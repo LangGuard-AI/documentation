@@ -98,10 +98,6 @@ const config: Config = {
           title: 'Product',
           items: [
             {
-              label: 'Dashboard',
-              href: 'https://app.langguard.ai',
-            },
-            {
               label: 'Pricing',
               href: 'mailto:sales@langguard.ai',
             },
@@ -129,7 +125,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} LangGuard. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} LangGuard Inc. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,
