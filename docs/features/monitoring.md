@@ -10,7 +10,14 @@ LangGuard provides comprehensive monitoring capabilities to help you understand 
 
 ## Dashboard Overview
 
-The main dashboard displays key metrics and recent activity at a glance.
+![Monitoring Dashboard](/img/monitoring-dashboard.png)
+
+The main dashboard displays key metrics and recent activity at a glance:
+
+- **Summary cards** - Total Traces, Active Agents, Total Errors, and Avg Response Time
+- **Real-time AI Usage Search** - Natural language search for traces with quick search filters
+- **Latest traces** - Live feed of recent agent execution traces with status indicators
+- **Real-time AI Usage Findings** - Security and compliance alerts including token requests, permission alerts, and key rotations
 
 ### Key Metrics
 
