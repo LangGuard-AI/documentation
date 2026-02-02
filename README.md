@@ -1,6 +1,6 @@
 # LangGuard Documentation
 
-Public documentation site for [LangGuard](https://langguard.ai), an AI Governance & Observability Platform. Built with [Docusaurus 3](https://docusaurus.io/).
+Public documentation site for [LangGuard](https://langguard.ai), an AI Control Plane for Governance & Observability. Built with [Docusaurus 3](https://docusaurus.io/).
 
 **Live site:** https://docs.langguard.ai
 
