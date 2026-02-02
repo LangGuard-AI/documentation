@@ -72,11 +72,6 @@ const config: Config = {
           label: 'Dashboard',
           position: 'right',
         },
-        {
-          href: 'https://github.com/LangGuard-AI/webapp',
-          label: 'GitHub',
-          position: 'right',
-        },
       ],
     },
     footer: {
