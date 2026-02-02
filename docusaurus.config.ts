@@ -12,7 +12,7 @@ const config: Config = {
   },
 
   url: 'https://docs.langguard.ai',
-  baseUrl: '/documentation/',
+  baseUrl: '/',
 
   organizationName: 'LangGuard-AI',
   projectName: 'langguard-docs',
