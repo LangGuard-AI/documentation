@@ -68,8 +68,8 @@ const config: Config = {
           label: 'Documentation',
         },
         {
-          href: 'https://app.langguard.ai',
-          label: 'Dashboard',
+          href: 'https://langguard.ai',
+          label: 'Home',
           position: 'right',
         },
       ],
