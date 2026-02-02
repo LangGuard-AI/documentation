@@ -17,6 +17,24 @@ Access the Data Catalog from the main navigation sidebar. It displays:
 - Columns and metadata
 - Usage statistics and lineage
 
+### Grid View
+
+![Data Catalog Grid View](/img/data-catalog-grid.png)
+
+The grid view displays entities as cards with activity sparklines, tags, and source indicators. Use the filters panel on the left to narrow results by resource type, owner, or tags.
+
+### List View
+
+![Data Catalog List View](/img/data-catalog-list.png)
+
+Switch to list view for a sortable table format showing entity name, type, source, and owner columns.
+
+### Graph View
+
+![Data Catalog Graph View](/img/data-catalog-graph.png)
+
+The graph view visualizes relationships between entities - agents, tools, models, and downstream systems. The legend shows node types, edge types, and sanction status (approved, pending review, or not approved).
+
 ## Navigation
 
 ### Hierarchical Browser
