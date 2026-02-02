@@ -10,6 +10,8 @@ LangGuard automatically discovers and catalogs AI assets from your connected int
 
 ## Overview
 
+![Discovery Dashboard](/img/discovery-dashboard.png)
+
 When you connect integrations like Langfuse or Databricks, LangGuard analyzes incoming trace data to:
 
 - Identify unique AI agents
@@ -18,6 +20,14 @@ When you connect integrations like Langfuse or Databricks, LangGuard analyzes in
 - Map dependencies between components
 
 This happens automatically during sync - no manual configuration required.
+
+The Discovery dashboard displays:
+
+- **Summary cards** - Quick counts of AI Tools, Agents, Downstream Systems, and Unsanctioned Assets
+- **AI Assets by Category** - Visual breakdown of asset types with drill-down capability
+- **AI Assets by Status** - Sanctioned vs. unsanctioned asset distribution
+- **AI Assets by Business Units** - Asset allocation across organizational units
+- **Lineage Map** - Visual representation of agent-to-model relationships
 
 ## What Gets Discovered
 
