@@ -25,11 +25,8 @@ To connect an integration:
 |----------|------------------|
 | [Langfuse](#langfuse) | Public Key, Secret Key |
 | [Databricks](#databricks) | Workspace URL, Access Token |
-| [LangSmith](#langsmith) | API Key |
-| [Braintrust](#braintrust) | API Key |
-| [Helicone](#helicone) | API Key |
-| [Phoenix](#phoenix) | Host URL, API Key (if cloud) |
-| [Weave](#weave) | W&B API Key |
+| [Claude Code](#ide-integrations) | Environment variables |
+| [Cursor](#ide-integrations) | GitHub plugin |
 
 ---
 
@@ -85,124 +82,14 @@ For more details, see [Databricks Integration Guide](/integrations/databricks).
 
 ---
 
-## LangSmith
+## IDE Integrations
 
-[LangSmith](https://smith.langchain.com) is LangChain's debugging and monitoring platform.
+LangGuard also supports direct telemetry from AI-powered development tools:
 
-### Get Your Credentials
+- **[Claude Code](/integrations/claude-code)** - Anthropic's CLI tool for AI-assisted development
+- **[Cursor](/integrations/cursor)** - AI-powered code editor
 
-1. Log in to [LangSmith](https://smith.langchain.com)
-2. Go to **Settings** → **API Keys**
-3. Create or copy your API key (starts with `lsv2_pt_`)
-
-### Connect in LangGuard
-
-1. Click **Add Integration** → **LangSmith**
-2. Enter:
-   - **Name**: A friendly name
-   - **API Key**: Your LangSmith API key
-3. Click **Test Connection**
-4. Click **Save**
-
-For more details, see [LangSmith Integration Guide](/integrations/langsmith).
-
----
-
-## Braintrust
-
-[Braintrust](https://braintrust.dev) is an AI evaluation and observability platform.
-
-### Get Your Credentials
-
-1. Log in to [Braintrust](https://www.braintrust.dev)
-2. Go to **Settings**
-3. Find or create your API key
-
-### Connect in LangGuard
-
-1. Click **Add Integration** → **Braintrust**
-2. Enter:
-   - **Name**: A friendly name
-   - **API Key**: Your Braintrust API key
-3. Click **Test Connection**
-4. Click **Save**
-
-For more details, see [Braintrust Integration Guide](/integrations/braintrust).
-
----
-
-## Helicone
-
-[Helicone](https://helicone.ai) provides LLM analytics and observability.
-
-### Get Your Credentials
-
-1. Log in to [Helicone](https://helicone.ai)
-2. Go to **Settings** → **API Keys**
-3. Create or copy your API key
-
-### Connect in LangGuard
-
-1. Click **Add Integration** → **Helicone**
-2. Enter:
-   - **Name**: A friendly name
-   - **API Key**: Your Helicone API key
-3. Click **Test Connection**
-4. Click **Save**
-
-For more details, see [Helicone Integration Guide](/integrations/helicone).
-
----
-
-## Phoenix
-
-[Phoenix](https://phoenix.arize.com) is Arize AI's open-source ML observability platform.
-
-### Get Your Credentials
-
-**For Arize Cloud:**
-1. Log in to your Arize account
-2. Get your API key from settings
-
-**For Self-Hosted:**
-1. Note your Phoenix server URL (e.g., `http://localhost:6006`)
-
-### Connect in LangGuard
-
-1. Click **Add Integration** → **Phoenix**
-2. Enter:
-   - **Name**: A friendly name
-   - **Host URL**: Your Phoenix server URL
-   - **API Key**: (if using Arize Cloud)
-3. Click **Test Connection**
-4. Click **Save**
-
-For more details, see [Phoenix Integration Guide](/integrations/phoenix).
-
----
-
-## Weave
-
-[Weave](https://wandb.ai/site/weave) is Weights & Biases' AI application toolkit.
-
-### Get Your Credentials
-
-1. Log in to [Weights & Biases](https://wandb.ai)
-2. Go to **User Settings**
-3. Copy your API key
-
-### Connect in LangGuard
-
-1. Click **Add Integration** → **Weave**
-2. Enter:
-   - **Name**: A friendly name
-   - **API Key**: Your W&B API key
-   - **Entity**: Your W&B username or team
-   - **Project**: Your Weave project name
-3. Click **Test Connection**
-4. Click **Save**
-
-For more details, see [Weave Integration Guide](/integrations/weave).
+These integrations send traces directly to LangGuard via OpenTelemetry, enabling real-time monitoring of agent activity, tool usage, and performance metrics.
 
 ---
 
