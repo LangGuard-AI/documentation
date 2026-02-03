@@ -10,23 +10,22 @@ LangGuard integrates with leading AI observability and data platforms to provide
 
 ## Supported Integrations
 
-### Observability Platforms
-
-| Platform | Capabilities | Status |
+| Platform | Description | Status |
 |----------|-------------|--------|
-| [Langfuse](/integrations/langfuse) | Traces, Metrics | ✓ Stable |
-| [Databricks MLflow](/integrations/databricks) | Traces, Data Catalog | ✓ Stable |
-| [LangSmith](/integrations/langsmith) | Traces, Runs | ✓ Stable |
-| [Braintrust](/integrations/braintrust) | Traces, Evals | ✓ Stable |
-| [Helicone](/integrations/helicone) | Traces, Analytics | ✓ Stable |
-| [Phoenix](/integrations/phoenix) | Traces, Spans | ✓ Stable |
-| [Weave](/integrations/weave) | Traces, Artifacts | ✓ Stable |
+| [Langfuse](/integrations/langfuse) | LLM observability and tracing platform | ✓ Available |
+| [Databricks](/integrations/databricks) | Ingest from Unity Catalog, MLflow, Genie, and more | ✓ Available |
+| [Cursor](/integrations/cursor) | AI-powered code editor integration | ✓ Available |
+| [Claude Code](/integrations/claude-code) | Anthropic Claude Code integration | ✓ Available |
 
-### Identity & Access
+## Coming Soon
 
-| Platform | Capabilities | Status |
+| Platform | Description | Status |
 |----------|-------------|--------|
-| [Okta](/integrations/okta) | SSO, User Sync | ✓ Stable |
+| Google Vertex AI | Google Cloud AI platform | 🚧 Under Construction |
+| Microsoft CoPilot Studio | Microsoft AI assistant platform | 🚧 Under Construction |
+| AWS Bedrock | Amazon AI foundation models | 🚧 Under Construction |
+| ZScaler | Cloud security and compliance | 🚧 Under Construction |
+| Splunk | Security and observability platform | 🚧 Under Construction |
 
 ## Architecture
 
@@ -40,14 +39,14 @@ LangGuard uses a unified integration architecture:
 ├────────────────────────────────────────────────────────────┤
 │                   Connector Registry                       │
 ├──────────┬──────────┬──────────┬──────────┬────────────────┤
-│ Langfuse │Databricks│LangSmith │  Okta    │    Others      │
+│ Langfuse │Databricks│  Cursor  │  Claude  │    Others      │
 └──────────┴──────────┴──────────┴──────────┴────────────────┘
                           │
             ┌─────────────┼─────────────┐
             ▼             ▼             ▼
       ┌───────────┐ ┌───────────┐ ┌───────────┐
-      │ Langfuse  │ │Databricks │ │ LangSmith │
-      │   Cloud   │ │   MLflow  │ │   Cloud   │
+      │ Langfuse  │ │Databricks │ │  Cursor   │
+      │   Cloud   │ │   MLflow  │ │   IDE     │
       └───────────┘ └───────────┘ └───────────┘
 ```
 
@@ -173,28 +172,16 @@ See [Integration Issues](/troubleshooting/integration-issues) for detailed help.
 <div className="homepage-features">
 
 ### [Langfuse](/integrations/langfuse)
-LLM observability platform with traces and metrics.
+LLM observability and tracing platform.
 
 ### [Databricks](/integrations/databricks)
-MLflow integration for ML traces and Unity Catalog.
+Ingest from Unity Catalog, MLflow, Genie, and more.
 
-### [LangSmith](/integrations/langsmith)
-LangChain's observability and debugging platform.
+### [Cursor](/integrations/cursor)
+AI-powered code editor integration.
 
-### [Okta](/integrations/okta)
-Enterprise SSO and user directory sync.
-
-### [Braintrust](/integrations/braintrust)
-AI evaluation and tracing platform.
-
-### [Helicone](/integrations/helicone)
-LLM analytics and cost tracking.
-
-### [Phoenix](/integrations/phoenix)
-Arize AI's open-source observability.
-
-### [Weave](/integrations/weave)
-Weights & Biases ML observability.
+### [Claude Code](/integrations/claude-code)
+Anthropic Claude Code integration.
 
 </div>
 

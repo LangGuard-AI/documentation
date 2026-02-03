@@ -54,12 +54,8 @@ const sidebars: SidebarsConfig = {
       items: [
         'integrations/langfuse',
         'integrations/databricks',
-        'integrations/langsmith',
-        'integrations/okta',
-        'integrations/braintrust',
-        'integrations/helicone',
-        'integrations/phoenix',
-        'integrations/weave',
+        'integrations/cursor',
+        'integrations/claude-code',
       ],
     },
     {
