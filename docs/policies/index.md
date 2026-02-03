@@ -10,6 +10,8 @@ LangGuard's policy engine enables automated governance and compliance for AI ope
 
 ## What Are Policies?
 
+![Policies Dashboard](/img/policies-dashboard.png)
+
 Policies are rules that evaluate AI agent traces to detect:
 
 - **Security risks** - PII exposure, injection attacks, unauthorized access
@@ -42,7 +44,7 @@ Each policy includes:
 |-----------|-------------|
 | **Name** | Unique identifier |
 | **Description** | What the policy detects |
-| **Category** | Security, Compliance, Cost, Performance |
+| **Category** | Security & Access, Models & Compliance, Budget & Ops, Audit |
 | **Severity** | Critical, High, Medium, Low |
 | **Rego Code** | The evaluation logic |
 | **Enabled** | Active or disabled |
@@ -71,7 +73,7 @@ violation[result] {
 
 ## Built-in Policies
 
-LangGuard includes 10 pre-configured policies:
+LangGuard includes pre-configured policies across all categories:
 
 | Policy | Category | Severity |
 |--------|----------|----------|
@@ -85,63 +87,6 @@ LangGuard includes 10 pre-configured policies:
 | [Hallucination Risk](/policies/built-in-policies#hallucination-risk-assessment) | Compliance | Medium |
 | [Data Retention](/policies/built-in-policies#data-retention-compliance) | Compliance | High |
 | [Model Version Control](/policies/built-in-policies#model-version-control) | Compliance | Medium |
-
-## Quick Start
-
-### 1. Start OPA Server
-
-```bash
-# Using Docker
-docker-compose up opa -d
-
-# Or run directly
-docker run -d -p 8181:8181 openpolicyagent/opa:latest-static run --server --addr 0.0.0.0:8181
-```
-
-### 2. Seed Built-in Policies
-
-```bash
-# Find your tenant ID
-npm run list:tenants
-
-# Seed policies
-npm run seed:policies <tenant-id>
-```
-
-### 3. Enable Policies
-
-1. Navigate to **Policies** in LangGuard
-2. Browse available policies
-3. Toggle **Enabled** for desired policies
-
-### 4. View Violations
-
-1. Go to **Policies > Violations**
-2. See traces that triggered policies
-3. Click to view details and evidence
-
-## Policy Dashboard
-
-The Policies page shows:
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│  Policy Statistics                                           │
-├──────────────────────────────────────────────────────────────┤
-│  Active Policies: 8/10                                       │
-│  Violations (24h): 47                                        │
-│  Critical: 3  │  High: 12  │  Medium: 25  │  Low: 7          │
-└──────────────────────────────────────────────────────────────┘
-```
-
-### Violation Breakdown
-
-| Severity | Color | Action Required |
-|----------|-------|-----------------|
-| **Critical** | Red | Immediate investigation |
-| **High** | Orange | Review within 24 hours |
-| **Medium** | Yellow | Review when possible |
-| **Low** | Gray | Informational |
 
 ## Documentation
 
