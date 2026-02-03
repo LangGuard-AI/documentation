@@ -58,7 +58,7 @@ const config: Config = {
       title: 'LangGuard',
       logo: {
         alt: 'LangGuard Logo',
-        src: 'img/logo.svg',
+        src: 'img/lg_favicon_32.png',
       },
       items: [
         {
