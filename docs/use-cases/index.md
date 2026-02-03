@@ -54,4 +54,4 @@ Built for security teams, not just developers. LangGuard provides the context an
 2. **[Enable policies](/policies)** - Turn on built-in detection rules
 3. **[Review violations](/policies/policy-violations)** - Investigate flagged activity
 
-Need help with a specific use case? Contact [support@langguard.ai](mailto:support@langguard.ai).
+Need help with a specific use case? Contact [info@langguard.ai](mailto:info@langguard.ai).

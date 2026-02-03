@@ -226,7 +226,7 @@ LangGuard is designed for desktop use. Mobile browsers may have limited function
 If none of these solutions work:
 
 1. **Check our FAQ**: [Frequently Asked Questions](/troubleshooting/faq)
-2. **Contact support**: [support@langguard.ai](mailto:support@langguard.ai)
+2. **Contact support**: [info@langguard.ai](mailto:info@langguard.ai)
 
 When contacting support, include:
 - What you were trying to do

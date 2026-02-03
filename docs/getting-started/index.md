@@ -42,4 +42,4 @@ Link your observability platforms to start syncing data.
 
 - Check our [Troubleshooting Guide](/troubleshooting) for common issues
 - Browse the [FAQ](/troubleshooting/faq) for quick answers
-- Contact [support@langguard.ai](mailto:support@langguard.ai) for assistance
+- Contact [info@langguard.ai](mailto:info@langguard.ai) for assistance

@@ -170,7 +170,7 @@ Yes. The free tier includes:
 - SLA guarantees
 - Dedicated support
 
-See [Pricing](mailto:sales@langguard.ai) for details.
+See [Pricing](mailto:info@langguard.ai) for details.
 
 ### How do I upgrade my plan?
 
@@ -221,15 +221,15 @@ See [Common Issues](/troubleshooting/common-issues) for more help.
 
 ### I forgot which email I used
 
-Try signing in with different emails. If you still can't find your account, contact [support@langguard.ai](mailto:support@langguard.ai).
+Try signing in with different emails. If you still can't find your account, contact [info@langguard.ai](mailto:info@langguard.ai).
 
 ### How do I change my email?
 
-Contact [support@langguard.ai](mailto:support@langguard.ai) with your current and new email addresses.
+Contact [info@langguard.ai](mailto:info@langguard.ai) with your current and new email addresses.
 
 ### How do I delete my account?
 
-Contact [support@langguard.ai](mailto:support@langguard.ai) to request account deletion.
+Contact [info@langguard.ai](mailto:info@langguard.ai) to request account deletion.
 
 ---
 
@@ -238,7 +238,7 @@ Contact [support@langguard.ai](mailto:support@langguard.ai) to request account d
 ### Where can I get support?
 
 1. **Documentation**: Check our docs for answers
-2. **Email**: [support@langguard.ai](mailto:support@langguard.ai)
+2. **Email**: [info@langguard.ai](mailto:info@langguard.ai)
 3. **In-app help**: Use the help menu in the application
 
 ### What's your support response time?
@@ -251,4 +251,4 @@ Contact [support@langguard.ai](mailto:support@langguard.ai) to request account d
 
 ## Still have questions?
 
-Contact us at [support@langguard.ai](mailto:support@langguard.ai).
+Contact us at [info@langguard.ai](mailto:info@langguard.ai).

@@ -87,7 +87,7 @@ Frequently asked questions.
 
 If you can't resolve the issue:
 
-1. **Email us**: [support@langguard.ai](mailto:support@langguard.ai)
+1. **Email us**: [info@langguard.ai](mailto:info@langguard.ai)
 2. **Include helpful details**:
    - What you were trying to do
    - What happened instead

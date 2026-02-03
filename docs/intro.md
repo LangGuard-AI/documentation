@@ -87,7 +87,7 @@ LangGuard is designed for teams who need visibility and control over their AI op
 ## Getting Help
 
 - **Documentation** - You're already here!
-- **Contact** - [support@langguard.ai](mailto:support@langguard.ai)
+- **Contact** - [info@langguard.ai](mailto:info@langguard.ai)
 
 ---
 

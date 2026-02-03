@@ -168,4 +168,4 @@ Get help with common issues.
 
 ---
 
-Need help? Contact [support@langguard.ai](mailto:support@langguard.ai) or check our [FAQ](/troubleshooting/faq).
+Need help? Contact [info@langguard.ai](mailto:info@langguard.ai) or check our [FAQ](/troubleshooting/faq).

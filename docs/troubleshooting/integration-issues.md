@@ -183,7 +183,7 @@ This page covers common problems with LangGuard integrations and their solutions
 
 ## When to Contact Support
 
-Contact [support@langguard.ai](mailto:support@langguard.ai) if:
+Contact [info@langguard.ai](mailto:info@langguard.ai) if:
 
 - Connection test passes but sync consistently fails
 - You're seeing errors not listed here

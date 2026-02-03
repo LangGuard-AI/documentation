@@ -99,11 +99,11 @@ const config: Config = {
           items: [
             {
               label: 'Pricing',
-              href: 'mailto:sales@langguard.ai',
+              href: 'mailto:info@langguard.ai',
             },
             {
               label: 'Support',
-              href: 'mailto:support@langguard.ai',
+              href: 'mailto:info@langguard.ai',
             },
           ],
         },
