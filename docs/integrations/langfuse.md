@@ -279,4 +279,3 @@ Response:
 
 - [Quick Start Guide](/getting-started/quick-start) - See your Langfuse traces in action
 - [Policies](/policies) - Apply governance rules to traces
-- [Agent Activity](/features/agent-activity) - Visualize agent behavior

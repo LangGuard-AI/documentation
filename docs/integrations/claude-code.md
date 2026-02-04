@@ -121,5 +121,4 @@ All tool invocations are monitored:
 ## Next Steps
 
 - [Integrations Overview](/integrations) - See all available integrations
-- [Agent Activity](/features/agent-activity) - Visualize captured agent behavior
 - [Policies](/policies) - Apply governance rules to agent traces

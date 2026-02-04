@@ -40,7 +40,6 @@ const sidebars: SidebarsConfig = {
         'features/discovery',
         'features/monitoring',
         'features/trace-explorer',
-        'features/agent-activity',
         'features/data-catalog',
       ],
     },

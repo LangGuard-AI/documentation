@@ -273,5 +273,4 @@ Set up alerts for critical conditions:
 ## Next Steps
 
 - [Trace Explorer](/features/trace-explorer) - Investigate specific traces
-- [Agent Activity](/features/agent-activity) - Detailed agent analysis
 - [Policies](/policies) - Set up governance rules

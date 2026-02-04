@@ -247,6 +247,5 @@ If tool usage isn't appearing:
 
 ## Next Steps
 
-- [View Agent Activity](/features/agent-activity) - Visualize discovered agents
 - [Data Catalog](/features/data-catalog) - Browse discovered entities
 - [Create Policies](/policies/creating-policies) - Apply governance to discovered assets

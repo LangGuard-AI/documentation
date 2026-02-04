@@ -49,19 +49,6 @@ Deep-dive into individual traces with powerful analysis tools:
 
 ---
 
-### Agent Activity View
-
-Visualize agent behavior with multiple visualization modes:
-
-- **Timeline View** - See when traces occurred over time
-- **Performance View** - Track success rates, latency, and costs
-- **Tools View** - Heatmap of tool usage across agents
-- **Graph View** - Dependency relationships and data flow
-
-[Learn more about Agent Activity →](/features/agent-activity)
-
----
-
 ### Data Catalog
 
 Browse and manage discovered entities:
@@ -80,7 +67,6 @@ Browse and manage discovered entities:
 | Feature | Free | Pro | Enterprise |
 |---------|------|-----|------------|
 | Trace Explorer | ✓ | ✓ | ✓ |
-| Agent Activity | ✓ | ✓ | ✓ |
 | 2 Integrations | ✓ | ✓ | ✓ |
 | Unlimited Integrations | - | ✓ | ✓ |
 | Built-in Policies | ✓ | ✓ | ✓ |
@@ -104,9 +90,6 @@ Real-time dashboards and metrics.
 
 ### [Trace Explorer](/features/trace-explorer)
 Search and analyze traces.
-
-### [Agent Activity](/features/agent-activity)
-Visualize agent behavior.
 
 ### [Data Catalog](/features/data-catalog)
 Browse discovered entities.

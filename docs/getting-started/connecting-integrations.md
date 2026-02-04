@@ -145,4 +145,3 @@ See [Integration Issues](/troubleshooting/integration-issues) for more help.
 
 - [Explore Trace Explorer](/features/trace-explorer) - Analyze your synced traces
 - [Set Up Policies](/policies) - Enable governance rules
-- [View Agent Activity](/features/agent-activity) - Visualize agent behavior

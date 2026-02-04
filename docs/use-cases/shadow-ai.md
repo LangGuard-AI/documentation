@@ -173,5 +173,4 @@ Shadow AI isn't a one-time problem. Establish continuous monitoring:
 
 ## Related
 
-- [Agent Activity](/features/agent-activity) - Monitor AI agent usage
 - [Discovery](/features/discovery) - Find AI across your environment

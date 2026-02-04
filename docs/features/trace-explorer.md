@@ -338,6 +338,5 @@ When investigating issues, start with the Violations tab.
 
 ## Next Steps
 
-- [Agent Activity](/features/agent-activity) - Visualize agent behavior
 - [Policy Violations](/policies/policy-violations) - Understand violation details
 - [Troubleshooting](/troubleshooting/common-issues) - Common issues and solutions

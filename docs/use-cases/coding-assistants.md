@@ -146,4 +146,3 @@ Track AI coding assistant security over time:
 
 - [SQL Injection Prevention](/policies/built-in-policies#sql-injection-prevention) - Built-in policy
 - [Creating Policies](/policies/creating-policies) - Custom security rules
-- [Agent Activity](/features/agent-activity) - Monitor AI agent usage
