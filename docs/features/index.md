@@ -62,22 +62,6 @@ Browse and manage discovered entities:
 
 ---
 
-## Feature Matrix
-
-| Feature | Free | Pro | Enterprise |
-|---------|------|-----|------------|
-| Trace Explorer | ✓ | ✓ | ✓ |
-| 2 Integrations | ✓ | ✓ | ✓ |
-| Unlimited Integrations | - | ✓ | ✓ |
-| Built-in Policies | ✓ | ✓ | ✓ |
-| Custom Policies | - | ✓ | ✓ |
-| Data Catalog | - | ✓ | ✓ |
-| Multi-tenant | - | - | ✓ |
-| SSO/SAML | - | - | ✓ |
-| SLA | - | 99.5% | 99.9% |
-
----
-
 ## Quick Links
 
 <div className="homepage-features">
