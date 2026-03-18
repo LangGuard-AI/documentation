@@ -55,7 +55,7 @@ This page covers frequently encountered issues and their solutions.
 
 ### Missing Agents
 
-**Symptoms**: Some agents not appearing in Agent Activity.
+**Symptoms**: Some agents not appearing in Discovery.
 
 **Solutions**:
 1. Agents are detected automatically from trace data - ensure traces are syncing
@@ -115,7 +115,7 @@ See [Integration Issues](/troubleshooting/integration-issues) for platform-speci
 
 **Solutions**:
 1. **Narrow the time range** - Smaller date ranges load faster
-2. **Reduce selected items** - Select fewer agents in Agent Activity
+2. **Reduce selected items** - Narrow filters to reduce data volume
 3. **Clear browser cache** - Stale data can cause slowdowns
 4. **Try a different browser** - Rule out browser-specific issues
 
@@ -165,7 +165,7 @@ See [Integration Issues](/troubleshooting/integration-issues) for platform-speci
 **Symptoms**: Buttons or features you expect aren't visible.
 
 **Solutions**:
-1. **Check your role** - Some features require Editor or Admin access
+1. **Check your role** - Some features require Member or Admin access
 2. **Contact your admin** to upgrade your permissions if needed
 
 ---
@@ -195,7 +195,7 @@ See [Integration Issues](/troubleshooting/integration-issues) for platform-speci
 **Symptoms**: Edit button disabled or missing.
 
 **Solutions**:
-1. **Check your role** - Policy editing requires Editor or Admin access
+1. **Check your role** - Policy editing requires Member or Admin access
 2. **Contact your admin** for permission upgrade
 
 ---

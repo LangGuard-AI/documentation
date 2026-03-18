@@ -13,7 +13,7 @@ Welcome to LangGuard! This guide will help you get started with the platform and
 Getting started with LangGuard is simple:
 
 1. **Sign up** for an account or receive an invitation from your team
-2. **Connect your integrations** - Link your observability platforms (Langfuse, Databricks, etc.)
+2. **Connect your integrations** - Link your AI platforms, frameworks, and tools
 3. **Explore your data** - View traces, monitor agents, and analyze activity
 4. **Set up policies** - Enable governance rules to protect your AI operations
 
@@ -22,21 +22,14 @@ Getting started with LangGuard is simple:
 Before you begin, make sure you have:
 
 - **Email access** - To verify your account
-- **Integration credentials** - API keys for your observability platforms (Langfuse, Databricks, LangSmith, etc.)
+- **Integration credentials** - API keys or tokens for your AI platforms (Databricks, AWS Bedrock, etc.)
 
 That's it! LangGuard is a hosted platform - no installation required.
 
 ## Next Steps
 
-<div className="homepage-features">
-
-### [Quick Start Guide](/getting-started/quick-start)
-Sign in and explore LangGuard in 10 minutes.
-
-### [Connecting Integrations](/getting-started/connecting-integrations)
-Link your observability platforms to start syncing data.
-
-</div>
+- [Quick Start Guide](/getting-started/quick-start) - Sign in and explore LangGuard in 10 minutes
+- [Connecting Integrations](/getting-started/connecting-integrations) - Link your observability platforms to start syncing data
 
 ## Need Help?
 

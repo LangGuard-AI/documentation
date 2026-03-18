@@ -4,17 +4,26 @@ title: Creating Policies
 description: Write custom governance policies with Rego
 ---
 
+import ThemedImage from '@theme/ThemedImage';
+
 # Creating Policies
 
 Learn how to write custom policies using Rego, the policy language used by Open Policy Agent (OPA).
+
+<ThemedImage
+  alt="Create Policy Dialog"
+  sources={{
+    light: '/img/policies-create-light.png',
+    dark: '/img/policies-create.png',
+  }}
+/>
 
 ## Prerequisites
 
 Before creating policies:
 
-1. OPA server is running (`docker-compose up opa -d`)
-2. You understand basic Rego syntax
-3. You have Editor or Admin role in LangGuard
+1. You understand basic Rego syntax
+2. You have Member or Admin role in LangGuard
 
 ## Policy Structure
 
@@ -25,15 +34,16 @@ Every LangGuard policy needs:
 ```rego
 package langguard.<policy_name>
 
+import rego.v1
+
 # Main violation rule
-violation[result] {
+violation contains result if {
     # Evaluation logic
 
     result := {
-        "policy": "<policy_name>",
-        "severity": "critical|high|medium|low",
+        "type": "<violation_type>",
         "message": "Human-readable message",
-        "evidence": <what triggered the violation>
+        # Additional evidence fields as needed
     }
 }
 ```
@@ -43,30 +53,26 @@ violation[result] {
 ```rego
 package langguard.max_response_time
 
-# Detect slow responses
-violation[result] {
-    trace := input.trace
-    duration := trace.duration
+import rego.v1
 
-    # Check if duration exceeds threshold (5 seconds)
-    duration > 5000
+# Detect slow responses using configurable threshold
+violation contains result if {
+    max_latency := object.get(input.config, "max_latency_ms", 5000)
+    latency := object.get(input.trace.metadata, "latency_ms", 0)
+    latency > max_latency
 
     result := {
-        "policy": "max_response_time",
-        "severity": "medium",
-        "message": sprintf("Response time exceeded threshold: %dms", [duration]),
-        "evidence": {
-            "duration_ms": duration,
-            "threshold_ms": 5000,
-            "trace_id": trace.id
-        }
+        "type": "response_time_exceeded",
+        "latency_ms": latency,
+        "threshold_ms": max_latency,
+        "message": sprintf("Response time exceeded threshold: %dms > %dms", [latency, max_latency]),
     }
 }
 ```
 
 ## Input Schema
 
-Policies receive trace data as `input`:
+Policies receive trace data and enrichment context as `input`:
 
 ```json
 {
@@ -74,22 +80,35 @@ Policies receive trace data as `input`:
     "id": "tr_abc123",
     "name": "customer_query",
     "timestamp": "2024-03-15T10:30:00Z",
-    "duration": 1234,
-    "status": "success",
-    "input": { ... },
-    "output": { ... },
+    "input": "...",
+    "output": "...",
     "metadata": {
       "agent_name": "CustomerService",
-      "model": "gpt-4",
-      "tokens": {
-        "input": 850,
-        "output": 400,
-        "total": 1250
-      },
-      "cost": 0.042
+      "latency_ms": 1234,
+      "attributes": { "gen_ai.agent.name": "CustomerService" },
+      "mappedGenAI": { "agentName": "CustomerService", "userId": "user-123" }
     },
-    "spans": [ ... ]
-  }
+    "tags": ["production"],
+    "observations": [
+      {
+        "id": "obs_1",
+        "type": "generation",
+        "model": "gpt-4",
+        "input": "...",
+        "output": "...",
+        "metadata": { "status": "success" },
+        "usage": { "input": 850, "output": 400, "total": 1250 },
+        "costDetails": { "total": 0.042 }
+      }
+    ]
+  },
+  "config": { },
+  "entity_approval": {
+    "entities": [ ],
+    "unresolved_tools": [ ]
+  },
+  "catalog": { "tags": { "stage": "prod" } },
+  "identity": { "user_id": "...", "classification": "human" }
 }
 ```
 
@@ -100,12 +119,16 @@ Policies receive trace data as `input`:
 | `trace.id` | string | Unique trace identifier |
 | `trace.name` | string | Operation name |
 | `trace.timestamp` | string | ISO timestamp |
-| `trace.duration` | number | Duration in milliseconds |
-| `trace.status` | string | "success", "error", "warning" |
-| `trace.input` | object | Request input |
-| `trace.output` | object | Response output |
-| `trace.metadata` | object | Custom metadata |
-| `trace.spans` | array | Child spans |
+| `trace.input` | string | Trace input content |
+| `trace.output` | string | Trace output content |
+| `trace.metadata` | object | Custom metadata (attributes, mappedGenAI, etc.) |
+| `trace.tags` | array | Trace tags |
+| `trace.observations` | array | Child observations (generations, spans, events) |
+| `config` | object | Policy-specific configurable thresholds |
+| `entity_approval` | object | Entity catalog approval data and unresolved tools |
+| `catalog` | object | Catalog context (tags, stage, status) |
+| `identity` | object | Identity enrichment data (user_id, classification, idp) |
+| `pii_detection` | object | PII pre-processor results (when `detect_pii` tag is set) |
 
 ## Creating a Policy
 
@@ -117,28 +140,13 @@ Policies receive trace data as `input`:
    - **Name**: Unique identifier (lowercase, underscores)
    - **Display Name**: Human-readable name
    - **Description**: What the policy detects
-   - **Category**: Security, Compliance, Cost, Performance
+   - **Category**: Security & Access, Models & Compliance, Budget & Operations, Audit
    - **Severity**: Critical, High, Medium, Low
 4. Write Rego code in the editor
 5. Click **Test** to validate
 6. Click **Create**
 
-### Via API
-
-```bash
-POST /api/policies
-Content-Type: application/json
-
-{
-  "name": "max_cost_per_request",
-  "displayName": "Maximum Cost Per Request",
-  "description": "Alerts when a single request exceeds cost threshold",
-  "category": "cost",
-  "severity": "high",
-  "regoCode": "package langguard.max_cost_per_request\n\nviolation[result] {\n    trace := input.trace\n    cost := trace.metadata.cost\n    cost > 0.10\n    result := {\n        \"policy\": \"max_cost_per_request\",\n        \"severity\": \"high\",\n        \"message\": sprintf(\"Request cost $%.2f exceeds $0.10 threshold\", [cost]),\n        \"evidence\": {\"cost\": cost, \"threshold\": 0.10}\n    }\n}",
-  "enabled": true
-}
-```
+For programmatic policy management, see the [API documentation](https://app.langguard.ai/swagger).
 
 ## Common Patterns
 
@@ -149,19 +157,20 @@ Detect patterns in text:
 ```rego
 package langguard.profanity_filter
 
+import rego.v1
+
 profanity_patterns := ["badword1", "badword2", "badword3"]
 
-violation[result] {
+violation contains result if {
     trace := input.trace
     output := lower(trace.output)
-    pattern := profanity_patterns[_]
+    some pattern in profanity_patterns
     contains(output, pattern)
 
     result := {
-        "policy": "profanity_filter",
-        "severity": "high",
+        "type": "profanity_detected",
         "message": "Inappropriate content detected in output",
-        "evidence": {"pattern": pattern}
+        "pattern": pattern,
     }
 }
 ```
@@ -173,18 +182,22 @@ Enforce numeric limits:
 ```rego
 package langguard.max_tokens
 
-max_tokens := 4000
+import rego.v1
 
-violation[result] {
-    trace := input.trace
-    total := trace.metadata.tokens.total
-    total > max_tokens
+violation contains result if {
+    max_tokens := object.get(input.config, "max_tokens_per_trace", 4000)
+    total_tokens := sum([tokens |
+        some obs in input.trace.observations
+        obs.usage
+        tokens := object.get(obs.usage, "total", 0)
+    ])
+    total_tokens > max_tokens
 
     result := {
-        "policy": "max_tokens",
-        "severity": "medium",
-        "message": sprintf("Token count %d exceeds limit of %d", [total, max_tokens]),
-        "evidence": {"actual": total, "limit": max_tokens}
+        "type": "token_limit_exceeded",
+        "total_tokens": total_tokens,
+        "max_allowed": max_tokens,
+        "message": sprintf("Token count %d exceeds limit of %d", [total_tokens, max_tokens]),
     }
 }
 ```
@@ -196,40 +209,44 @@ Control allowed values:
 ```rego
 package langguard.approved_models
 
+import rego.v1
+
 approved_models := {"gpt-4", "gpt-4-turbo", "claude-3-opus"}
 
-violation[result] {
-    trace := input.trace
-    model := trace.metadata.model
-    not approved_models[model]
+violation contains result if {
+    some obs in input.trace.observations
+    obs.model
+    not approved_models[obs.model]
 
     result := {
-        "policy": "approved_models",
-        "severity": "high",
-        "message": sprintf("Model '%s' is not approved for use", [model]),
-        "evidence": {"model": model, "approved": approved_models}
+        "type": "unapproved_model",
+        "model": obs.model,
+        "span_id": obs.id,
+        "message": sprintf("Model '%s' is not approved for use", [obs.model]),
     }
 }
 ```
 
-### Pattern 4: Span Analysis
+### Pattern 4: Observation Analysis
 
-Check individual spans:
+Check individual observations:
 
 ```rego
 package langguard.slow_llm_calls
 
-violation[result] {
-    trace := input.trace
-    span := trace.spans[_]
-    span.type == "llm"
-    span.duration > 10000
+import rego.v1
+
+violation contains result if {
+    some obs in input.trace.observations
+    obs.type == "generation"
+    latency := object.get(obs.metadata, "latency_ms", 0)
+    latency > 10000
 
     result := {
-        "policy": "slow_llm_calls",
-        "severity": "medium",
-        "message": sprintf("LLM call '%s' took %dms", [span.name, span.duration]),
-        "evidence": {"span": span.name, "duration": span.duration}
+        "type": "slow_llm_call",
+        "span_id": obs.id,
+        "latency_ms": latency,
+        "message": sprintf("LLM call '%s' took %dms", [obs.id, latency]),
     }
 }
 ```
@@ -241,21 +258,23 @@ Complex evaluation:
 ```rego
 package langguard.production_guardrails
 
-violation[result] {
-    trace := input.trace
-    trace.metadata.environment == "production"
-    trace.metadata.model == "gpt-4-turbo"
-    trace.metadata.tokens.total > 8000
+import rego.v1
+
+violation contains result if {
+    catalog := object.get(input, "catalog", {})
+    tags := object.get(catalog, "tags", {})
+    lower(object.get(tags, "stage", "")) == "prod"
+
+    some obs in input.trace.observations
+    obs.model == "gpt-4-turbo"
+    total := object.get(obs.usage, "total", 0)
+    total > 8000
 
     result := {
-        "policy": "production_guardrails",
-        "severity": "critical",
+        "type": "expensive_production_usage",
+        "model": obs.model,
+        "tokens": total,
         "message": "High token usage with expensive model in production",
-        "evidence": {
-            "environment": trace.metadata.environment,
-            "model": trace.metadata.model,
-            "tokens": trace.metadata.tokens.total
-        }
     }
 }
 ```
@@ -275,11 +294,13 @@ violation[result] {
 # Save policy to file
 cat > policy.rego << 'EOF'
 package langguard.test_policy
-violation[result] { ... }
+import rego.v1
+violation contains result if { ... }
 EOF
 
 # Test with input
-echo '{"trace": {"id": "test", ...}}' | opa eval -d policy.rego 'data.langguard.test_policy.violation'
+echo '{"trace": {"id": "test", "metadata": {}, "observations": []}, "config": {}}' \
+  | opa eval -d policy.rego 'data.langguard.test_policy.violation'
 ```
 
 ### Unit Testing
@@ -289,16 +310,20 @@ Write OPA tests:
 ```rego
 package langguard.test_policy_test
 
-test_violation_triggered {
+import rego.v1
+
+test_violation_triggered if {
     result := data.langguard.test_policy.violation with input as {
-        "trace": {"metadata": {"tokens": {"total": 5000}}}
+        "trace": {"metadata": {}, "observations": [{"usage": {"total": 5000}}]},
+        "config": {"max_tokens_per_trace": 4000},
     }
     count(result) > 0
 }
 
-test_no_violation {
+test_no_violation if {
     result := data.langguard.test_policy.violation with input as {
-        "trace": {"metadata": {"tokens": {"total": 100}}}
+        "trace": {"metadata": {}, "observations": [{"usage": {"total": 100}}]},
+        "config": {"max_tokens_per_trace": 4000},
     }
     count(result) == 0
 }
@@ -316,6 +341,7 @@ opa test . -v
 ```rego
 # Good
 package langguard.pii_email_detection
+import rego.v1
 
 # Bad
 package langguard.policy1
@@ -348,11 +374,10 @@ result := {
 ### 4. Handle Missing Data
 
 ```rego
-violation[result] {
-    trace := input.trace
-    # Check field exists before using
-    trace.metadata.cost
-    trace.metadata.cost > 0.10
+violation contains result if {
+    # Use object.get with defaults to safely access nested fields
+    cost := object.get(input.trace.metadata, "cost", 0)
+    cost > 0.10
     ...
 }
 ```
@@ -363,6 +388,8 @@ Add comments explaining the logic:
 
 ```rego
 package langguard.gdpr_compliance
+
+import rego.v1
 
 # GDPR Compliance Policy
 #
@@ -376,7 +403,7 @@ package langguard.gdpr_compliance
 # - metadata.consent_given
 # - metadata.data_retention_days
 
-violation[result] {
+violation contains result if {
     # ... implementation
 }
 ```
@@ -396,21 +423,6 @@ violation[result] {
 2. Check for overly broad regex patterns
 3. Verify threshold values
 4. Test edge cases
-
-### OPA Server Issues
-
-```bash
-# Check OPA health
-curl http://localhost:8181/health
-
-# Check policy is loaded
-curl http://localhost:8181/v1/policies
-
-# Test evaluation
-curl -X POST http://localhost:8181/v1/data/langguard/your_policy/violation \
-  -H "Content-Type: application/json" \
-  -d '{"input": {"trace": {...}}}'
-```
 
 ---
 

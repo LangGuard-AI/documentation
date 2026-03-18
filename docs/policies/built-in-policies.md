@@ -4,257 +4,218 @@ title: Built-in Policies
 description: Pre-configured AI governance policies in LangGuard
 ---
 
+import ThemedImage from '@theme/ThemedImage';
+
 # Built-in Policies
 
-LangGuard includes 10 pre-configured policies covering security, compliance, cost, and performance governance.
+LangGuard includes 10 pre-configured policies covering security, compliance, cost, and audit governance. Each policy is written in Rego and evaluated by the OPA engine as traces are ingested.
+
+<ThemedImage
+  alt="Built-in Policies"
+  sources={{
+    light: '/img/policies-built-in-light.png',
+    dark: '/img/policies-built-in.png',
+  }}
+/>
 
 ## Security Policies
 
-### PII Data Detection
+### Credential Surface Discovery
 
-**Severity**: Critical
+**ID**: `credential-surface-discovery` · **Severity**: Critical · **Default**: Enabled (enforce)
 
-Detects personally identifiable information in AI agent outputs.
+Detects hardcoded/static credentials, super user permissions, and long-lived API keys in AI agent runtime.
 
 **What it detects**:
-- Email addresses
-- Phone numbers
-- Social Security numbers
-- Credit card numbers
-- IP addresses
-- Physical addresses
+- **Hardcoded credentials** — API keys, passwords, secret keys, bearer tokens, and private keys referenced in trace metadata
+- **Exposed provider API keys** — Scans trace input/output and observations for provider-specific patterns:
+  - OpenAI (`sk-*`, `sk-proj-*`, `sk-svcacct-*`)
+  - Anthropic (`sk-ant-*`)
+  - AWS (`AKIA*`)
+  - GCP (private keys, service account JSON)
+  - Azure (connection strings, SAS tokens)
+  - GitHub (`ghp_*`, `gho_*`, `ghu_*`, `ghs_*`, `ghr_*`, `github_pat_*`)
+- **Super user permissions** — `admin`, `root`, `full_access`, `all_permissions`, etc.
+- **Long-lived tokens** — Tokens exceeding a configurable max lifetime
 
-**Configuration**:
-```rego
-# Patterns checked
-patterns := [
-    `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`,  # Email
-    `\b\d{3}[-.]?\d{3}[-.]?\d{4}\b`,                     # Phone
-    `\b\d{3}[-]?\d{2}[-]?\d{4}\b`,                       # SSN
-    `\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b`        # Credit card
-]
-```
-
-**When to use**: Always enabled for production environments handling user data.
+**Configuration** (`input.config`):
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `approved_credentials` | `["oauth2_token", "short_lived_jwt", "delegated_credential", "managed_identity"]` | Credential types that are allowed |
+| `max_token_lifetime_hours` | `24` | Maximum token lifetime before flagging |
 
 ---
 
-### SQL Injection Prevention
+### PII Detection
 
-**Severity**: High
+**ID**: `pii-detection` · **Severity**: Critical · **Default**: Enabled (enforce)
 
-Blocks dangerous SQL statements that could modify or destroy data.
+Detects personally identifiable information in trace input/output using a PII pre-processor.
+
+**How it works**:
+1. At least one entity in the trace must have the tag `detect_pii` set to `"true"`
+2. When the tag is present, LangGuard's PII pre-processor scans the trace and populates `input.pii_detection.matches`
+3. The policy emits a violation for each PII match found
 
 **What it detects**:
-- DROP statements
-- ALTER statements
-- TRUNCATE statements
-- DELETE without WHERE
-- Schema modifications
+- PII matches identified by the pre-processor (type, location, and span ID for each match)
+- Missing pre-processor results when the `detect_pii` tag is present (warns of misconfiguration)
 
-**Example violation**:
-```sql
-DROP TABLE users;  -- Blocked
-ALTER TABLE accounts ADD column;  -- Blocked
-```
-
-**When to use**: Enable when agents can generate or execute SQL queries.
+**When to use**: Enable for entities handling user data. Tag the relevant entities with `detect_pii: "true"` to activate scanning.
 
 ---
 
-### Prompt Injection Detection
+### Non-Human Identity Violation
 
-**Severity**: Critical
+**ID**: `nhi-violation` · **Severity**: High · **Default**: Disabled
 
-Detects attempts to manipulate AI agents through malicious prompts.
+Validates that non-human identities (NHIs) have proper Entra enrichment and service principal configuration.
 
 **What it detects**:
-- "Ignore previous instructions"
-- "Disregard all rules"
-- "Pretend you are..."
-- "Jailbreak" attempts
-- System prompt extraction
+- NHI without IDP enrichment (no identity provider data)
+- NHI without `service_principal_type` set
+- NHI with empty `service_principal_type`
+- NHI with a disabled account in the identity provider
 
-**Patterns**:
-```rego
-injection_patterns := [
-    `(?i)ignore (all )?(previous|prior|above)`,
-    `(?i)disregard (all )?(rules|instructions)`,
-    `(?i)pretend (you are|to be)`,
-    `(?i)forget (everything|all)`,
-    `(?i)what (is|are) your (system|initial) (prompt|instructions)`
-]
-```
+**Notes**:
+- Skips evaluation in development environments (when the entity has `stage: dev` tag)
+- Requires Microsoft Entra ID integration for IDP enrichment data
 
-**When to use**: Always enabled for user-facing AI applications.
+---
+
+### Unapproved Tool Use
+
+**ID**: `unapproved-tool-use` · **Severity**: High · **Default**: Enabled (enforce)
+
+Flags tools that are not approved in the entity catalog.
+
+**What it detects**:
+- **Unapproved tools** — Tools with resource type `mcp_tool`, `function`, or `tool` that don't have `approved` status in the Data Catalog
+- **Unresolved tools** — Tools that couldn't be matched to any entity in the catalog
+
+**When to use**: Enable to ensure agents only use sanctioned tools. Requires entities to be registered and approved in the [Data Catalog](/features/data-catalog).
 
 ---
 
 ## Compliance Policies
 
-### Sensitive Data Access
+### Approved Model Version
 
-**Severity**: High
+**ID**: `approved-model-version` · **Severity**: High · **Default**: Disabled
 
-Monitors access to sensitive data categories.
+Ensures only approved models deployed to production are used.
 
 **What it detects**:
-- Access to PII columns
-- Medical records queries
-- Financial data access
-- Authentication data exposure
+- **Unapproved models** — Models in the entity catalog with a status other than `approved`
+- **Non-production models** — Models that are approved but not deployed to production stage
+- **Unregistered models** — Models referenced in observations that have no entity catalog entry at all
 
-**Configuration**:
-```yaml
-sensitive_patterns:
-  - "*password*"
-  - "*ssn*"
-  - "*social_security*"
-  - "*credit_card*"
-  - "*medical*"
-  - "*health*"
-  - "*salary*"
-  - "*bank_account*"
-```
-
-**When to use**: Required for HIPAA, PCI-DSS, GDPR compliance.
+**When to use**: Enable when you need to control which AI models are used in production. Requires models to be registered in the [Data Catalog](/features/data-catalog).
 
 ---
 
-### Data Retention Compliance
+### Latency/Health Threshold
 
-**Severity**: High
+**ID**: `latency-health-threshold` · **Severity**: Medium · **Default**: Disabled
 
-Ensures data handling aligns with retention policies.
+Monitors request latency and error rates, flagging when operational thresholds are exceeded.
 
-**What it checks**:
-- Data accessed beyond retention period
-- Requests for deleted data
-- Archive compliance
+**What it detects**:
+- **Trace latency** — Overall trace latency exceeding threshold
+- **Error status** — Error, failed, timeout, or exception statuses in observations
+- **High error rate** — Error count across observations exceeding rate threshold
+- **Context window limits** — Input token counts exceeding configured maximum
 
-**When to use**: Required for regulatory compliance (GDPR right to erasure, etc.).
-
----
-
-### Model Version Control
-
-**Severity**: Medium
-
-Ensures only approved model versions are used.
-
-**What it checks**:
-- Model name against allowlist
-- Model version validation
-- Deprecated model detection
-
-**Configuration**:
-```yaml
-approved_models:
-  - "gpt-4"
-  - "gpt-4-turbo"
-  - "claude-3-opus"
-  - "claude-3-sonnet"
-
-deprecated_models:
-  - "gpt-3.5-turbo-0301"
-  - "text-davinci-003"
-```
-
-**When to use**: When you need to control which AI models are used.
+**Configuration** (`input.config`):
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `max_latency_ms` | `5000` | Maximum trace latency in milliseconds |
+| `max_error_rate` | `0.1` | Maximum error rate (0.0–1.0) |
+| `max_context_tokens` | _(disabled)_ | Maximum input tokens per observation |
 
 ---
 
-### Hallucination Risk Assessment
+### Cross-Boundary Access
 
-**Severity**: Medium
+**ID**: `cross-boundary-access` · **Severity**: Critical · **Default**: Enabled (enforce)
 
-Flags responses with low confidence or potential hallucinations.
+Detects agents accessing tools, data, or models outside their authorized stage boundary.
 
-**What it checks**:
-- Confidence scores below threshold
-- Claims without citations
-- Factual inconsistencies
-- "I don't know" overrides
+**Stage hierarchy**:
+| Stage | Level |
+|-------|-------|
+| `dev` / `poc` | 0 |
+| `staging` | 1 |
+| `prod` | 2 |
 
-**Thresholds**:
-```yaml
-min_confidence: 0.7
-require_citations: true
-max_claims_without_source: 2
-```
+**Rules**:
+- **Tools and data** — An agent cannot access resources at a *higher* stage. For example, a `dev` agent cannot use `prod` tools.
+- **Models** — Reversed: a higher-stage agent cannot use a *lower*-stage model. For example, a `prod` agent cannot use a `dev` model (to prevent unstable models in production). A `dev` agent *can* use a `prod` model.
 
-**When to use**: For applications where accuracy is critical (medical, legal, financial).
+**When to use**: Enable to enforce environment isolation. Requires entities to have `stage` tags set in the Data Catalog.
 
 ---
 
-## Cost Policies
+## Cost Policy
 
-### Token Usage Limits
+### Budget Overrun Detection
 
-**Severity**: Medium
+**ID**: `budget-overrun` · **Severity**: High · **Default**: Disabled
 
-Enforces token consumption limits to control costs.
+Tracks aggregated spend against budget thresholds, flagging when spending exceeds configured limits.
 
-**What it checks**:
-- Input tokens per request
-- Output tokens per request
-- Total tokens per request
-- Daily/monthly limits (coming soon)
+**What it detects**:
+- **Budget threshold exceeded** — Cumulative spend exceeding configured percentage of budget
+- **Trace cost exceeded** — Individual trace cost exceeding per-trace limit
+- **Token limit exceeded** — Total tokens per trace exceeding limit
+- **Cost anomaly** — Trace cost exceeding 5x the configured average cost
 
-**Default limits**:
-```yaml
-max_input_tokens: 4000
-max_output_tokens: 2000
-max_total_tokens: 6000
-```
-
-**When to use**: Always enabled to prevent runaway costs.
-
----
-
-### Output Length Limits
-
-**Severity**: Medium
-
-Limits response length to control costs and ensure conciseness.
-
-**What it checks**:
-- Character count
-- Word count
-- Token count
-
-**Default limits**:
-```yaml
-max_output_characters: 10000
-max_output_words: 2000
-max_output_tokens: 2000
-```
-
-**When to use**: For applications with response size requirements.
+**Configuration** (`input.config`):
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `budget_threshold_percent` | `80` | Percentage of budget that triggers a violation |
+| `budget_usd` | _(required)_ | Total budget in USD |
+| `max_cost_per_trace` | `1.00` | Maximum cost per individual trace |
+| `max_tokens_per_trace` | _(disabled)_ | Maximum total tokens per trace |
+| `avg_cost_per_trace` | _(disabled)_ | Average cost for anomaly detection (5x triggers) |
 
 ---
 
-## Performance Policies
+## Audit Policies
 
-### Rate Limiting
+### Mandatory Trace Logging
 
-**Severity**: Medium
+**ID**: `mandatory-trace-logging` · **Severity**: Low · **Default**: Enabled (enforce)
 
-Enforces request rate limits per agent or user.
+Verifies that traces include agent name and user identity metadata.
 
 **What it checks**:
-- Requests per minute
-- Requests per hour
-- Concurrent requests
+- **Agent name** (`gen_ai.agent.name`) — Checked in `metadata.attributes`, `metadata.mappedGenAI.agentName`, and `metadata.agent_name`
+- **User identity** (`gen_ai.agent.user.id`) — Checked in `metadata.attributes` and `metadata.mappedGenAI.userId`
 
-**Default limits**:
-```yaml
-max_requests_per_minute: 60
-max_requests_per_hour: 1000
-max_concurrent: 10
-```
+**When to use**: Enable to ensure all traces are attributable to a specific agent and user for audit purposes.
 
-**When to use**: To prevent abuse and ensure fair resource allocation.
+---
+
+### Metadata Tagging Requirements
+
+**ID**: `metadata-tagging` · **Severity**: Low · **Default**: Enabled (enforce)
+
+Checks that traces have required governance metadata fields and tags.
+
+**What it detects**:
+- **Missing required metadata** — Configurable list of required fields (default: `ai_app_id`, `department`)
+- **Empty metadata values** — Required fields that are present but empty
+- **Missing governance metadata** — For sensitive operations (data classified as confidential/restricted), requires `security_classification` and `data_owner`
+- **Missing required tags** — Configurable list of required trace tags
+- **Missing user attribution** — Traces without `user_id`, `actor_id`, or `userType` in metadata
+
+**Configuration** (`input.config`):
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `required_metadata` | `["ai_app_id", "department"]` | Fields required on all traces |
+| `required_tags` | `[]` | Tags required on all traces |
+| `require_user_attribution` | `true` | Whether user attribution is required |
 
 ---
 
@@ -265,17 +226,6 @@ max_concurrent: 10
 1. Navigate to **Policies**
 2. Find the policy
 3. Toggle **Enabled**
-
-### Via API
-
-```bash
-POST /api/policies/{id}/toggle
-Content-Type: application/json
-
-{
-  "enabled": true
-}
-```
 
 ## Customizing Built-in Policies
 

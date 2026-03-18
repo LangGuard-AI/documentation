@@ -4,13 +4,21 @@ title: Monitoring
 description: Real-time monitoring dashboards for AI operations
 ---
 
+import ThemedImage from '@theme/ThemedImage';
+
 # Monitoring
 
 LangGuard provides comprehensive monitoring capabilities to help you understand the health and performance of your AI operations.
 
 ## Dashboard Overview
 
-![Monitoring Dashboard](/img/monitoring-dashboard.png)
+<ThemedImage
+  alt="Monitoring Dashboard"
+  sources={{
+    light: '/img/monitoring-dashboard-light.png',
+    dark: '/img/monitoring-dashboard.png',
+  }}
+/>
 
 The main dashboard displays key metrics and recent activity at a glance:
 
@@ -138,11 +146,11 @@ Monitor the health of your data source connections:
 ┌─────────────────────────────────────────┐
 │  Integrations                            │
 ├─────────────────────────────────────────┤
-│  Langfuse (Production)    ● Connected   │
+│  Databricks (Production)  ● Connected   │
 │  Last Sync: 2 minutes ago               │
 │  Traces Synced: 12,456                  │
 ├─────────────────────────────────────────┤
-│  Databricks MLflow        ● Connected   │
+│  Azure AI Foundry         ● Connected   │
 │  Last Sync: 5 minutes ago               │
 │  Traces Synced: 3,421                   │
 └─────────────────────────────────────────┘
@@ -154,10 +162,10 @@ View recent sync operations:
 
 | Time | Integration | Status | Items |
 |------|-------------|--------|-------|
-| 2 min ago | Langfuse | ✓ Success | 45 traces |
-| 7 min ago | Langfuse | ✓ Success | 52 traces |
-| 12 min ago | Databricks | ✓ Success | 23 traces |
-| 17 min ago | Langfuse | ⚠ Warning | 0 traces (rate limited) |
+| 2 min ago | Databricks | ✓ Success | 45 traces |
+| 7 min ago | Databricks | ✓ Success | 52 traces |
+| 12 min ago | Azure AI Foundry | ✓ Success | 23 traces |
+| 17 min ago | Databricks | ⚠ Warning | 0 traces (rate limited) |
 
 ## Policy Violations
 
@@ -181,8 +189,8 @@ Quick list of recent policy triggers:
 | Time | Policy | Agent | Severity |
 |------|--------|-------|----------|
 | 5 min ago | PII Detection | EmailBot | Critical |
-| 12 min ago | Token Limits | ChatBot | Medium |
-| 1 hour ago | SQL Injection | DataAgent | High |
+| 12 min ago | Metadata Tagging | ChatBot | Low |
+| 1 hour ago | Credential Surface Discovery | DataAgent | Critical |
 
 Click any violation to view details in the Trace Explorer.
 
@@ -199,40 +207,6 @@ The dashboard automatically refreshes based on your sync interval:
 ### Manual Refresh
 
 Click the refresh button (↻) to force an update.
-
-## Exporting Data
-
-### Export Formats
-
-Export monitoring data for external analysis:
-
-- **JSON** - Complete data with metadata
-- **CSV** - Spreadsheet-compatible format
-- **PDF** - Formatted report (coming soon)
-
-### API Access
-
-Access metrics programmatically:
-
-```bash
-# Get dashboard metrics
-curl -X GET "https://api.langguard.ai/v1/metrics" \
-  -H "Authorization: Bearer $API_KEY"
-```
-
-Response:
-```json
-{
-  "timeRange": "24h",
-  "metrics": {
-    "totalTraces": 12456,
-    "successRate": 0.942,
-    "avgLatency": 1.23,
-    "activeAgents": 8,
-    "policyViolations": 33
-  }
-}
-```
 
 ## Best Practices
 
@@ -259,14 +233,6 @@ Schedule periodic reviews:
 - Daily: Quick health check
 - Weekly: Trend analysis
 - Monthly: Deep dive and optimization
-
-### 4. Configure Alerts (Coming Soon)
-
-Set up alerts for critical conditions:
-
-- Success rate drops below threshold
-- Latency exceeds limit
-- Policy violations spike
 
 ---
 

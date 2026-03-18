@@ -1,53 +1,95 @@
 ---
 sidebar_position: 1
 title: Integrations Overview
-description: Connect LangGuard to your AI observability platforms
+description: Connect LangGuard to your AI platforms and tools
 ---
+
+import ThemedImage from '@theme/ThemedImage';
 
 # Integrations Overview
 
-LangGuard integrates with leading AI observability and data platforms to provide unified governance and monitoring.
+LangGuard integrates with AI platforms, frameworks, coding agents, and identity providers to provide unified governance and monitoring.
+
+<ThemedImage
+  alt="Integrations Overview"
+  sources={{
+    light: '/img/integrations-light.png',
+    dark: '/img/integrations.png',
+  }}
+/>
 
 ## Supported Integrations
 
+### AI Gateways
+
 | Platform | Description | Status |
 |----------|-------------|--------|
-| [Langfuse](/integrations/langfuse) | LLM observability and tracing platform | ✓ Available |
+| [OpenRouter](/integrations/openrouter) | Multi-provider AI gateway | ✓ Available |
+| [LiteLLM](/integrations/litellm) | Unified LLM proxy | ✓ Available |
+| [Cloudflare](/integrations/cloudflare) | AI Gateway observability | ✓ Available |
+
+### AI Platforms
+
+| Platform | Description | Status |
+|----------|-------------|--------|
+| [Azure AI Foundry](/integrations/azure-ai-foundry) | Discover AI Foundry resources, deployments, and traces | ✓ Available |
 | [Databricks](/integrations/databricks) | Ingest from Unity Catalog, MLflow, Genie, and more | ✓ Available |
+| [AWS Bedrock](/integrations/aws-bedrock) | Discover Bedrock models, provisioned throughput, and invocations | ✓ Available |
+| Google Vertex AI | Google Cloud AI platform | 🚧 Coming Soon |
+
+### AI Frameworks
+
+| Platform | Description | Status |
+|----------|-------------|--------|
+| [MLflow](/integrations/mlflow) | ML lifecycle management platform | ✓ Available |
+| [LangChain](/integrations/langchain) | LLM application framework | ✓ Available |
+| [CrewAI](/integrations/crewai) | Multi-agent orchestration framework | ✓ Available |
+| [AWS AgentCore](/integrations/aws-agentcore) | Amazon Bedrock AgentCore observability | ✓ Available |
+
+### Coding Agents
+
+| Platform | Description | Status |
+|----------|-------------|--------|
 | [Cursor](/integrations/cursor) | AI-powered code editor integration | ✓ Available |
 | [Claude Code](/integrations/claude-code) | Anthropic Claude Code integration | ✓ Available |
+| [OpenCode](/integrations/opencode) | Open-source coding agent | ✓ Available |
+| Google Antigravity | Google AI coding agent | 🚧 Coming Soon |
 
-## Coming Soon
+### Identity Platforms
 
 | Platform | Description | Status |
 |----------|-------------|--------|
-| Google Vertex AI | Google Cloud AI platform | 🚧 Under Construction |
-| Microsoft CoPilot Studio | Microsoft AI assistant platform | 🚧 Under Construction |
-| AWS Bedrock | Amazon AI foundation models | 🚧 Under Construction |
-| ZScaler | Cloud security and compliance | 🚧 Under Construction |
-| Splunk | Security and observability platform | 🚧 Under Construction |
+| [Microsoft Entra ID](/integrations/entra-id) | Identity governance and user enrichment | ✓ Available |
+| [Google Workspace](/integrations/google-workspace) | Identity governance and user enrichment | ✓ Available |
+
+### Network Discovery
+
+| Platform | Description | Status |
+|----------|-------------|--------|
+| Splunk | Security and observability platform | 🚧 Coming Soon |
+| Microsoft Sentinel | Cloud-native SIEM platform | 🚧 Coming Soon |
+
+### Endpoint Discovery
+
+| Platform | Description | Status |
+|----------|-------------|--------|
+| Microsoft Defender | Endpoint detection and response | 🚧 Coming Soon |
 
 ## Architecture
 
 LangGuard uses a unified integration architecture:
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│                      LangGuard Dashboard                   │
-├────────────────────────────────────────────────────────────┤
-│                    Sync Orchestrator                       │
-├────────────────────────────────────────────────────────────┤
-│                   Connector Registry                       │
-├──────────┬──────────┬──────────┬──────────┬────────────────┤
-│ Langfuse │Databricks│  Cursor  │  Claude  │    Others      │
-└──────────┴──────────┴──────────┴──────────┴────────────────┘
-                          │
-            ┌─────────────┼─────────────┐
-            ▼             ▼             ▼
-      ┌───────────┐ ┌───────────┐ ┌───────────┐
-      │ Langfuse  │ │Databricks │ │  Cursor   │
-      │   Cloud   │ │   MLflow  │ │   IDE     │
-      └───────────┘ └───────────┘ └───────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                     LangGuard Dashboard                      │
+├──────────────────────────────────────────────────────────────┤
+│                    Sync Orchestrator                          │
+├──────────────────────────────────────────────────────────────┤
+│                   Connector Registry                         │
+├─────────┬──────────┬─────────┬─────────┬─────────┬──────────┤
+│ AI      │ AI       │ AI      │ Coding  │Identity │ Network  │
+│Gateways │Platforms │Frameworks│ Agents │Platforms│Discovery │
+└─────────┴──────────┴─────────┴─────────┴─────────┴──────────┘
 ```
 
 ### Key Features
@@ -62,29 +104,13 @@ LangGuard uses a unified integration architecture:
 
 ### Via UI
 
-1. Navigate to **Settings > Integrations**
+1. Navigate to **Integrations** in the sidebar
 2. Click **Add Integration**
-3. Select the platform
-4. Enter credentials
-5. Test connection
-6. Configure sync settings
+3. Browse categories to find your platform
+4. Click the platform card
+5. Enter credentials
+6. Test connection
 7. Save
-
-### Via API
-
-```bash
-curl -X POST "https://api.langguard.ai/v1/integrations" \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "type": "langfuse",
-    "name": "Production Langfuse",
-    "credentials": {
-      "publicKey": "pk-lf-...",
-      "secretKey": "sk-lf-..."
-    }
-  }'
-```
 
 ## Credential Security
 
@@ -113,22 +139,20 @@ Configure automatic synchronization:
 | Setting | Description | Default |
 |---------|-------------|---------|
 | **Enabled** | Auto-sync on/off | Yes |
-| **Interval** | Time between syncs | 5 minutes |
+| **Interval** | Time between syncs | 15 minutes |
 | **Lookback** | Days of history | 7 days |
 | **Batch Size** | Items per sync | 100 |
 
 ### Manual Sync
 
-Trigger sync on-demand:
-- Click **Sync Now** button
-- Or call `POST /api/integrations/{id}/sync`
+Trigger sync on-demand by clicking the **Sync Now** button on the integration card.
 
 ### Push-Based Ingestion
 
-For real-time ingestion, use OpenTelemetry webhooks:
+For real-time ingestion, use OpenTelemetry:
 
 ```bash
-POST /api/webhooks/opentelemetry
+POST /v1/traces
 Headers:
   x-tenant-slug: your-tenant
   x-otel-signature: sha256=<hmac-signature>
@@ -167,26 +191,26 @@ Common issues and solutions:
 
 See [Integration Issues](/troubleshooting/integration-issues) for detailed help.
 
-## Quick Links
+## Integration Guides
 
-<div className="homepage-features">
-
-### [Langfuse](/integrations/langfuse)
-LLM observability and tracing platform.
-
-### [Databricks](/integrations/databricks)
-Ingest from Unity Catalog, MLflow, Genie, and more.
-
-### [Cursor](/integrations/cursor)
-AI-powered code editor integration.
-
-### [Claude Code](/integrations/claude-code)
-Anthropic Claude Code integration.
-
-</div>
+- [OpenRouter](/integrations/openrouter) - Multi-provider AI gateway
+- [LiteLLM](/integrations/litellm) - Unified LLM proxy
+- [Cloudflare](/integrations/cloudflare) - AI Gateway observability
+- [Azure AI Foundry](/integrations/azure-ai-foundry) - Azure AI resources and traces
+- [Databricks](/integrations/databricks) - Unity Catalog, MLflow, and more
+- [AWS Bedrock](/integrations/aws-bedrock) - Bedrock models and invocations
+- [MLflow](/integrations/mlflow) - ML lifecycle management
+- [LangChain](/integrations/langchain) - LLM application framework
+- [CrewAI](/integrations/crewai) - Multi-agent orchestration
+- [AWS AgentCore](/integrations/aws-agentcore) - Bedrock AgentCore observability
+- [Cursor](/integrations/cursor) - AI-powered code editor
+- [Claude Code](/integrations/claude-code) - Anthropic Claude Code CLI
+- [OpenCode](/integrations/opencode) - Open-source coding agent
+- [Microsoft Entra ID](/integrations/entra-id) - Identity governance and user enrichment
+- [Google Workspace](/integrations/google-workspace) - Identity governance and user enrichment
 
 ---
 
 ## Need a New Integration?
 
-Don't see your platform? [Request an integration](https://github.com/LangGuard-AI/webapp/issues/new?template=integration-request.md) or check our [developer guide](https://github.com/LangGuard-AI/webapp/blob/main/docs/guides/adding-integrations.md) to build your own connector.
+Don't see your platform? Contact [info@langguard.ai](mailto:info@langguard.ai) to request an integration.

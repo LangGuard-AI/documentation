@@ -4,15 +4,23 @@ title: Discovery & Inventory
 description: Automatically discover and catalog AI assets across your organization
 ---
 
+import ThemedImage from '@theme/ThemedImage';
+
 # Discovery & Inventory
 
 LangGuard automatically discovers and catalogs AI assets from your connected integrations, giving you a complete picture of your AI ecosystem.
 
 ## Overview
 
-![Discovery Dashboard](/img/discovery-dashboard.png)
+<ThemedImage
+  alt="Discovery Dashboard"
+  sources={{
+    light: '/img/discovery-dashboard-light.png',
+    dark: '/img/discovery-dashboard.png',
+  }}
+/>
 
-When you connect integrations like Langfuse or Databricks, LangGuard analyzes incoming trace data to:
+When you connect integrations like Databricks or Azure AI Foundry, LangGuard analyzes incoming trace data to:
 
 - Identify unique AI agents
 - Catalog models being used
@@ -73,7 +81,7 @@ External systems agents interact with:
 
 ### Agent List
 
-Navigate to **Dashboard** or **Agent Activity** to see discovered agents:
+Navigate to **Discovery** in the sidebar to see discovered agents:
 
 ```
 ┌──────────────────────────────────────┐
@@ -161,17 +169,6 @@ Discovery is enabled by default. To disable:
 2. Select your integration
 3. Toggle **Auto Discovery** off
 
-### Discovery Scope
-
-Control what gets discovered:
-
-```bash
-# Environment variables
-DISCOVERY_INCLUDE_TOOLS=true
-DISCOVERY_INCLUDE_MODELS=true
-DISCOVERY_TRACK_DEPENDENCIES=true
-```
-
 ### Refresh Interval
 
 Discovery updates with each sync. Adjust sync frequency to control freshness:
@@ -242,6 +239,43 @@ If tool usage isn't appearing:
 1. Ensure traces include tool/span information
 2. Check that tool calls are instrumented
 3. Verify the integration supports span data
+
+## Dashboard Views
+
+The Discovery dashboard includes several summary views that provide different perspectives on your AI ecosystem.
+
+### AI Platform Usage Summary
+
+See aggregated usage statistics per connected integration:
+
+- **Integration name** and type
+- **Total traces** ingested from each platform
+- **Active agents** per integration
+- **Last sync** timestamp and sync health
+
+This view helps you understand which platforms are most active and whether integrations are syncing as expected.
+
+### User Access Summary
+
+Understand who has access to AI assets across your organization:
+
+- **Users** with access to each integration
+- **Access level** per user (admin, member, viewer)
+- **Last active** timestamp
+- **Asset count** each user interacts with
+
+Use this view to identify over-permissioned users or access that needs review.
+
+### AI Assets by Business Units
+
+See how AI assets are distributed across organizational units:
+
+- **Business unit** breakdown (by team, department, or custom grouping)
+- **Asset count** per unit
+- **Approval status** distribution within each unit
+- **Drill-down** to see specific assets in each unit
+
+This view is especially useful for governance teams managing AI adoption across a large organization.
 
 ---
 

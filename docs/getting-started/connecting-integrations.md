@@ -1,12 +1,12 @@
 ---
 sidebar_position: 3
 title: Connecting Integrations
-description: Link your observability platforms to LangGuard
+description: Link your AI platforms and tools to LangGuard
 ---
 
 # Connecting Integrations
 
-LangGuard connects to your existing AI observability platforms to aggregate and analyze your agent data. This guide covers how to connect each supported platform.
+LangGuard connects to your AI platforms, frameworks, coding agents, and identity providers to aggregate and analyze your data. This guide covers how to connect supported platforms.
 
 ## Overview
 
@@ -14,82 +14,187 @@ To connect an integration:
 
 1. Navigate to **Integrations** in the sidebar
 2. Click **Add Integration**
-3. Select your platform
-4. Enter your credentials
-5. Test the connection
-6. Save and start syncing
+3. Browse the categories to find your platform
+4. Click the platform card
+5. Enter your credentials
+6. Test the connection
+7. Save and start syncing
 
 ## Supported Platforms
 
+### AI Gateways
+
 | Platform | What You'll Need |
 |----------|------------------|
-| [Langfuse](#langfuse) | Public Key, Secret Key |
-| [Databricks](#databricks) | Workspace URL, Access Token |
-| [Claude Code](#ide-integrations) | Environment variables |
-| [Cursor](#ide-integrations) | GitHub plugin |
+| [OpenRouter](/integrations/openrouter) | API Key |
+| [LiteLLM](/integrations/litellm) | Proxy URL, API Key |
+| [Cloudflare](/integrations/cloudflare) | Account ID, API Token |
+
+### AI Platforms
+
+| Platform | What You'll Need |
+|----------|------------------|
+| [Databricks](/integrations/databricks) | Workspace URL, Access Token |
+| [Azure AI Foundry](/integrations/azure-ai-foundry) | Subscription ID, Client credentials |
+| [AWS Bedrock](/integrations/aws-bedrock) | AWS Access Key, Secret Key, Region |
+
+### AI Frameworks
+
+| Platform | What You'll Need |
+|----------|------------------|
+| [MLflow](/integrations/mlflow) | Tracking URI, API Token |
+| [LangChain](/integrations/langchain) | OpenTelemetry environment variables |
+| [CrewAI](/integrations/crewai) | OpenTelemetry environment variables |
+| [AWS AgentCore](/integrations/aws-agentcore) | AWS credentials, Region |
+
+### Coding Agents
+
+| Platform | What You'll Need |
+|----------|------------------|
+| [Claude Code](/integrations/claude-code) | OpenTelemetry environment variables |
+| [Cursor](/integrations/cursor) | GitHub plugin |
+| [OpenCode](/integrations/opencode) | OpenTelemetry environment variables |
+
+### Identity Platforms
+
+| Platform | What You'll Need |
+|----------|------------------|
+| [Microsoft Entra ID](/integrations/entra-id) | Tenant ID, Client ID, Client Secret |
+| [Google Workspace](/integrations/google-workspace) | Service account credentials |
+
+See the [Integrations Overview](/integrations) for the full list of supported and upcoming platforms.
 
 ---
 
-## Langfuse
+## Connecting AI Gateways
 
-[Langfuse](https://langfuse.com) is an open-source LLM observability platform.
+AI gateways proxy LLM traffic through a central point, making them a convenient integration option since all model calls are captured automatically.
 
-### Get Your Credentials
+### OpenRouter
 
-1. Log in to [Langfuse Cloud](https://cloud.langfuse.com) (or your self-hosted instance)
-2. Select your project
-3. Go to **Settings** → **API Keys**
-4. Copy the **Public Key** (starts with `pk-lf-`)
-5. Copy the **Secret Key** (starts with `sk-lf-`)
+1. Click **Add Integration** > **AI Gateways** > **OpenRouter**
+2. Enter your **API Key** (from your OpenRouter dashboard)
+3. Click **Test Connection**, then **Save**
 
-### Connect in LangGuard
+### LiteLLM
 
-1. Click **Add Integration** → **Langfuse**
+1. Click **Add Integration** > **AI Gateways** > **LiteLLM**
 2. Enter:
-   - **Name**: A friendly name (e.g., "Production")
-   - **Public Key**: Your public key
-   - **Secret Key**: Your secret key
-   - **Host URL**: Leave blank for Langfuse Cloud, or enter your self-hosted URL
-3. Click **Test Connection**
-4. Click **Save**
+   - **Proxy URL**: Your LiteLLM proxy endpoint
+   - **API Key**: Your LiteLLM master key
+3. Click **Test Connection**, then **Save**
 
-For more details, see [Langfuse Integration Guide](/integrations/langfuse).
+### Cloudflare AI Gateway
+
+1. Click **Add Integration** > **AI Gateways** > **Cloudflare**
+2. Enter:
+   - **Account ID**: Your Cloudflare account ID
+   - **API Token**: A Cloudflare API token with AI Gateway read permissions
+3. Click **Test Connection**, then **Save**
 
 ---
 
-## Databricks
+## Connecting AI Platforms
 
-[Databricks](https://databricks.com) MLflow provides ML experiment tracking and trace logging.
+### Databricks
 
-### Get Your Credentials
-
-1. Log in to your Databricks workspace
-2. Click your profile → **User Settings**
-3. Go to **Access Tokens** → **Generate New Token**
-4. Copy the token (starts with `dapi`)
-
-### Connect in LangGuard
-
-1. Click **Add Integration** → **Databricks**
+1. Click **Add Integration** > **AI Platforms** > **Databricks**
 2. Enter:
-   - **Name**: A friendly name
+   - **Name**: A friendly name (e.g., "Production Databricks")
    - **Host URL**: Your workspace URL (e.g., `https://dbc-xxx.cloud.databricks.com`)
-   - **Access Token**: Your personal access token
-3. Click **Test Connection**
-4. Click **Save**
+   - **Access Token**: Your personal access token (starts with `dapi`)
+3. Click **Test Connection**, then **Save**
 
-For more details, see [Databricks Integration Guide](/integrations/databricks).
+:::info Where to Find Databricks Tokens
+1. Log in to your Databricks workspace
+2. Click your profile > **User Settings**
+3. Go to **Access Tokens** > **Generate New Token**
+:::
+
+For detailed configuration including Unity Catalog sync and Python bridge setup, see the [Databricks Integration Guide](/integrations/databricks).
+
+### Azure AI Foundry
+
+1. Click **Add Integration** > **AI Platforms** > **Azure AI Foundry**
+2. Enter:
+   - **Subscription ID**: Your Azure subscription ID
+   - **Client ID**: Azure AD application client ID
+   - **Client Secret**: Azure AD application client secret
+   - **Tenant ID**: Your Azure AD tenant ID
+3. Click **Test Connection**, then **Save**
+
+### AWS Bedrock
+
+1. Click **Add Integration** > **AI Platforms** > **AWS Bedrock**
+2. Enter:
+   - **Access Key ID**: Your AWS access key
+   - **Secret Access Key**: Your AWS secret key
+   - **Region**: The AWS region where Bedrock is enabled (e.g., `us-east-1`)
+3. Click **Test Connection**, then **Save**
 
 ---
 
-## IDE Integrations
+## Connecting AI Frameworks
 
-LangGuard also supports direct telemetry from AI-powered development tools:
+AI framework integrations use OpenTelemetry to send traces directly to LangGuard.
 
-- **[Claude Code](/integrations/claude-code)** - Anthropic's CLI tool for AI-assisted development
-- **[Cursor](/integrations/cursor)** - AI-powered code editor
+### MLflow
 
-These integrations send traces directly to LangGuard via OpenTelemetry, enabling real-time monitoring of agent activity, tool usage, and performance metrics.
+1. Click **Add Integration** > **AI Frameworks** > **MLflow**
+2. Enter:
+   - **Tracking URI**: Your MLflow tracking server URL
+   - **API Token**: Authentication token (if required)
+3. Click **Test Connection**, then **Save**
+
+### LangChain / CrewAI / AWS AgentCore
+
+These frameworks integrate via OpenTelemetry environment variables:
+
+1. Click **Add Integration** and select your framework
+2. LangGuard generates the OTLP endpoint and API key for your integration
+3. Set the environment variables in your application:
+
+```bash
+export OTEL_EXPORTER_OTLP_ENDPOINT="https://app.langguard.ai"
+export OTEL_EXPORTER_OTLP_PROTOCOL="http/json"
+export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer YOUR_API_KEY"
+```
+
+4. Restart your application to begin sending traces
+
+---
+
+## Connecting Coding Agents
+
+Coding agent integrations send traces directly to LangGuard via OpenTelemetry, enabling real-time monitoring of agent activity, tool usage, and performance metrics.
+
+- **[Claude Code](/integrations/claude-code)** — Set environment variables to send OTLP traces
+- **[Cursor](/integrations/cursor)** — Install the GitHub plugin for hook-based tracing
+- **OpenCode** — Set environment variables to send OTLP traces
+
+See the individual integration guides for step-by-step setup.
+
+---
+
+## Connecting Identity Platforms
+
+Identity platform integrations enrich LangGuard data with user and group information for governance and access tracking.
+
+### Microsoft Entra ID
+
+1. Click **Add Integration** > **Identity Platforms** > **Microsoft Entra ID**
+2. Enter:
+   - **Tenant ID**: Your Azure AD tenant ID
+   - **Client ID**: Application (client) ID
+   - **Client Secret**: Application client secret
+3. Click **Test Connection**, then **Save**
+
+### Google Workspace
+
+1. Click **Add Integration** > **Identity Platforms** > **Google Workspace**
+2. Upload your **service account credentials** JSON file
+3. Enter the **admin email** for domain-wide delegation
+4. Click **Test Connection**, then **Save**
 
 ---
 
@@ -134,7 +239,7 @@ Each integration shows:
 
 ### Rate Limit Errors
 
-- Increase the sync interval (e.g., 10 minutes instead of 5)
+- Increase the sync interval (e.g., 30 minutes instead of 15)
 - Some platforms have API rate limits
 
 See [Integration Issues](/troubleshooting/integration-issues) for more help.

@@ -63,18 +63,9 @@ Before diving into specific issues, try these quick fixes:
 
 ### Documentation
 
-<div className="homepage-features">
-
-### [Common Issues](/troubleshooting/common-issues)
-Solutions for login, data, and UI problems.
-
-### [Integration Issues](/troubleshooting/integration-issues)
-Help with connecting data sources.
-
-### [FAQ](/troubleshooting/faq)
-Frequently asked questions.
-
-</div>
+- [Common Issues](/troubleshooting/common-issues) - Solutions for login, data, and UI problems
+- [Integration Issues](/troubleshooting/integration-issues) - Help with connecting data sources
+- [FAQ](/troubleshooting/faq) - Frequently asked questions
 
 ### Self-Service Tips
 
