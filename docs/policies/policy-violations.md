@@ -4,9 +4,19 @@ title: Policy Violations
 description: Understanding and managing policy violations
 ---
 
+import ThemedImage from '@theme/ThemedImage';
+
 # Policy Violations
 
 When traces trigger enabled policies, LangGuard records violations with full context for investigation and remediation.
+
+<ThemedImage
+  alt="Policy Detail and Violations"
+  sources={{
+    light: '/img/policies-violations-light.png',
+    dark: '/img/policies-violations.png',
+  }}
+/>
 
 ## Understanding Violations
 
@@ -62,9 +72,9 @@ Navigate to **Policies > Violations**:
 │  Time       │ Policy          │ Severity │ Agent    │ Status  │
 ├─────────────┼─────────────────┼──────────┼──────────┼─────────┤
 │  10:30 AM   │ PII Detection   │ Critical │ ChatBot  │ New     │
-│  10:28 AM   │ Token Limits    │ Medium   │ DataBot  │ New     │
-│  10:15 AM   │ SQL Injection   │ High     │ QueryBot │ Ack     │
-│  10:00 AM   │ Rate Limiting   │ Medium   │ ChatBot  │ Resolved│
+│  10:28 AM   │ Metadata Tag    │ Low      │ DataBot  │ New     │
+│  10:15 AM   │ Credential Srf  │ Critical │ QueryBot │ Ack     │
+│  10:00 AM   │ Trace Logging   │ Low      │ ChatBot  │ Resolved│
 └─────────────┴─────────────────┴──────────┴──────────┴─────────┘
 ```
 
@@ -162,9 +172,9 @@ See which policies trigger most:
 Top Policies (Last 7 Days)
 ────────────────────────────────────
 1. PII Detection        18 violations
-2. Token Limits         15 violations
-3. Rate Limiting        12 violations
-4. SQL Injection         5 violations
+2. Metadata Tagging     15 violations
+3. Credential Surface   12 violations
+4. Unapproved Tool       5 violations
 ```
 
 ### By Agent
@@ -207,8 +217,8 @@ In trace details, violations appear prominently:
 │  🔴 Critical: PII Data Detection         │
 │     Email address in output              │
 ├──────────────────────────────────────────┤
-│  🟡 Medium: Token Limits                 │
-│     2,150 tokens (limit: 2,000)          │
+│  🟡 Low: Metadata Tagging                │
+│     Required field missing: ai_app_id    │
 └──────────────────────────────────────────┘
 ```
 
@@ -225,53 +235,9 @@ Evidence:
 └── Context: "...contact us at user@example.com for..."
 ```
 
-## API Access
+For programmatic access to violations, see the [API documentation](https://app.langguard.ai/swagger).
 
-### List Violations
-
-```bash
-GET /api/policies/violations?severity=critical&status=new&limit=50
-```
-
-Response:
-```json
-{
-  "violations": [
-    {
-      "id": "viol_123",
-      "policyId": "pol_456",
-      "policyName": "PII Detection",
-      "severity": "critical",
-      "traceId": "tr_abc",
-      "message": "Email address detected",
-      "evidence": {"pattern": "email", "value": "user@example.com"},
-      "status": "new",
-      "createdAt": "2024-03-15T10:30:00Z"
-    }
-  ],
-  "total": 47
-}
-```
-
-### Get Violations by Trace
-
-```bash
-GET /api/policies/violations/by-trace/:traceId
-```
-
-### Update Violation Status
-
-```bash
-PATCH /api/policies/violations/:id
-Content-Type: application/json
-
-{
-  "status": "acknowledged",
-  "notes": "Investigating with security team"
-}
-```
-
-## Workflows
+## Incident Response
 
 ### Incident Response
 
@@ -306,15 +272,6 @@ When violations are false positives:
 3. Mark violation as resolved
 4. Add note: "False positive - policy adjusted"
 5. Monitor for recurrence
-
-## Notifications (Coming Soon)
-
-Configure alerts for violations:
-
-- Email notifications for Critical
-- Slack integration for High+
-- Webhook for custom integrations
-- Daily digest reports
 
 ## Best Practices
 

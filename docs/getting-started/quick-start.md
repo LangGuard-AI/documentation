@@ -10,7 +10,7 @@ This guide walks you through your first steps with LangGuard. By the end, you'll
 
 ## Step 1: Sign In
 
-1. Go to [app.langguard.ai](https://app.langguard.ai)
+1. Go to your organization's LangGuard URL
 2. Click **Sign in with Google** (or use your SSO provider if configured)
 3. Authorize LangGuard to access your account
 
@@ -24,12 +24,13 @@ After signing in, you'll see the main dashboard:
 
 ### Navigation Sidebar
 
-- **Dashboard** - Overview metrics and recent activity
-- **Monitoring** - Visualize agent behavior
+- **Discovery** - Discover and inventory AI assets
+- **Monitoring** - Overview metrics and recent activity
 - **Trace Explorer** - Search and analyze traces
 - **Policies** - Manage governance rules
 - **Data Catalog** - Browse discovered entities
-- **Integrations** - Configure data sources
+- **Integrations** - Configure data sources (Admin only)
+- **Settings** - Workspace configuration, users, SSO, and more (gear icon)
 
 ### Dashboard Overview
 
@@ -46,22 +47,22 @@ To see your AI agent data in LangGuard, connect an integration.
 
 ### Navigate to Integrations
 
-1. Click **Integrations** in the sidebar (or the gear icon)
+1. Click **Integrations** in the sidebar
 2. Click **Add Integration**
-3. Select your platform (e.g., **Langfuse**)
+3. Browse categories and select your platform (e.g., **Databricks**)
 
 ### Enter Credentials
 
-For Langfuse as an example:
+For Databricks as an example:
 
-1. **Name**: Give it a friendly name (e.g., "Production Langfuse")
-2. **Public Key**: Your Langfuse public key (starts with `pk-lf-`)
-3. **Secret Key**: Your Langfuse secret key (starts with `sk-lf-`)
+1. **Name**: Give it a friendly name (e.g., "Production Databricks")
+2. **Host URL**: Your workspace URL (e.g., `https://dbc-xxx.cloud.databricks.com`)
+3. **Access Token**: Your personal access token (starts with `dapi`)
 
-:::info Where to Find Langfuse Keys
-1. Log in to [Langfuse Cloud](https://cloud.langfuse.com)
-2. Go to your project → **Settings** → **API Keys**
-3. Copy the Public Key and Secret Key
+:::info Where to Find Databricks Tokens
+1. Log in to your Databricks workspace
+2. Click your profile → **User Settings**
+3. Go to **Access Tokens** → **Generate New Token**
 :::
 
 ### Test and Save
@@ -72,22 +73,15 @@ For Langfuse as an example:
 
 See [Connecting Integrations](/getting-started/connecting-integrations) for detailed guides for each platform.
 
-## Step 4: Sync Your Data
+## Step 4: View Your Data
 
-Once connected, LangGuard syncs your traces automatically.
+How traces arrive in LangGuard depends on the type of integration you connected:
 
-### Automatic Sync
+- **OTLP-based integrations** (LangChain, CrewAI, Claude Code, Cursor, OpenCode) — Traces are pushed to LangGuard in real time as your agents run. No sync step is needed.
+- **Platform integrations** (Databricks, Azure AI Foundry, AWS Bedrock) — Traces are delivered via webhook in real time through LangGuard's OpenCITE connector.
+- **Polling integrations** — Some integrations periodically fetch new traces. The default interval is 15 minutes, configurable from 1 minute to 1 hour. When no users are active, the interval automatically backs off to conserve resources.
 
-By default, LangGuard syncs every 5 minutes. You can see:
-- **Last Sync** time on the integration card
-- **Sync Status** indicator (green = healthy)
-
-### Manual Sync
-
-To sync immediately:
-1. Find your integration in the list
-2. Click the **Sync** button (refresh icon)
-3. Wait for sync to complete
+For polling integrations, you can see the **Last Sync** time and **Sync Status** on the integration card. Click the **Sync** button (refresh icon) to trigger an immediate sync.
 
 ## Step 5: Explore Your Traces
 
@@ -114,28 +108,15 @@ Use the controls to find specific traces:
    - **Input/Output** - Request and response data
    - **Violations** - Any triggered policies
 
-## Step 6: Try Agent Activity View
-
-For a visual overview of your agents:
-
-1. In Trace Explorer, find the view toggle
-2. Click **Agent Activity**
-3. Select agents from the left panel
-4. Explore different visualizations:
-   - **Timeline** - When traces occurred
-   - **Performance** - Success rates, latency
-   - **Tools** - Tool usage heatmap
-   - **Graph** - Dependencies
-
-## Step 7: Enable Policies (Optional)
+## Step 6: Enable Policies (Optional)
 
 Policies automatically detect issues in your traces.
 
 1. Click **Policies** in the sidebar
 2. Browse available policies:
    - PII Detection
-   - Token Limits
-   - Prompt Injection Detection
+   - Credential Surface Discovery
+   - Unapproved Tool Use
    - And more...
 3. Toggle **Enabled** for policies you want active
 4. View violations in **Policies > Violations**
@@ -150,21 +131,10 @@ You've successfully:
 
 ## What's Next?
 
-<div className="homepage-features">
-
-### [Connect More Integrations](/integrations)
-Add Databricks, LangSmith, and other platforms.
-
-### [Explore Features](/features)
-Deep-dive into all LangGuard capabilities.
-
-### [Set Up Policies](/policies)
-Configure governance rules for your AI agents.
-
-### [Troubleshooting](/troubleshooting)
-Get help with common issues.
-
-</div>
+- [Connect More Integrations](/integrations) - Add more AI platforms, frameworks, and tools
+- [Explore Features](/features) - Deep-dive into all LangGuard capabilities
+- [Set Up Policies](/policies) - Configure governance rules for your AI agents
+- [Troubleshooting](/troubleshooting) - Get help with common issues
 
 ---
 

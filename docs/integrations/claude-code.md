@@ -26,7 +26,7 @@ Configure Claude Code to send OpenTelemetry traces directly to LangGuard by sett
 
 | Variable | Value | Description |
 |----------|-------|-------------|
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | `https://dev.app.langguard.ai/api/otel/webhook` | LangGuard OTEL webhook endpoint |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | `https://app.langguard.ai` | LangGuard OTLP endpoint |
 | `OTEL_EXPORTER_OTLP_PROTOCOL` | `http/json` | Protocol for OTLP export |
 | `OTEL_SERVICE_NAME` | `claude-code-agent` | Service name (optional) |
 
@@ -38,7 +38,7 @@ Add the following to your `~/.bashrc` or `~/.zshrc`:
 
 ```bash
 # Add to ~/.bashrc or ~/.zshrc
-export OTEL_EXPORTER_OTLP_ENDPOINT="https://dev.app.langguard.ai/api/otel/webhook"
+export OTEL_EXPORTER_OTLP_ENDPOINT="https://app.langguard.ai"
 export OTEL_EXPORTER_OTLP_PROTOCOL="http/json"
 export OTEL_SERVICE_NAME="claude-code-agent"
 ```
@@ -55,7 +55,7 @@ Add the following to your PowerShell profile:
 
 ```powershell
 # Add to PowerShell profile
-$env:OTEL_EXPORTER_OTLP_ENDPOINT="https://dev.app.langguard.ai/api/otel/webhook"
+$env:OTEL_EXPORTER_OTLP_ENDPOINT="https://app.langguard.ai"
 $env:OTEL_EXPORTER_OTLP_PROTOCOL="http/json"
 $env:OTEL_SERVICE_NAME="claude-code-agent"
 ```

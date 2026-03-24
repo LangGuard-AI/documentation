@@ -54,14 +54,7 @@ cd .cursor/hooks && npm install
 
 ### Step 3: Configure Environment
 
-Create a `.env` file in your project root with your LangGuard/Langfuse credentials as specified in the repository's README.
-
-```bash
-# Example .env configuration
-LANGFUSE_PUBLIC_KEY=pk-lf-your-public-key
-LANGFUSE_SECRET_KEY=sk-lf-your-secret-key
-LANGFUSE_HOST=https://cloud.langfuse.com
-```
+Create a `.env` file in your project root with your LangGuard credentials as specified in the repository's README.
 
 :::tip
 Refer to the [README.md](https://github.com/LangGuard-AI/cursor-otel-hook#readme) for full configuration options and troubleshooting.
@@ -108,7 +101,7 @@ Model Context Protocol interactions are tracked:
 ### No Traces Appearing
 
 1. Verify `.env` credentials are correct
-2. Check network connectivity to Langfuse
+2. Check network connectivity to LangGuard
 3. Review plugin logs in Cursor's developer console
 
 ### Missing Events

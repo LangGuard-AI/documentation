@@ -12,18 +12,21 @@ description: Frequently asked questions about LangGuard
 
 LangGuard is an AI governance and observability platform that helps organizations monitor, manage, and secure their AI agent operations. It aggregates data from multiple observability platforms and provides unified governance through policy enforcement.
 
-### What observability platforms does LangGuard support?
+### What platforms does LangGuard support?
 
-LangGuard connects to:
-- Langfuse
-- Databricks MLflow
-- LangSmith
-- Braintrust
-- Helicone
-- Phoenix (Arize)
-- Weave (Weights & Biases)
+LangGuard connects to a wide range of platforms organized by category:
 
-More integrations are coming soon. Contact us if you need a specific platform.
+**AI Gateways**: OpenRouter, LiteLLM, Cloudflare
+
+**AI Platforms**: Azure AI Foundry, Databricks, AWS Bedrock
+
+**AI Frameworks**: MLflow, LangChain, CrewAI, AWS AgentCore
+
+**Coding Agents**: Cursor, Claude Code, OpenCode
+
+**Identity Platforms**: Microsoft Entra ID, Google Workspace
+
+See the [Integrations Overview](/integrations) for the full list including upcoming integrations.
 
 ### Do I need multiple integrations?
 
@@ -35,7 +38,7 @@ No. You can use LangGuard with just one integration. Start with your primary obs
 
 ### How do I sign up?
 
-1. Visit [app.langguard.ai](https://app.langguard.ai)
+1. Visit your organization's LangGuard URL
 2. Sign in with your work email (Google OAuth or SSO)
 3. Follow the onboarding to connect your first integration
 
@@ -51,9 +54,8 @@ No. You can use LangGuard with just one integration. Start with your primary obs
 | Role | What They Can Do |
 |------|------------------|
 | **Viewer** | View dashboards, traces, and reports |
-| **Analyst** | Viewer + export data, create saved views |
-| **Editor** | Analyst + manage integrations and policies |
-| **Admin** | Editor + manage users and settings |
+| **Member** | Viewer + interact with features, apply tags, limited settings access |
+| **Admin** | Member + manage users, settings, and tenant configuration |
 
 ---
 
@@ -83,9 +85,8 @@ Yes. All data is encrypted:
 ### Can I delete my data?
 
 Yes. You can:
-- Delete individual traces
 - Remove integrations (stops sync)
-- Contact support for complete data deletion
+- Contact support for data deletion
 
 ### Does LangGuard share my data?
 
@@ -97,22 +98,24 @@ No. We don't share, sell, or use your data for any purpose other than providing 
 
 ### How often does LangGuard sync data?
 
-By default, every 5 minutes. You can configure this from 1 minute to 1 hour in your integration settings.
+It depends on the integration type:
+- **OTLP and webhook integrations** (LangChain, CrewAI, Claude Code, Databricks, Azure AI Foundry, etc.) deliver traces in real time — no polling interval applies.
+- **Polling integrations** sync every 15 minutes by default. You can configure this from 1 minute to 1 hour in your integration settings. The interval automatically backs off during idle periods.
 
 ### Can I trigger a manual sync?
 
-Yes. Click the **Sync** button on any integration card to sync immediately.
+Yes. For polling integrations, click the **Sync** button on the integration card to sync immediately.
 
 ### What happens if a sync fails?
 
 - Previous data remains available
-- LangGuard will retry on the next sync interval
+- LangGuard will retry on the next sync interval (up to 3 retries)
 - You'll see "Failed" status with error details
 - Check [Integration Issues](/troubleshooting/integration-issues) for help
 
 ### Can I connect multiple accounts?
 
-Yes. You can add multiple integrations of the same type. For example, multiple Langfuse projects or multiple Databricks workspaces.
+Yes. You can add multiple integrations of the same type. For example, multiple Databricks workspaces or multiple Azure AI Foundry subscriptions.
 
 ---
 
@@ -125,17 +128,16 @@ Policies are rules that automatically evaluate your AI traces to detect security
 ### Are policies included?
 
 Yes. LangGuard includes 10 built-in policies covering:
-- PII detection
-- SQL injection prevention
-- Token usage limits
-- Prompt injection detection
-- And more
+- Credential Surface Discovery and PII Detection
+- Unapproved Tool Use and Cross-Boundary Access
+- Budget Overrun Detection and Latency/Health Thresholds
+- Mandatory Trace Logging and Metadata Tagging
 
 See [Built-in Policies](/policies/built-in-policies) for the complete list.
 
 ### Can I create custom policies?
 
-Yes, on Pro and Enterprise plans. You can write custom policies using Rego language. See [Creating Policies](/policies/creating-policies).
+Yes. You can write custom policies using Rego language. See [Creating Policies](/policies/creating-policies).
 
 ### How do I know if a policy is triggered?
 
@@ -143,42 +145,6 @@ When a trace violates a policy:
 1. It appears in **Policies > Violations**
 2. The trace shows a violation badge in Trace Explorer
 3. (Coming soon) You can set up alerts
-
----
-
-## Billing & Plans
-
-### Is there a free tier?
-
-Yes. The free tier includes:
-- Unlimited traces
-- 2 integrations
-- Built-in policies
-- Basic support
-
-### What's included in paid plans?
-
-**Pro**:
-- Unlimited integrations
-- Custom policies
-- Data catalog
-- Priority support
-
-**Enterprise**:
-- SSO/SAML
-- Multi-tenant workspaces
-- SLA guarantees
-- Dedicated support
-
-See [Pricing](mailto:info@langguard.ai) for details.
-
-### How do I upgrade my plan?
-
-Go to **Settings > Billing** and select the plan you want. Changes take effect immediately.
-
-### Can I cancel anytime?
-
-Yes. You can downgrade or cancel from **Settings > Billing**. You'll retain access until the end of your billing period.
 
 ---
 
@@ -193,11 +159,11 @@ Integration API keys are:
 
 ### Do you support SSO?
 
-Yes, on Enterprise plans. We support:
-- Okta
-- Azure AD
-- SAML 2.0 providers
-- OIDC providers
+Yes. We support:
+- Microsoft Entra ID (Azure AD)
+- Google Workspace
+
+See [SSO Settings](/settings/sso) for configuration details.
 
 ### Can I restrict who can access LangGuard?
 
@@ -239,13 +205,6 @@ Contact [info@langguard.ai](mailto:info@langguard.ai) to request account deletio
 
 1. **Documentation**: Check our docs for answers
 2. **Email**: [info@langguard.ai](mailto:info@langguard.ai)
-3. **In-app help**: Use the help menu in the application
-
-### What's your support response time?
-
-- **Free tier**: Within 2 business days
-- **Pro**: Within 1 business day
-- **Enterprise**: Same day (with SLA)
 
 ---
 

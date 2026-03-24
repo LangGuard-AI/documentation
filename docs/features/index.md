@@ -64,18 +64,7 @@ Browse and manage discovered entities:
 
 ## Quick Links
 
-<div className="homepage-features">
-
-### [Discovery](/features/discovery)
-Discover and inventory your AI assets.
-
-### [Monitoring](/features/monitoring)
-Real-time dashboards and metrics.
-
-### [Trace Explorer](/features/trace-explorer)
-Search and analyze traces.
-
-### [Data Catalog](/features/data-catalog)
-Browse discovered entities.
-
-</div>
+- [Discovery](/features/discovery) - Discover and inventory your AI assets
+- [Monitoring](/features/monitoring) - Real-time dashboards and metrics
+- [Trace Explorer](/features/trace-explorer) - Search and analyze traces
+- [Data Catalog](/features/data-catalog) - Browse discovered entities

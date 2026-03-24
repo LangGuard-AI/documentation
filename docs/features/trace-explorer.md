@@ -4,18 +4,42 @@ title: Trace Explorer
 description: Search, filter, and analyze AI agent traces
 ---
 
+import ThemedImage from '@theme/ThemedImage';
+
 # Trace Explorer
 
 The Trace Explorer is your primary tool for investigating AI agent activity. Search across all traces, apply filters, and drill into details.
+
+<ThemedImage
+  alt="Trace Explorer"
+  sources={{
+    light: '/img/trace-explorer-light.png',
+    dark: '/img/trace-explorer.png',
+  }}
+/>
 
 ## Overview
 
 Access the Trace Explorer from the main navigation sidebar. It provides:
 
+- **KPI Summary Cards** - Key metrics at a glance
 - **Table View** - List all traces with sortable columns
 - **Advanced Filters** - Narrow results by multiple criteria
 - **Detail Drawer** - Full trace information without leaving the page
 - **Bulk Actions** - Select and operate on multiple traces
+
+## KPI Summary Cards
+
+At the top of the Trace Explorer, summary cards display key performance indicators for the current filter selection:
+
+| Card | Description |
+|------|-------------|
+| **Total Traces** | Number of traces matching current filters |
+| **Error Rate** | Percentage of traces with errors |
+| **Avg Latency** | Mean duration across all matching traces |
+| **Total Cost** | Estimated cost for all matching traces |
+
+These cards update dynamically as you change filters or time ranges, giving you an instant overview before diving into individual traces.
 
 ## Table View
 
@@ -32,7 +56,7 @@ The trace table displays key information:
 | **Tokens** | Input + Output tokens |
 | **Cost** | Estimated cost |
 | **Time** | When the trace occurred |
-| **Source** | Integration source (Langfuse, Databricks, etc.) |
+| **Source** | Integration source (Databricks, Azure AI Foundry, etc.) |
 
 ### Sorting
 
@@ -245,8 +269,8 @@ Policy violations for this trace:
 ┌─────────────────────────────────────────────────────────────┐
 │  Policy Violations (2)                                       │
 ├─────────────────────────────────────────────────────────────┤
-│  ⚠ MEDIUM: Token Limits Exceeded                            │
-│  Policy: Max 2000 tokens, Actual: 2150 tokens               │
+│  ⚠ LOW: Metadata Tagging Requirements                        │
+│  Policy: Required field missing: ai_app_id                   │
 ├─────────────────────────────────────────────────────────────┤
 │  🔴 HIGH: PII Detected                                       │
 │  Pattern: Email address in output                            │
@@ -262,8 +286,7 @@ Right-click a trace or use the action menu:
 
 - **View Details** - Open detail drawer
 - **Copy Trace ID** - Copy to clipboard
-- **View in Langfuse** - Open in source platform
-- **Compare** - Add to comparison selection
+- **View in Source** - Open in source platform
 - **Export** - Download trace data
 
 ### Bulk Actions
@@ -273,42 +296,7 @@ Select multiple traces using checkboxes:
 1. Check individual traces or "Select All"
 2. Use the bulk action menu:
    - **Export Selected** - Download as JSON/CSV
-   - **Compare** - Open comparison view
    - **Acknowledge Violations** - Mark violations as reviewed
-
-## Comparison Mode
-
-Compare multiple traces side-by-side:
-
-1. Select 2-4 traces
-2. Click "Compare"
-3. View comparison modal:
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│  Compare Traces                                        [×]    │
-├──────────────────┬─────────────┬─────────────┬──────────────┤
-│  Metric          │  Trace 1    │  Trace 2    │  Trace 3     │
-├──────────────────┼─────────────┼─────────────┼──────────────┤
-│  Duration        │  1.23s      │  2.15s      │  0.89s       │
-│  Tokens          │  1,250      │  2,100      │  950         │
-│  Cost            │  $0.042     │  $0.068     │  $0.031      │
-│  Status          │  Success    │  Warning    │  Success     │
-│  Model           │  gpt-4      │  gpt-4      │  gpt-4-turbo │
-└──────────────────┴─────────────┴─────────────┴──────────────┘
-```
-
-## Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `/` | Focus search |
-| `Esc` | Clear selection / Close drawer |
-| `↑` `↓` | Navigate rows |
-| `Enter` | Open selected trace |
-| `c` | Compare selected traces |
-| `e` | Export selected |
-| `r` | Refresh data |
 
 ## Tips & Best Practices
 
@@ -323,20 +311,42 @@ Save filter combinations you use regularly:
 - "My Agent (Last Week)"
 - "High-Cost Traces"
 
-### 3. Leverage Comparison
-
-Compare successful vs failed traces to identify issues:
-1. Filter to errors
-2. Find a similar successful trace
-3. Compare to spot differences
-
-### 4. Check Violations First
+### 3. Check Violations First
 
 When investigating issues, start with the Violations tab.
+
+## Export
+
+Export trace data for external analysis or reporting.
+
+### Export Formats
+
+- **CSV** — Spreadsheet-compatible format with one row per trace
+- **JSON** — Complete trace data including metadata and spans
+
+### How to Export
+
+1. Apply filters to scope the data you want to export
+2. Optionally select specific traces with checkboxes
+3. Click **Export** in the toolbar
+4. Choose CSV or JSON format
+5. Download the file
+
+Exports respect your current filters — only matching traces are included.
+
+## Column Customization
+
+Customize which columns appear in the trace table:
+
+1. Click the **column settings** icon in the table header
+2. Toggle columns on or off
+3. Drag columns to reorder them
+4. Your column preferences are saved for future sessions
 
 ---
 
 ## Next Steps
 
 - [Policy Violations](/policies/policy-violations) - Understand violation details
+- [Monitoring](/features/monitoring) - View aggregate metrics and trends
 - [Troubleshooting](/troubleshooting/common-issues) - Common issues and solutions

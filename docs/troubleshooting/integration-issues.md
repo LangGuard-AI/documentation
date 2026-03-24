@@ -89,17 +89,6 @@ This page covers common problems with LangGuard integrations and their solutions
 
 ## Platform-Specific Issues
 
-### Langfuse
-
-**Invalid credentials error**:
-- Verify public key starts with `pk-lf-`
-- Verify secret key starts with `sk-lf-`
-- Ensure keys are from the correct project
-
-**Wrong data showing**:
-- Each Langfuse project has unique API keys
-- Check you're using keys from the intended project
-
 ### Databricks
 
 **Connection issues**:
@@ -111,24 +100,14 @@ This page covers common problems with LangGuard integrations and their solutions
 - Confirm MLflow tracing is enabled in your Databricks experiments
 - Verify you have trace data (not just MLflow runs)
 
-### LangSmith
-
-**Invalid API key**:
-- Verify key format starts with `lsv2_pt_`
-- Check the key in your LangSmith dashboard
-
-**No data appearing**:
-- Verify the project has runs
-- Check time range settings
-
-### Okta
+### Entra ID
 
 **SSO redirect issues**:
 - Contact your IT admin to verify redirect URIs
-- Ensure your account is assigned to the LangGuard app in Okta
+- Ensure your account is assigned to the LangGuard app in Entra ID
 
 **Users not syncing**:
-- Verify users are assigned to the LangGuard app in Okta
+- Verify users are assigned to the LangGuard app in Entra ID
 - Check group mappings with your admin
 
 ---
@@ -191,7 +170,7 @@ Contact [info@langguard.ai](mailto:info@langguard.ai) if:
 - You need help with a specific integration setup
 
 **Include in your support request**:
-- Integration type (Langfuse, Databricks, etc.)
+- Integration type (Databricks, Azure AI Foundry, etc.)
 - Error message you're seeing
 - When the issue started
 - Screenshots if helpful

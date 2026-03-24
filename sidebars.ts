@@ -15,21 +15,7 @@ const sidebars: SidebarsConfig = {
         'getting-started/connecting-integrations',
       ],
     },
-    {
-      type: 'category',
-      label: 'Use Cases',
-      link: {
-        type: 'doc',
-        id: 'use-cases/index',
-      },
-      items: [
-        'use-cases/prompt-injection',
-        'use-cases/data-exfiltration',
-        'use-cases/coding-assistants',
-        'use-cases/shadow-ai',
-      ],
-    },
-    {
+{
       type: 'category',
       label: 'Features',
       link: {
@@ -51,10 +37,21 @@ const sidebars: SidebarsConfig = {
         id: 'integrations/index',
       },
       items: [
-        'integrations/langfuse',
+        'integrations/openrouter',
+        'integrations/litellm',
+        'integrations/cloudflare',
+        'integrations/azure-ai-foundry',
         'integrations/databricks',
+        'integrations/aws-bedrock',
+        'integrations/mlflow',
+        'integrations/langchain',
+        'integrations/crewai',
+        'integrations/aws-agentcore',
         'integrations/cursor',
         'integrations/claude-code',
+        'integrations/opencode',
+        'integrations/entra-id',
+        'integrations/google-workspace',
       ],
     },
     {
@@ -68,6 +65,25 @@ const sidebars: SidebarsConfig = {
         'policies/built-in-policies',
         'policies/creating-policies',
         'policies/policy-violations',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Settings',
+      link: {
+        type: 'doc',
+        id: 'settings/index',
+      },
+      items: [
+        'settings/general',
+        'settings/api-keys',
+        'settings/webhooks',
+        'settings/tags',
+        'settings/audit-log',
+        'settings/sso',
+        'settings/session',
+        'settings/user-management',
+        'settings/cost-estimates',
       ],
     },
     {
