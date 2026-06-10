@@ -62,9 +62,25 @@ Browse and manage discovered entities:
 
 ---
 
+### Workflow Governance
+
+Govern the lifecycle of your AI assets with policy-gated approvals:
+
+- **Lifecycle Kanban** - Move assets through stages on a drag-and-drop board
+- **Gated Promotion** - OPA-evaluated checks must pass before an asset advances
+- **Custom Workflow Checks** - Define the rules that gate each stage
+- **Activity Timeline** - Track how assets progressed over time
+
+[Learn more about Workflow Governance →](/features/workflow-governance)
+
+---
+
 ## Quick Links
 
 - [Discovery](/features/discovery) - Discover and inventory your AI assets
 - [Monitoring](/features/monitoring) - Real-time dashboards and metrics
 - [Trace Explorer](/features/trace-explorer) - Search and analyze traces
 - [Data Catalog](/features/data-catalog) - Browse discovered entities
+- [Workflow Governance](/features/workflow-governance) - Manage AI asset lifecycle
+- [AI Registry](/features/ai-registry) - Governance dashboard for sanctioned AI
+- [Identity Governance](/features/identity) - Govern human and non-human identities

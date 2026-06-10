@@ -115,7 +115,9 @@ LangGuard includes pre-configured policies across all categories:
 ## Documentation
 
 - [Built-in Policies](/policies/built-in-policies) - Details on all pre-configured policies
+- [AI Policy Authoring](/policies/ai-authoring) - Generate policies from plain-language intent
 - [Creating Policies](/policies/creating-policies) - Write custom policies with Rego
+- [Budgets & Cost Control](/policies/budgets) - Track cost and enforce spend budgets
 - [Policy Violations](/policies/policy-violations) - Understanding and managing violations
 
 ## Policy Modes
@@ -175,4 +177,5 @@ After understanding built-in policies, create custom ones for:
 
 - [Built-in Policies](/policies/built-in-policies) - Explore available policies
 - [Creating Policies](/policies/creating-policies) - Write your own
+- [Workflow Governance](/features/workflow-governance) - Gate asset lifecycle promotions with policies
 - [Troubleshooting](/troubleshooting) - Get help with common issues

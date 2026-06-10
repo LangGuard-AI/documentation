@@ -16,6 +16,7 @@ The LiteLLM integration enables LangGuard to:
 - **Track usage per model and provider** across your organization
 - **Capture request/response data** for policy evaluation
 - **Analyze costs and performance** across models
+- **Enforce policies in real time** by auto-installing guardrails into your proxy
 
 ## Prerequisites
 
@@ -41,6 +42,9 @@ From your LiteLLM deployment:
    - **Name**: A friendly name (e.g., "Production LiteLLM Proxy")
    - **Proxy URL**: Your LiteLLM proxy endpoint
    - **API Key**: Your LiteLLM master key
+   - **Poll interval** (optional): how often LangGuard polls the proxy for discovery
+   - **Install LangGuard guardrails** (optional): auto-install real-time policy
+     enforcement (see [Real-time guardrails](#real-time-guardrails))
 5. Click **Test Connection**
 6. Click **Save**
 
@@ -66,6 +70,21 @@ All requests proxied through LiteLLM are captured:
 - Rate limit and budget tracking per key
 - Fallback and retry events
 
+## Real-time guardrails
+
+Beyond monitoring, LangGuard can **enforce policies on LiteLLM traffic in real time**
+by installing guardrails into your LiteLLM proxy.
+
+When you enable **Install LangGuard guardrails** during setup, LangGuard:
+
+1. Mints a scoped API key for the proxy
+2. Registers `pre_call` and `post_call` guardrail hooks in your LiteLLM configuration
+3. Routes each call through LangGuard policy evaluation, which can allow, flag, or
+   block the request
+
+If LangGuard can't reach the LiteLLM admin API to push the configuration
+automatically, the setup dialog provides a **`config.yaml` snippet** you can paste
+into your proxy to wire up the guardrail manually.
 ## Troubleshooting
 
 ### No Traces Appearing

@@ -1,0 +1,70 @@
+# Copy this file into LangGuard-AI/documentation at .github/workflows/sync-docs.yml
+#
+# On every push to main it syncs the markdown sources to the chatbot's S3
+# source bucket, then invokes the ingestion Lambda ONCE to rebuild the RAG
+# index. Fresh docs are answerable by the chatbot within ~a minute of merging.
+#
+# One-time AWS setup (in the website repo):
+#   1. Ensure the GitHub OIDC provider exists in the AWS account:
+#        aws iam list-open-id-connect-providers   # look for token.actions.githubusercontent.com
+#      If missing:
+#        aws iam create-open-id-connect-provider \
+#          --url https://token.actions.githubusercontent.com \
+#          --client-id-list sts.amazonaws.com
+#   2. Deploy chatbot/template.yaml with DocsRepo=<org/repo> and
+#      GitHubOidcProviderArn=<provider arn>. The stack creates the
+#      `langguard-docs-sync` role; its ARN is in the stack outputs.
+#   3. In the documentation repo: Settings -> Secrets and variables -> Actions
+#      -> Variables -> New repository variable:
+#         Name:  AWS_ROLE_ARN
+#         Value: arn:aws:iam::<account-id>:role/langguard-docs-sync
+#      (Kept out of this file so the public repo carries no account ID. It is a
+#      reference, not a credential — the role can only be assumed by this repo
+#      via OIDC and can only write to the docs source bucket.)
+#
+# Adjust DOCS_DIR if the markdown lives somewhere other than docs/.
+
+name: Sync docs to chatbot index
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write   # OIDC token for AWS
+  contents: read
+
+env:
+  # AWS_ROLE_ARN comes from a repo Actions variable (vars.AWS_ROLE_ARN) so the
+  # account ID never lives in this public file.
+  BUCKET: langguard-docs-source
+  DOCS_DIR: docs
+  AWS_REGION: us-west-2
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Sync markdown to S3
+        run: |
+          aws s3 sync "$DOCS_DIR" "s3://$BUCKET/" \
+            --exclude "*" --include "*.md" --delete
+
+      - name: Rebuild the RAG index (one deterministic invoke)
+        run: |
+          aws lambda invoke --function-name langguard-chatbot-ingestion \
+            --cli-read-timeout 0 --cli-binary-format raw-in-base64-out \
+            --payload "{\"Records\":[{\"s3\":{\"bucket\":{\"name\":\"$BUCKET\"}}}]}" \
+            /tmp/reindex.json
+          echo "Ingestion result:"; cat /tmp/reindex.json; echo
+          if grep -q '"errorMessage"' /tmp/reindex.json; then
+            echo "::error::Reindex failed"; exit 1
+          fi

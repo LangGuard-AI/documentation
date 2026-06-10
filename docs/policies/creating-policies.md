@@ -8,7 +8,10 @@ import ThemedImage from '@theme/ThemedImage';
 
 # Creating Policies
 
-Learn how to write custom policies using Rego, the policy language used by Open Policy Agent (OPA).
+There are two ways to create a custom policy in LangGuard: let the **AI Policy
+Authoring** wizard generate it from a plain-language description, or write the
+[Rego](https://www.openpolicyagent.org/docs/latest/policy-language/) yourself. This
+page covers both.
 
 <ThemedImage
   alt="Create Policy Dialog"
@@ -17,6 +20,12 @@ Learn how to write custom policies using Rego, the policy language used by Open 
     dark: '/img/policies-create.png',
   }}
 />
+
+:::tip Prefer to describe it in plain language?
+The **[AI Policy Authoring](/policies/ai-authoring)** wizard generates, red-teams,
+and explains a Rego policy from a plain-language description — no Rego expertise
+required. The rest of this page covers writing Rego by hand.
+:::
 
 ## Prerequisites
 

@@ -61,6 +61,14 @@ Detects personally identifiable information in trace input/output using a PII pr
 - PII matches identified by the pre-processor (type, location, and span ID for each match)
 - Missing pre-processor results when the `detect_pii` tag is present (warns of misconfiguration)
 
+The pre-processor uses a Microsoft Presidio–aligned analyzer that assigns each match
+a **confidence score**, so you can tune sensitivity per policy.
+
+**Configuration** (`input.config`):
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `min_confidence` | `0.3` | Minimum match confidence (0.0–1.0); lower-confidence matches are filtered out |
+
 **When to use**: Enable for entities handling user data. Tag the relevant entities with `detect_pii: "true"` to activate scanning.
 
 ---

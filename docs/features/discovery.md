@@ -8,7 +8,7 @@ import ThemedImage from '@theme/ThemedImage';
 
 # Discovery & Inventory
 
-LangGuard automatically discovers and catalogs AI assets from your connected integrations, giving you a complete picture of your AI ecosystem.
+LangGuard automatically discovers and catalogs AI assets from your connected integrations, giving you a complete picture of your AI ecosystem. **Discovery is the landing page** when you open LangGuard — it's the first screen you see, summarizing every AI agent and model in your environment.
 
 ## Overview
 
@@ -77,26 +77,21 @@ External systems agents interact with:
 - Vector stores (Pinecone, Weaviate)
 - Message queues (Kafka, Redis)
 
-## Viewing Discovered Assets
+## Browsing Discovered Assets
 
-### Agent List
+### The Agent Discovery home
 
-Navigate to **Discovery** in the sidebar to see discovered agents:
+Discovery is the **landing page** of LangGuard (also called **Agent Discovery**).
+It presents every discovered asset as a browsable directory.
 
-```
-┌──────────────────────────────────────┐
-│  Discovered Agents                    │
-├──────────────────────────────────────┤
-│  CustomerService Agent               │
-│  ✓ Active • 1,234 traces • 94.2%    │
-├──────────────────────────────────────┤
-│  OrderProcessing Agent               │
-│  ✓ Active • 567 traces • 98.1%      │
-├──────────────────────────────────────┤
-│  EmailAssistant Agent                │
-│  ⚠ Issues • 89 traces • 78.5%       │
-└──────────────────────────────────────┘
-```
+Use the **Agents / Models** toggle at the top to switch what you're looking at:
+
+- **Agents** — group by team, owner, risk, system, or MCP server
+- **Models** — group by provider or risk
+
+Pick a layout — an **org tree** or **swimlane** view — to see how agents roll up to
+teams and owners. Each card shows the asset's status, recent activity, and key
+metrics; click a card to open its full details in the entity drawer.
 
 ### Data Catalog
 

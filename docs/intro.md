@@ -37,6 +37,18 @@ Deep-dive into individual traces with advanced filtering, search, and visualizat
 
 Define governance policies using Rego (OPA) to automatically detect PII, flag exposed credentials, enforce cross-boundary access controls, and more.
 
+### AI-Assisted Policy Authoring
+
+Describe a rule in plain language and let LangGuard's Policy Authoring Agent generate, red-team, and explain the Rego for you — no Rego expertise required.
+
+### Workflow Governance
+
+Manage the lifecycle of your AI assets with a Kanban board and policy-gated stage promotion, from proposal to production to retirement.
+
+### Deploy on Databricks
+
+Run LangGuard natively inside your own Databricks workspace as a [Databricks App](/databricks-app) — full data residency, real-time AI Gateway enforcement, and storage in your Unity Catalog.
+
 ### Multi-tenant Support
 
 Built for enterprise with full multi-tenancy, role-based access, and subdomain isolation.
@@ -47,6 +59,7 @@ Built for enterprise with full multi-tenancy, role-based access, and subdomain i
 - [Features](/features) - Explore all platform capabilities
 - [Integrations](/integrations) - Connect your data sources
 - [Policies](/policies) - Set up governance rules
+- [Databricks App](/databricks-app) - Run LangGuard inside your Databricks workspace
 
 ## Who Uses LangGuard?
 
