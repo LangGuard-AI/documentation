@@ -27,6 +27,9 @@ const sidebars: SidebarsConfig = {
         'features/monitoring',
         'features/trace-explorer',
         'features/data-catalog',
+        'features/workflow-governance',
+        'features/ai-registry',
+        'features/identity',
       ],
     },
     {
@@ -56,6 +59,20 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Databricks App',
+      link: {
+        type: 'doc',
+        id: 'databricks-app/index',
+      },
+      items: [
+        'databricks-app/installation',
+        'databricks-app/ai-gateway',
+        'databricks-app/data-capture',
+        'databricks-app/unity-catalog',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Policies',
       link: {
         type: 'doc',
@@ -63,7 +80,9 @@ const sidebars: SidebarsConfig = {
       },
       items: [
         'policies/built-in-policies',
+        'policies/ai-authoring',
         'policies/creating-policies',
+        'policies/budgets',
         'policies/policy-violations',
       ],
     },
@@ -77,7 +96,9 @@ const sidebars: SidebarsConfig = {
       items: [
         'settings/general',
         'settings/api-keys',
+        'settings/mcp-server',
         'settings/webhooks',
+        'settings/custom-checks',
         'settings/tags',
         'settings/audit-log',
         'settings/sso',

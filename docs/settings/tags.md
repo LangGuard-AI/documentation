@@ -69,6 +69,14 @@ Tags are applied to assets from their respective pages:
 - In **Discovery**, select an asset and use the tag picker
 - In **Data Catalog**, click "Add Tag" on an entity detail view
 
+## System tags
+
+In addition to the tags you create, LangGuard applies some **system tags**
+automatically from discovered metadata — most notably a `department` tag on agents.
+These power the **business-unit** grouping in [Discovery](/features/discovery), so
+you can see assets organized by team or department without tagging them by hand.
+System tags never overwrite tags you've set manually.
+
 ## Best Practices
 
 - **Use consistent naming conventions** — Decide on a format (e.g., `team:analytics`, `env:production`) and stick to it

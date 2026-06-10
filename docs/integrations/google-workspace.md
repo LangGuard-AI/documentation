@@ -104,6 +104,11 @@ LangGuard matches users from Google Workspace to AI activity by:
 2. Resolving user identifiers to their directory entries
 3. Enriching the Discovery view with user and department context
 
+The synced **department** flows into entity [system tags](/settings/tags#system-tags),
+powering the business-unit grouping in [Discovery](/features/discovery). Account
+status feeds [Identity Governance](/features/identity) and the Non-Human Identity
+policy.
+
 ## Troubleshooting
 
 ### Authentication Failed
@@ -130,5 +135,6 @@ LangGuard matches users from Google Workspace to AI activity by:
 ## Next Steps
 
 - [Integrations Overview](/integrations) — See all available integrations
+- [Identity Governance](/features/identity) — Govern human and non-human identities
 - [Discovery](/features/discovery) — View user access summaries
 - [SSO Settings](/settings/sso) — Configure Google Workspace for login

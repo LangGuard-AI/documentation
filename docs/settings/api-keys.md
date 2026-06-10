@@ -27,14 +27,33 @@ API keys are used for:
 - **OTLP Ingestion** — Send traces directly to LangGuard using the OpenTelemetry protocol
 - **API Access** — Interact with LangGuard programmatically (metrics, events, etc.)
 
+## Scopes
+
+Every API key has a **scope** that limits what it can do. Grant the narrowest scope
+that works for the job:
+
+| Scope | Grants |
+|-------|--------|
+| **Ingest** | Push trace and log data only — nothing else |
+| **Read** | Read-only access to data via the API |
+| **Write** | Read and modify data via the API |
+| **Admin** | Full administrative access via the API |
+
+:::note Ingestion requires an ingest-scoped key
+Trace and log ingestion endpoints accept **only** keys with the **Ingest** scope —
+a read/write/admin key cannot push trace data. Use a dedicated ingest key for your
+OTLP exporters and keep API-operation keys separate.
+:::
+
 ## Generating a Key
 
 1. Navigate to **Settings > API Keys**
 2. Click **Generate API Key**
 3. Enter a descriptive **name** for the key (e.g., "Production OTLP Ingestion")
-4. Click **Create**
-5. **Copy the key immediately** — it is only shown once and cannot be retrieved later
-
+4. Choose a **scope** that matches what the key needs to do (see [Scopes](#scopes) above)
+5. Choose an **expiration** — 30, 60, 90, 180, or 365 days
+6. Click **Create**
+7. **Copy the key immediately** — it is only shown once and cannot be retrieved later
 :::warning Copy Your Key
 The API key value is displayed only at creation time. If you lose it, you must generate a new key.
 :::
@@ -46,8 +65,10 @@ The API keys table shows:
 | Column | Description |
 |--------|-------------|
 | **Name** | Descriptive name you assigned |
+| **Scope** | The key's permission scope |
 | **Created** | When the key was generated |
 | **Last Used** | Most recent API call using this key |
+| **Expires** | When the key expires |
 | **Actions** | Revoke or delete the key |
 
 ### Revoking a Key

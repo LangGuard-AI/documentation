@@ -26,6 +26,15 @@ Before you begin, make sure you have:
 
 That's it! LangGuard is a hosted platform - no installation required.
 
+:::tip Running LangGuard in your own Databricks workspace?
+LangGuard can also be deployed as a [Databricks App](/databricks-app) for full data
+residency — installed into your workspace and storing data in your Unity Catalog.
+The steps below cover the hosted SaaS.
+:::
+
+Once you're signed in, **guided tours** walk you through each area of the product —
+look for the tour prompts as you explore.
+
 ## Next Steps
 
 - [Quick Start Guide](/getting-started/quick-start) - Sign in and explore LangGuard in 10 minutes

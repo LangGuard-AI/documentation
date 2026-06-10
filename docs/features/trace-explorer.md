@@ -51,7 +51,7 @@ The trace table displays key information:
 |--------|-------------|
 | **Name** | Trace/operation name |
 | **Agent** | Agent that executed the trace |
-| **Status** | Success, Warning, or Error |
+| **Status** | Success, Warning, Error, or **Blocked** (denied by a policy) |
 | **Duration** | Execution time |
 | **Tokens** | Input + Output tokens |
 | **Cost** | Estimated cost |
@@ -92,7 +92,7 @@ Use the filter bar above the table:
 |--------|---------|
 | **Search** | Full-text search across all fields |
 | **Time Range** | Last hour, 24h, 7d, 30d, Custom |
-| **Status** | Success, Warning, Error, All |
+| **Status** | Success, Warning, Error, Blocked, All |
 | **Agent** | Select from discovered agents |
 | **Source** | Filter by integration |
 | **Has Violations** | Only traces with policy violations |
@@ -183,17 +183,16 @@ Click any trace row to open the detail drawer:
 
 ### Overview Tab
 
-Key metrics at a glance:
+The overview is designed for glanceability, summarizing the trace across a few cards:
 
-- **Trace ID** - Unique identifier
-- **Started** - Start timestamp
-- **Duration** - Total execution time
-- **Status** - Success/Warning/Error
-- **Agent** - Agent name and version
-- **Model** - LLM model used
-- **Tokens** - Input/Output counts
-- **Cost** - Estimated cost
-
+- **Key metrics** — trace ID, start time, duration, model, token usage, and cost
+- **Status** — Success, Warning, Error, or **Blocked** when a policy denied the call
+- **Identity card** — who made the call: the caller identity, its classification
+  (**human**, **NHI** — non-human identity, or **OBO** — on-behalf-of), and the
+  entity's approval status
+- **Policy violations** — any violations raised on this trace, with severity
+- **Agent** — the agent that ran the trace, shown as a link straight to its
+  [Data Catalog](/features/data-catalog) entity
 ### Timeline Tab
 
 Span breakdown showing execution flow:

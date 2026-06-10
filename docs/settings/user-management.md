@@ -70,6 +70,11 @@ Read-only access:
 - Cannot modify any data or settings
 - Useful for stakeholders who need visibility without edit access
 
+:::note Admin-only pages
+**Integrations** and **Settings** (which includes the Audit Log) are admin-only.
+Members and Viewers don't see them in the navigation at all.
+:::
+
 ## Changing Roles
 
 1. Find the user in the user list

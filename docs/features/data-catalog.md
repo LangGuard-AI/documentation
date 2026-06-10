@@ -55,6 +55,7 @@ The graph view visualizes relationships between entities — agents, tools, mode
 - **Zoom** — Scroll to zoom in/out, or use the +/- controls
 - **Pan** — Click and drag the background to pan the view
 - **Select** — Click a node to select it and view its details
+- **Search** — Press **Ctrl+F** (⌘F on Mac) to search for a node by name and jump to it
 - **Recenter** — Click the recenter button to reset the view to fit all nodes
 
 #### Legend
@@ -74,6 +75,10 @@ Click any node in the graph to open its detail panel, which shows:
 - **Connected entities** — What it connects to in the graph
 - **Tags** applied to the entity
 - **Recent activity** — Last seen and trace count
+
+When you follow a connected entity, the drawer keeps a **breadcrumb trail** at the
+top so you can see where you've navigated and use **Back** to return to the previous
+entity without losing your place.
 
 #### Model Cost Information
 
@@ -108,6 +113,19 @@ Filter entities by type using the checkboxes in the Filters panel:
 
 Filter by tags applied to entities. Tags can be managed from the [Tags settings](/settings/tags) page.
 
+## MCP Servers
+
+LangGuard automatically discovers **MCP (Model Context Protocol) servers** from
+trace activity and treats them as first-class catalog entities:
+
+- **Auto-discovery** — MCP servers are detected from traces; no manual registration
+- **Tool roll-up** — the individual MCP tools an agent calls are grouped under their
+  parent MCP server node, so the catalog stays readable instead of showing dozens of
+  loose tool nodes
+- **Official badge** — recognized official MCP servers are marked with a badge so you
+  can tell vetted servers from unknown ones at a glance
+
+MCP servers participate in approval and policy enforcement just like other entities.
 ## Entity Properties
 
 Each entity in the catalog has the following properties:
