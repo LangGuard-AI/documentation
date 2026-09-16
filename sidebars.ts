@@ -97,6 +97,8 @@ const sidebars: SidebarsConfig = {
         'settings/general',
         'settings/api-keys',
         'settings/mcp-server',
+        'settings/arbiter-management',
+        'settings/arbiter-deployment',
         'settings/webhooks',
         'settings/custom-checks',
         'settings/tags',
@@ -105,6 +107,7 @@ const sidebars: SidebarsConfig = {
         'settings/session',
         'settings/user-management',
         'settings/cost-estimates',
+        'settings/enforcement-mode',
       ],
     },
     {

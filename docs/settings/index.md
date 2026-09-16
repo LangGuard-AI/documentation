@@ -24,8 +24,28 @@ Generate and manage API keys for programmatic access and OTLP trace ingestion.
 
 ---
 
+### [MCP Server](/settings/mcp-server)
+Connect AI agents to LangGuard's governance control plane over the Model Context Protocol.
+
+---
+
+### [Arbiter Management](/settings/arbiter-management)
+See every machine running the Arbiter daemon, its enforcement mode and verdict traffic, and relabel, remote-control, deactivate, or forget devices.
+
+---
+
+### [Arbiter Deployment](/settings/arbiter-deployment)
+Install Arbiter hooks in Claude Code, Codex, Cursor, and Google Antigravity, connect to a remote daemon, or deploy Arbiter to Google Cloud or Azure.
+
+---
+
 ### [Webhooks](/settings/webhooks)
 Set up outbound webhooks to receive notifications when events occur in LangGuard.
+
+---
+
+### [Custom Checks](/settings/custom-checks)
+Reusable Rego checks that gate workflow lifecycle stages.
 
 ---
 
@@ -56,3 +76,8 @@ Invite users, assign roles, and manage workspace membership.
 
 ### [Cost Estimates](/settings/cost-estimates)
 Configure cost-per-token rates for different models to power cost metrics in Trace Explorer and Monitoring.
+
+---
+
+### [Enforcement Mode](/settings/enforcement-mode)
+Switch the gateway between observe-only Shadow mode and active Enforce mode for this tenant's inline agent and LLM traffic.
