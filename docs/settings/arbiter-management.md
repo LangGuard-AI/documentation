@@ -20,7 +20,8 @@ relabel, remote-control, deactivate, and forget devices.
 
 :::info Admin only
 Arbiter Management is available to workspace **admins**. It is not shown when LangGuard
-runs as a Databricks App.
+runs as a Databricks App, where inline enforcement is configured under
+[AI Gateway Enforcement](/databricks-app/ai-gateway) instead.
 :::
 
 To install Arbiter on developer machines or deploy it to your cloud, use the
@@ -59,10 +60,11 @@ The strip at the top of the page summarises the whole fleet:
 
 ### Legacy daemon banner
 
-If any API keys are sending Arbiter traffic **without device details**, an amber banner
-shows how many. These daemons predate per-device reporting and appear in traffic totals
-but not in the device list. Upgrade them to the latest Arbiter build to get install-id,
-heartbeat, and per-device visibility. The **Upgrade guide** button opens the
+If any active API keys have been used recently but have **no registered device**, an
+amber banner shows how many. These are daemons that predate per-device reporting. They
+do not appear in the device list, and their verdicts are not included in the fleet
+traffic counts. Upgrade them to the latest Arbiter build to get install-id, heartbeat,
+and per-device visibility. The **Upgrade guide** button opens the
 [Deployment](/settings/arbiter-deployment) page.
 
 ## Device table
@@ -85,7 +87,9 @@ its plugin version, active session count, whether it is ASK-capable, and when it
 last seen. Click anywhere else on the row to open the device drawer.
 
 Sort by device, status, traffic, version, or last seen. Select rows with the checkboxes
-to **Deactivate** or **Forget** several devices at once.
+to **Deactivate** or **Forget** several devices at once. Bulk deactivate queues a
+cooperative stop for each selected device; bulk forget removes them from the list, and
+live daemons reappear on their next heartbeat.
 
 ### Presence
 
@@ -128,6 +132,31 @@ Only harnesses that can render a native approval prompt (Claude Code, Cursor,
 Antigravity) support ASK. Codex and shell have no ask affordance, so an ASK verdict
 **fails closed to a deny** on those harnesses. The **ASK-capable** column in the
 harness children shows which is which.
+
+### How verdicts are decided
+
+Every gated tool call runs through a fixed, first-match-wins rule table. The inputs are
+the tool's **approval status** in the [Data Catalog](/features/data-catalog#approval-status),
+its **SCOPE risk tier** (low, medium, high, or critical, when classified), any
+**policy violations** from evaluation, whether the tool is a native tool or matches the
+catastrophic deny-list, and the policy **mode** (enforce or permissive). In order:
+
+| Condition | Verdict |
+|-----------|---------|
+| Policy engine unreachable | ASK (never a silent allow) |
+| Native shell command matches the catastrophic deny-list | BLOCK |
+| Entity is **banned** (blocked by an operator or a deny rule) | BLOCK |
+| A blocking policy violation, and the policy is in enforce mode | BLOCK |
+| Native (non-MCP) tool | ALLOW |
+| Critical-risk tool | BLOCK in enforce mode, otherwise ASK |
+| High-risk tool | ASK |
+| Tool is **not approved**, or not found in the catalog | ASK |
+| Approved tool with low, medium, or unclassified risk | ALLOW |
+| Anything else | ASK |
+
+The practical consequence: a tool that is not registered and approved in your catalog
+gets **ASK**, which becomes a **deny** on Codex and shell. Approve the tools you expect
+agents to use before switching a fleet to strict mode.
 
 ## Device drawer
 
@@ -172,8 +201,9 @@ The channel is deliberately **cooperative**:
 - There is intentionally **no** fail-open "pause" or "allow all" command.
 
 Command status moves through `pending` → `delivered` → `acked` (or `failed`). Undelivered
-commands become `expired`; you can also see `canceled`. Track progress in the drawer's
-**Commands** tab.
+commands become `expired`. Queuing a new command of the same type for a device
+supersedes any still-pending one, which is marked `canceled`. Track progress in the
+drawer's **Commands** tab.
 
 :::note Bundle refresh
 A **refresh bundle** command exists in the command vocabulary but is currently a
@@ -199,9 +229,9 @@ is why strict mode is recommended for managed rollouts.
 
 ### Forget
 
-Forgetting removes the device from the fleet list. If the daemon is still running and
-keeps sending heartbeats, it will re-register and reappear. Deactivate it first if you
-want it to stay gone.
+Forgetting removes the device from the fleet list. If the daemon is still running, it
+reappears as active on its next heartbeat. Deactivate it first if you want it to stay
+gone.
 
 ## Next steps
 

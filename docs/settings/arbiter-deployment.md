@@ -32,7 +32,9 @@ deterministic verdict against your LangGuard policies, with a best-effort audit 
 
 By default the full verdict flow applies to **MCP tools** (`mcp__*`). Native tools such
 as Bash, Edit, and Read are screened and auto-allowed, apart from a short bundled
-deny-list of catastrophic shell commands.
+deny-list of catastrophic shell commands. Verdicts depend on each tool's approval status
+and risk tier as well as your policies. See
+[how verdicts are decided](/settings/arbiter-management#how-verdicts-are-decided).
 
 ## Choosing a deployment model
 
@@ -267,8 +269,9 @@ curl -fsS <daemonUrl>/health
 
 ### Arbiter Connect invites (no SSO)
 
-For developers who cannot sign in with SSO, an admin can generate a **single-use,
-email-bound invite link**. Opening it signs the developer into the Connect portal so
+The **Arbiter Connect invites** card sits on the Per-developer install tab, below the
+harness install steps. For developers who cannot sign in with SSO, an admin can generate
+a **single-use, email-bound invite link**. Opening it signs the developer into the Connect portal so
 they can collect their per-install key. It grants nothing else. The link is shown once;
 copy it and send it to the developer. Pending invites are listed and can be revoked at
 any time before they are used.
@@ -310,8 +313,13 @@ The wizard has three steps:
    browser address.
 2. **Deploy** — LangGuard mints an **ingest key** and a **fleet token** and renders your
    gateway config and deploy commands. The secrets are shown once; store them
-   immediately. Deploy the gateway with the generated config, then the Arbiter sidecar
-   beside it (or both via the generated manifest).
+   immediately. Pick where the sidecar will run: **Google Cloud**, **Azure**, **AWS**,
+   **Docker**, or **Kubernetes**. For a cloud target you get a deploy script for the
+   gateway itself (with a complete `gateway.yaml` and a Dockerfile that wraps the
+   `claude` binary), then a second script for the Arbiter sidecar. For Docker or
+   Kubernetes you get a single manifest (`docker-compose.yaml` or
+   `arbiter-sidecar.yaml`) that runs the gateway and sidecar together. The gateway must
+   sit on your private network; public IPs are rejected.
 3. **Verify** — confirm the sidecar is reachable, then watch enforcement arrive in
    LangGuard.
 
@@ -321,7 +329,8 @@ Good to know:
   session (`claude -p` skips it).
 - The gate scope is `mcp__*` tools; native tools auto-allow.
 - In enforce mode a tool that is **not in your entity catalog is blocked**, so register
-  the tools you want to allow in the [AI Registry](/features/ai-registry).
+  and approve the tools you want to allow in the
+  [Data Catalog](/features/data-catalog#approval-status).
 - Per-user attribution is coarse at the hook layer because of the shared fleet bearer.
   It is recovered through identity-stamped OTLP telemetry correlated by session ID.
 
@@ -332,8 +341,9 @@ Arbiter inside your Google Cloud Agent Gateway's VPC and attaches the authorizat
 extension and policy to your existing gateway. Arbiter decides locally against a policy
 bundle it syncs from LangGuard.
 
-Connect your Google Cloud integration under
-[Integrations](/getting-started/connecting-integrations) first. Then fill in:
+Connect your **Google Agent Platform** integration under
+[Integrations](/getting-started/connecting-integrations) first. The module is generated
+against it, and the project and region are read from the connection. Then fill in:
 
 | Field | Notes |
 |-------|-------|
@@ -342,7 +352,7 @@ Connect your Google Cloud integration under
 | **VPC self-link** | `projects/PROJECT/global/networks/NETWORK` |
 | **Subnet self-link** | `projects/PROJECT/regions/REGION/subnetworks/SUBNET` |
 | **Gateway egress CIDR** | For example `10.20.0.0/28` |
-| **Fail open** | Whether the gateway allows traffic if Arbiter is unreachable |
+| **Fail open** | Allow traffic when Arbiter cannot reach a decision. Leave off to deny on error, which is recommended for enforcement. |
 
 Generating the module mints a **one-time ingest key** and bakes it into
 `terraform.tfvars`. Copy the files or download the `.tar.gz`, fill in any
@@ -361,8 +371,9 @@ Azure Container App with an API Management (APIM) gateway in front of it. APIM c
 Arbiter on each tool call and blocks or allows transparently, decided locally against a
 policy bundle synced from LangGuard.
 
-Connect your [Azure AI Foundry](/integrations/azure-ai-foundry) integration first.
-Then fill in:
+Connect your [Azure AI Foundry](/integrations/azure-ai-foundry) integration first. The
+module is generated against it, and the subscription and region are read from the
+connection. Then fill in:
 
 | Field | Notes |
 |-------|-------|
@@ -370,7 +381,7 @@ Then fill in:
 | **Location** | Defaults to `eastus2` |
 | **Existing APIM name** | Optional; leave blank to create a new APIM |
 | **Existing APIM resource group** | Optional; blank means the same resource group |
-| **Fail open** | Whether APIM allows traffic if Arbiter is unreachable |
+| **Fail open** | Allow traffic when Arbiter cannot reach a decision. Leave off to deny on error, which is recommended for enforcement. |
 
 Generating the module mints a one-time ingest key into `terraform.tfvars`. Download and
 extract the module, register the `Microsoft.App`, `Microsoft.ApiManagement`, and
