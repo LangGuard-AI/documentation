@@ -97,6 +97,8 @@ const sidebars: SidebarsConfig = {
         'settings/general',
         'settings/api-keys',
         'settings/mcp-server',
+        'settings/arbiter-management',
+        'settings/arbiter-deployment',
         'settings/webhooks',
         'settings/custom-checks',
         'settings/tags',

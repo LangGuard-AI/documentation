@@ -18,6 +18,12 @@ The Claude Code integration enables LangGuard to:
 - **Compatible** with any OTEL collector
 - **Seamless integration** with LangGuard's observability platform
 
+:::tip Enforcing policies inside Claude Code
+This page covers **observability** via OpenTelemetry. To **enforce** LangGuard policies
+on each tool call inside Claude Code, install the Arbiter plugin. See
+[Arbiter Deployment](/settings/arbiter-deployment).
+:::
+
 ## Environment Variable Setup
 
 Configure Claude Code to send OpenTelemetry traces directly to LangGuard by setting the following environment variables.
