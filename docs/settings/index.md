@@ -76,3 +76,8 @@ Invite users, assign roles, and manage workspace membership.
 
 ### [Cost Estimates](/settings/cost-estimates)
 Configure cost-per-token rates for different models to power cost metrics in Trace Explorer and Monitoring.
+
+---
+
+### [Enforcement Mode](/settings/enforcement-mode)
+Switch the gateway between observe-only Shadow mode and active Enforce mode for this tenant's inline agent and LLM traffic.

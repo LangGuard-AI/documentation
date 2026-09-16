@@ -328,8 +328,8 @@ Good to know:
 - Pushing hooks triggers a one-time client security-approval dialog in each interactive
   session (`claude -p` skips it).
 - The gate scope is `mcp__*` tools; native tools auto-allow.
-- In enforce mode a tool that is **not in your entity catalog is blocked**, so register
-  and approve the tools you want to allow in the
+- In [Enforce mode](/settings/enforcement-mode) a tool that is **not in your entity
+  catalog is blocked**, so register and approve the tools you want to allow in the
   [Data Catalog](/features/data-catalog#approval-status).
 - Per-user attribution is coarse at the hook layer because of the shared fleet bearer.
   It is recovered through identity-stamped OTLP telemetry correlated by session ID.

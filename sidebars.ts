@@ -107,6 +107,7 @@ const sidebars: SidebarsConfig = {
         'settings/session',
         'settings/user-management',
         'settings/cost-estimates',
+        'settings/enforcement-mode',
       ],
     },
     {
