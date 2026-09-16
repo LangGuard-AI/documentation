@@ -112,6 +112,17 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'API Reference',
+      link: {
+        type: 'doc',
+        id: 'api-reference/index',
+      },
+      items: [
+        'api-reference/interceptor',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Troubleshooting',
       link: {
         type: 'doc',
