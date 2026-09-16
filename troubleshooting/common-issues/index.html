@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-troubleshooting/common-issues" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.9.2">
+<title data-rh="true">Common Issues | LangGuard</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://docs.langguard.ai/img/langguard-social-card.png"><meta data-rh="true" name="twitter:image" content="https://docs.langguard.ai/img/langguard-social-card.png"><meta data-rh="true" property="og:url" content="https://docs.langguard.ai/troubleshooting/common-issues"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Common Issues | LangGuard"><meta data-rh="true" name="description" content="Solutions for common LangGuard problems"><meta data-rh="true" property="og:description" content="Solutions for common LangGuard problems"><link data-rh="true" rel="icon" href="/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://docs.langguard.ai/troubleshooting/common-issues"><link data-rh="true" rel="alternate" href="https://docs.langguard.ai/troubleshooting/common-issues" hreflang="en"><link data-rh="true" rel="alternate" href="https://docs.langguard.ai/troubleshooting/common-issues" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Troubleshooting","item":"https://docs.langguard.ai/troubleshooting/"},{"@type":"ListItem","position":2,"name":"Common Issues","item":"https://docs.langguard.ai/troubleshooting/common-issues"}]}</script><link rel="stylesheet" href="/assets/css/styles.3563e405.css">
+<script src="/assets/js/runtime~main.44457d0e.js" defer="defer"></script>
+<script src="/assets/js/main.b8e2cdec.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><link rel="preload" as="image" href="/img/lg_favicon_32.png"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/"><div class="navbar__logo"><img src="/img/lg_favicon_32.png" alt="LangGuard Logo" class="themedComponent_mlkZ themedComponent--light_NVdE"><img src="/img/lg_favicon_32.png" alt="LangGuard Logo" class="themedComponent_mlkZ themedComponent--dark_xIcU"></div><b class="navbar__title text--truncate">LangGuard</b></a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/">Documentation</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://langguard.ai" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">Home<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/"><span title="Introduction" class="linkLabel_WmDU">Introduction</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/getting-started/"><span title="Getting Started" class="categoryLinkLabel_W154">Getting Started</span></a><button aria-label="Expand sidebar category &#x27;Getting Started&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/features/"><span title="Features" class="categoryLinkLabel_W154">Features</span></a><button aria-label="Expand sidebar category &#x27;Features&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/integrations/"><span title="Integrations" class="categoryLinkLabel_W154">Integrations</span></a><button aria-label="Expand sidebar category &#x27;Integrations&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/databricks-app/"><span title="Databricks App" class="categoryLinkLabel_W154">Databricks App</span></a><button aria-label="Expand sidebar category &#x27;Databricks App&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/policies/"><span title="Policies" class="categoryLinkLabel_W154">Policies</span></a><button aria-label="Expand sidebar category &#x27;Policies&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/settings/"><span title="Settings" class="categoryLinkLabel_W154">Settings</span></a><button aria-label="Expand sidebar category &#x27;Settings&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/troubleshooting/"><span title="Troubleshooting" class="categoryLinkLabel_W154">Troubleshooting</span></a><button aria-label="Collapse sidebar category &#x27;Troubleshooting&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/troubleshooting/common-issues"><span title="Common Issues" class="linkLabel_WmDU">Common Issues</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/troubleshooting/integration-issues"><span title="Integration Issues" class="linkLabel_WmDU">Integration Issues</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/troubleshooting/faq"><span title="FAQ" class="linkLabel_WmDU">FAQ</span></a></li></ul></li></ul></nav></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_VOVn"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/troubleshooting/"><span>Troubleshooting</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">Common Issues</span></li></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>Common Issues</h1></header>
+<p>This page covers frequently encountered issues and their solutions.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="login-issues">Login Issues<a href="#login-issues" class="hash-link" aria-label="Direct link to Login Issues" title="Direct link to Login Issues" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="cant-sign-in">Can&#x27;t Sign In<a href="#cant-sign-in" class="hash-link" aria-label="Direct link to Can&#x27;t Sign In" title="Direct link to Can&#x27;t Sign In" translate="no">​</a></h3>
+<p><strong>Symptoms</strong>: Unable to log in, redirected back to login page.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li class=""><strong>Clear browser cookies</strong> for LangGuard and try again</li>
+<li class=""><strong>Try incognito/private mode</strong> to rule out browser extensions</li>
+<li class=""><strong>Check your email domain</strong> - Your organization may restrict which domains can access LangGuard</li>
+<li class=""><strong>Contact your admin</strong> if you need to be added to the allowed users list</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="session-expired">Session Expired<a href="#session-expired" class="hash-link" aria-label="Direct link to Session Expired" title="Direct link to Session Expired" translate="no">​</a></h3>
+<p><strong>Symptoms</strong>: Suddenly logged out, &quot;Session expired&quot; message.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li class="">Simply log in again - sessions expire after a period of inactivity</li>
+<li class="">Clear cookies if you&#x27;re stuck in a loop</li>
+<li class="">Check if you have multiple tabs open - logging out in one logs you out everywhere</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="wrong-account">Wrong Account<a href="#wrong-account" class="hash-link" aria-label="Direct link to Wrong Account" title="Direct link to Wrong Account" translate="no">​</a></h3>
+<p><strong>Symptoms</strong>: Logged in but seeing wrong data or no access.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li class="">Check which Google account you&#x27;re signed in with</li>
+<li class="">Log out and log in with the correct account</li>
+<li class="">Contact your admin if you need access to a different workspace</li>
+</ol>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="data-not-appearing">Data Not Appearing<a href="#data-not-appearing" class="hash-link" aria-label="Direct link to Data Not Appearing" title="Direct link to Data Not Appearing" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="no-traces-showing">No Traces Showing<a href="#no-traces-showing" class="hash-link" aria-label="Direct link to No Traces Showing" title="Direct link to No Traces Showing" translate="no">​</a></h3>
+<p><strong>Symptoms</strong>: Trace Explorer is empty, no data visible.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li class=""><strong>Check the time range</strong> - Expand to &quot;Last 7 days&quot; or &quot;Last 30 days&quot;</li>
+<li class=""><strong>Clear all filters</strong> - Remove any active filters that might be hiding data</li>
+<li class=""><strong>Check integration status</strong> - Go to Integrations and verify connections are healthy</li>
+<li class=""><strong>Trigger a manual sync</strong> - Click the sync button on your integration</li>
+<li class=""><strong>Verify source has data</strong> - Check your observability platform directly</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="missing-agents">Missing Agents<a href="#missing-agents" class="hash-link" aria-label="Direct link to Missing Agents" title="Direct link to Missing Agents" translate="no">​</a></h3>
+<p><strong>Symptoms</strong>: Some agents not appearing in Discovery.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li class="">Agents are detected automatically from trace data - ensure traces are syncing</li>
+<li class="">Check if agent names are being set correctly in your instrumentation</li>
+<li class="">Allow time for the next sync cycle to detect new agents</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="stale-data">Stale Data<a href="#stale-data" class="hash-link" aria-label="Direct link to Stale Data" title="Direct link to Stale Data" translate="no">​</a></h3>
+<p><strong>Symptoms</strong>: Data appears outdated, recent traces missing.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li class=""><strong>Check last sync time</strong> on the integration card</li>
+<li class=""><strong>Trigger manual sync</strong> to get latest data immediately</li>
+<li class=""><strong>Check integration health</strong> - A failed sync may have stopped updates</li>
+</ol>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="integration-issues">Integration Issues<a href="#integration-issues" class="hash-link" aria-label="Direct link to Integration Issues" title="Direct link to Integration Issues" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="connection-failed">Connection Failed<a href="#connection-failed" class="hash-link" aria-label="Direct link to Connection Failed" title="Direct link to Connection Failed" translate="no">​</a></h3>
+<p><strong>Symptoms</strong>: &quot;Connection test failed&quot; when adding integration.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li class=""><strong>Double-check credentials</strong> - Ensure API keys are correct and complete</li>
+<li class=""><strong>Check for typos</strong> - Extra spaces, missing characters</li>
+<li class=""><strong>Verify key permissions</strong> - Some keys may have limited access</li>
+<li class=""><strong>Check if keys expired</strong> - Some platforms expire keys after a period</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="sync-errors">Sync Errors<a href="#sync-errors" class="hash-link" aria-label="Direct link to Sync Errors" title="Direct link to Sync Errors" translate="no">​</a></h3>
+<p><strong>Symptoms</strong>: Integration shows error status, sync failing.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li class=""><strong>Check integration health</strong> - Click the integration to see error details</li>
+<li class=""><strong>Re-test connection</strong> - Credentials may have been revoked</li>
+<li class=""><strong>Check source platform</strong> - The external service may be experiencing issues</li>
+<li class=""><strong>Wait and retry</strong> - Temporary network issues usually resolve themselves</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="rate-limit-errors">Rate Limit Errors<a href="#rate-limit-errors" class="hash-link" aria-label="Direct link to Rate Limit Errors" title="Direct link to Rate Limit Errors" translate="no">​</a></h3>
+<p><strong>Symptoms</strong>: &quot;Rate limit exceeded&quot; errors in sync history.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li class="">This is usually temporary - syncs will resume automatically</li>
+<li class="">If persistent, contact support to adjust sync frequency</li>
+</ol>
+<p>See <a class="" href="/troubleshooting/integration-issues">Integration Issues</a> for platform-specific help.</p>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="performance-issues">Performance Issues<a href="#performance-issues" class="hash-link" aria-label="Direct link to Performance Issues" title="Direct link to Performance Issues" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="slow-page-loading">Slow Page Loading<a href="#slow-page-loading" class="hash-link" aria-label="Direct link to Slow Page Loading" title="Direct link to Slow Page Loading" translate="no">​</a></h3>
+<p><strong>Symptoms</strong>: Pages take a long time to load, spinners persist.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li class=""><strong>Narrow the time range</strong> - Smaller date ranges load faster</li>
+<li class=""><strong>Reduce selected items</strong> - Narrow filters to reduce data volume</li>
+<li class=""><strong>Clear browser cache</strong> - Stale data can cause slowdowns</li>
+<li class=""><strong>Try a different browser</strong> - Rule out browser-specific issues</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="charts-not-loading">Charts Not Loading<a href="#charts-not-loading" class="hash-link" aria-label="Direct link to Charts Not Loading" title="Direct link to Charts Not Loading" translate="no">​</a></h3>
+<p><strong>Symptoms</strong>: Visualizations show &quot;Loading...&quot; indefinitely.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li class=""><strong>Refresh the page</strong> - A simple reload often fixes this</li>
+<li class=""><strong>Check your network</strong> - Slow connections affect chart rendering</li>
+<li class=""><strong>Reduce data range</strong> - Large datasets take longer to visualize</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="timeouts">Timeouts<a href="#timeouts" class="hash-link" aria-label="Direct link to Timeouts" title="Direct link to Timeouts" translate="no">​</a></h3>
+<p><strong>Symptoms</strong>: &quot;Request timed out&quot; errors.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li class=""><strong>Narrow your query</strong> - Use filters to reduce data volume</li>
+<li class=""><strong>Try again later</strong> - Server may be under heavy load</li>
+<li class=""><strong>Contact support</strong> if timeouts persist</li>
+</ol>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="ui-issues">UI Issues<a href="#ui-issues" class="hash-link" aria-label="Direct link to UI Issues" title="Direct link to UI Issues" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="page-not-loading">Page Not Loading<a href="#page-not-loading" class="hash-link" aria-label="Direct link to Page Not Loading" title="Direct link to Page Not Loading" translate="no">​</a></h3>
+<p><strong>Symptoms</strong>: Blank page, nothing displays.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li class=""><strong>Hard refresh</strong> - Press Cmd+Shift+R (Mac) or Ctrl+Shift+R (Windows)</li>
+<li class=""><strong>Clear cache</strong> - Browser cached data may be corrupted</li>
+<li class=""><strong>Try incognito mode</strong> - Rules out extension conflicts</li>
+<li class=""><strong>Check browser console</strong> - Press F12 and look for errors</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="layout-problems">Layout Problems<a href="#layout-problems" class="hash-link" aria-label="Direct link to Layout Problems" title="Direct link to Layout Problems" translate="no">​</a></h3>
+<p><strong>Symptoms</strong>: Elements overlapping, broken styling.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li class=""><strong>Zoom to 100%</strong> - Browser zoom can cause layout issues</li>
+<li class=""><strong>Try a different browser</strong> - Some browsers render differently</li>
+<li class=""><strong>Clear cache</strong> - Old CSS may be cached</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="features-missing">Features Missing<a href="#features-missing" class="hash-link" aria-label="Direct link to Features Missing" title="Direct link to Features Missing" translate="no">​</a></h3>
+<p><strong>Symptoms</strong>: Buttons or features you expect aren&#x27;t visible.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li class=""><strong>Check your role</strong> - Some features require Member or Admin access</li>
+<li class=""><strong>Contact your admin</strong> to upgrade your permissions if needed</li>
+</ol>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="policy-issues">Policy Issues<a href="#policy-issues" class="hash-link" aria-label="Direct link to Policy Issues" title="Direct link to Policy Issues" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="policies-not-working">Policies Not Working<a href="#policies-not-working" class="hash-link" aria-label="Direct link to Policies Not Working" title="Direct link to Policies Not Working" translate="no">​</a></h3>
+<p><strong>Symptoms</strong>: Policies enabled but no violations appearing.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li class=""><strong>Verify traces are syncing</strong> - Policies evaluate incoming traces</li>
+<li class=""><strong>Check policy is enabled</strong> - Toggle may have been switched off</li>
+<li class=""><strong>Review policy criteria</strong> - Your traces may not match the policy conditions</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="too-many-violations">Too Many Violations<a href="#too-many-violations" class="hash-link" aria-label="Direct link to Too Many Violations" title="Direct link to Too Many Violations" translate="no">​</a></h3>
+<p><strong>Symptoms</strong>: Overwhelmed by violation alerts.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li class=""><strong>Adjust policy severity</strong> - Lower severity for less critical policies</li>
+<li class=""><strong>Refine policy rules</strong> - Make policies more specific</li>
+<li class=""><strong>Disable noisy policies</strong> - Turn off policies generating false positives</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="cant-edit-policies">Can&#x27;t Edit Policies<a href="#cant-edit-policies" class="hash-link" aria-label="Direct link to Can&#x27;t Edit Policies" title="Direct link to Can&#x27;t Edit Policies" translate="no">​</a></h3>
+<p><strong>Symptoms</strong>: Edit button disabled or missing.</p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li class=""><strong>Check your role</strong> - Policy editing requires Member or Admin access</li>
+<li class=""><strong>Contact your admin</strong> for permission upgrade</li>
+</ol>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="browser-compatibility">Browser Compatibility<a href="#browser-compatibility" class="hash-link" aria-label="Direct link to Browser Compatibility" title="Direct link to Browser Compatibility" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="supported-browsers">Supported Browsers<a href="#supported-browsers" class="hash-link" aria-label="Direct link to Supported Browsers" title="Direct link to Supported Browsers" translate="no">​</a></h3>
+<p>LangGuard works best with:</p>
+<ul>
+<li class="">Google Chrome (recommended)</li>
+<li class="">Mozilla Firefox</li>
+<li class="">Microsoft Edge</li>
+<li class="">Safari</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="known-issues">Known Issues<a href="#known-issues" class="hash-link" aria-label="Direct link to Known Issues" title="Direct link to Known Issues" translate="no">​</a></h3>
+<ul>
+<li class=""><strong>Internet Explorer</strong>: Not supported</li>
+<li class=""><strong>Older browsers</strong>: May have display issues</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="mobile">Mobile<a href="#mobile" class="hash-link" aria-label="Direct link to Mobile" title="Direct link to Mobile" translate="no">​</a></h3>
+<p>LangGuard is designed for desktop use. Mobile browsers may have limited functionality.</p>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="still-need-help">Still Need Help?<a href="#still-need-help" class="hash-link" aria-label="Direct link to Still Need Help?" title="Direct link to Still Need Help?" translate="no">​</a></h2>
+<p>If none of these solutions work:</p>
+<ol>
+<li class=""><strong>Check our FAQ</strong>: <a class="" href="/troubleshooting/faq">Frequently Asked Questions</a></li>
+<li class=""><strong>Contact support</strong>: <a href="mailto:info@langguard.ai" target="_blank" rel="noopener noreferrer" class="">info@langguard.ai</a></li>
+</ol>
+<p>When contacting support, include:</p>
+<ul>
+<li class="">What you were trying to do</li>
+<li class="">What happened instead</li>
+<li class="">Any error messages you saw</li>
+<li class="">Screenshots if helpful</li>
+</ul></div></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/troubleshooting/"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Troubleshooting Overview</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/troubleshooting/integration-issues"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Integration Issues</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#login-issues" class="table-of-contents__link toc-highlight">Login Issues</a><ul><li><a href="#cant-sign-in" class="table-of-contents__link toc-highlight">Can&#39;t Sign In</a></li><li><a href="#session-expired" class="table-of-contents__link toc-highlight">Session Expired</a></li><li><a href="#wrong-account" class="table-of-contents__link toc-highlight">Wrong Account</a></li></ul></li><li><a href="#data-not-appearing" class="table-of-contents__link toc-highlight">Data Not Appearing</a><ul><li><a href="#no-traces-showing" class="table-of-contents__link toc-highlight">No Traces Showing</a></li><li><a href="#missing-agents" class="table-of-contents__link toc-highlight">Missing Agents</a></li><li><a href="#stale-data" class="table-of-contents__link toc-highlight">Stale Data</a></li></ul></li><li><a href="#integration-issues" class="table-of-contents__link toc-highlight">Integration Issues</a><ul><li><a href="#connection-failed" class="table-of-contents__link toc-highlight">Connection Failed</a></li><li><a href="#sync-errors" class="table-of-contents__link toc-highlight">Sync Errors</a></li><li><a href="#rate-limit-errors" class="table-of-contents__link toc-highlight">Rate Limit Errors</a></li></ul></li><li><a href="#performance-issues" class="table-of-contents__link toc-highlight">Performance Issues</a><ul><li><a href="#slow-page-loading" class="table-of-contents__link toc-highlight">Slow Page Loading</a></li><li><a href="#charts-not-loading" class="table-of-contents__link toc-highlight">Charts Not Loading</a></li><li><a href="#timeouts" class="table-of-contents__link toc-highlight">Timeouts</a></li></ul></li><li><a href="#ui-issues" class="table-of-contents__link toc-highlight">UI Issues</a><ul><li><a href="#page-not-loading" class="table-of-contents__link toc-highlight">Page Not Loading</a></li><li><a href="#layout-problems" class="table-of-contents__link toc-highlight">Layout Problems</a></li><li><a href="#features-missing" class="table-of-contents__link toc-highlight">Features Missing</a></li></ul></li><li><a href="#policy-issues" class="table-of-contents__link toc-highlight">Policy Issues</a><ul><li><a href="#policies-not-working" class="table-of-contents__link toc-highlight">Policies Not Working</a></li><li><a href="#too-many-violations" class="table-of-contents__link toc-highlight">Too Many Violations</a></li><li><a href="#cant-edit-policies" class="table-of-contents__link toc-highlight">Can&#39;t Edit Policies</a></li></ul></li><li><a href="#browser-compatibility" class="table-of-contents__link toc-highlight">Browser Compatibility</a><ul><li><a href="#supported-browsers" class="table-of-contents__link toc-highlight">Supported Browsers</a></li><li><a href="#known-issues" class="table-of-contents__link toc-highlight">Known Issues</a></li><li><a href="#mobile" class="table-of-contents__link toc-highlight">Mobile</a></li></ul></li><li><a href="#still-need-help" class="table-of-contents__link toc-highlight">Still Need Help?</a></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Documentation</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/getting-started">Getting Started</a></li><li class="footer__item"><a class="footer__link-item" href="/features">Features</a></li><li class="footer__item"><a class="footer__link-item" href="/integrations">Integrations</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Product</div><ul class="footer__items clean-list"><li class="footer__item"><a href="mailto:info@langguard.ai" target="_blank" rel="noopener noreferrer" class="footer__link-item">Pricing<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li><li class="footer__item"><a href="mailto:info@langguard.ai" target="_blank" rel="noopener noreferrer" class="footer__link-item">Support<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Company</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://langguard.ai" target="_blank" rel="noopener noreferrer" class="footer__link-item">About<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li><li class="footer__item"><a href="https://langguard.ai/blog" target="_blank" rel="noopener noreferrer" class="footer__link-item">Blog<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li><li class="footer__item"><a href="https://langguard.ai" target="_blank" rel="noopener noreferrer" class="footer__link-item">Contact<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 LangGuard Inc. Built with Docusaurus.</div></div></div></footer></div>
+</body>
+</html>
