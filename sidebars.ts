@@ -108,6 +108,7 @@ const sidebars: SidebarsConfig = {
         'settings/user-management',
         'settings/cost-estimates',
         'settings/enforcement-mode',
+        'settings/ai-gateway/entra-cowork-plugin',
       ],
     },
     {

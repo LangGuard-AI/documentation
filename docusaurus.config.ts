@@ -130,7 +130,7 @@ const config: Config = {
     prism: {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
-      additionalLanguages: ['bash', 'typescript', 'json', 'yaml'],
+      additionalLanguages: ['bash', 'typescript', 'json', 'yaml', 'powershell'],
     },
     algolia: undefined, // Add Algolia search config when ready
   } satisfies Preset.ThemeConfig,

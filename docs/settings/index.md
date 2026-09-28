@@ -81,3 +81,8 @@ Configure cost-per-token rates for different models to power cost metrics in Tra
 
 ### [Enforcement Mode](/settings/enforcement-mode)
 Switch the gateway between observe-only Shadow mode and active Enforce mode for this tenant's inline agent and LLM traffic.
+
+---
+
+### [Entra SSO for Copilot Cowork](/settings/ai-gateway/entra-cowork-plugin)
+Let Microsoft Copilot Cowork call your governed MCP tools with each signed-in user's Microsoft Entra token, and generate the plugin package it installs.
