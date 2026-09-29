@@ -70,7 +70,7 @@ later value is printed in full with a copy button instead of a placeholder.
 
 ## Step 1 — Create the Entra app
 
-**Entra admin center → Entra ID → App registrations**
+**[Entra admin center → Entra ID → App registrations](https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade)**
 
 If a gateway app already exists for this directory, **reuse it**. Check the *All
 applications* tab first. A second app changes the Application ID URI, and the
@@ -102,7 +102,7 @@ The connector stops on the day the secret lapses, so rotate it before then.
 
 ## Step 2 — Register the OAuth client
 
-**Teams Developer Portal → Tools → OAuth client registration → Register client**
+**[Teams Developer Portal → Tools → OAuth client registration](https://dev.teams.microsoft.com/tools/oauth-configuration) → Register client**
 
 ### a. App settings
 
