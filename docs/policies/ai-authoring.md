@@ -47,17 +47,22 @@ the agent actually generated, with a **plain-language explanation of each rule**
 This is the key step for non-technical stakeholders to confirm the policy does what
 was asked — without reading Rego.
 
+A control counts as covered when a generated rule matches the control's tool by name,
+through the [tool-call helpers](/policies/creating-policies#tool-calls), and a synthetic
+call to that tool triggers a violation.
+
 ### 4. Red-team
 
-The agent generates **adversarial test cases** and shows which ones the policy
-catches and which slip through, surfacing gaps. You can ask it to **remediate** the
+The agent generates **adversarial test cases**, shaped like the tool calls and traces
+that LangGuard's entry paths produce, and shows which ones the policy catches and which
+slip through, surfacing gaps. You can ask it to **remediate** the
 gaps before moving on.
 
 ### 5. Review & Save
 
 Review the final Rego in the editor, set the policy's metadata (name, description,
 category, severity), and save. The new policy joins your [policy](/policies) set and
-starts evaluating traces.
+starts evaluating traces and tool calls.
 
 ## Pause, resume, and remediate
 
@@ -70,7 +75,7 @@ Nothing is saved as an active policy until you finish the Review & Save step.
 AI authoring is the fastest path for most policies. When you need full control over
 the evaluation logic — or want to fine-tune what the agent produced — see
 [Creating Policies](/policies/creating-policies) for the Rego model, input schema,
-and common patterns.
+[tool-call helpers](/policies/creating-policies#tool-calls), and common patterns.
 
 ## Next steps
 
