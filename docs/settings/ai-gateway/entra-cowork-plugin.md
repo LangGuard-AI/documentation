@@ -186,8 +186,13 @@ is set.
 |---|---|
 | Redirect URI | `https://teams.microsoft.com/api/platform/v1.0/oAuthConsentRedirect` |
 | Redirect URI | `https://teams.microsoft.com/api/platform/v1.0/oAuthRedirect` |
+| Redirect URI | `https://<tenant>.app.langguard.ai/api/mcp-connect/entra/callback` |
 
-Add **both** to the same Web platform. Consent uses the first, sign-in the second.
+Add **all three** to the same Web platform. Consent uses the first, sign-in the
+second. The third is LangGuard's own: when someone first uses an MCP server that
+needs their personal account (for example Linear), LangGuard signs them in with
+this app to confirm who they are before they connect it. Replace `<tenant>` with
+your LangGuard workspace name.
 
 ## Step 4 — Finish the OAuth client
 
@@ -216,6 +221,24 @@ Application ID URI in a v1 token, and which one you get is a property of the
 directory, so accepting both covers either.
 
 Click **Save and Generate Plugin**. The `.zip` downloads straight away.
+
+#### Connect sign-in
+
+Some MCP servers, such as Linear, need each person's own account, so that "my
+assigned issues" returns that person's issues. The first time someone uses one
+from Cowork, LangGuard gives them a link to connect it, and signs them in with
+the same Entra app to confirm who they are. For that, LangGuard needs its own
+client secret for the app.
+
+1. In the Entra app, **Certificates & secrets → New client secret**. Name it for
+   LangGuard. Do not reuse the secret in the Teams OAuth client: separate secrets
+   expire and rotate separately.
+2. In LangGuard, under **Connect sign-in** on the same page, enter the
+   **Application (client) ID** and the secret's **Value** (not its Secret ID),
+   then click **Check and save**.
+
+LangGuard checks the secret with Microsoft Entra before it saves it, and never
+shows it again. The section also shows the redirect URI from step 3b.
 
 ### b. Install the plugin
 
@@ -279,6 +302,8 @@ Virtual-key callers are unaffected.
 | Tokens rejected on audience | Only one audience entered | Enter both the client-id GUID and the Application ID URI |
 | The connector worked, then stopped on a date | The client secret expired | Create a new secret and update the Teams OAuth client |
 | Changes in LangGuard do not reach Cowork | A stale install | Uninstall the old app, then install the newly generated `.zip` |
+| Cowork says connecting accounts "isn't set up for your organization yet" | No Connect sign-in saved | Save the client ID and secret under **Connect sign-in** (step 5a) |
+| A connect link fails at Microsoft with `AADSTS50011` naming `…/api/mcp-connect/entra/callback` | The third redirect URI is missing | Add it to the Web platform (step 3b), wait a minute, then open the link again |
 
 ## Related
 
