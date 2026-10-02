@@ -179,16 +179,20 @@ Add `import data.langguard.helpers` to the policy. The helpers take no arguments
 | Helper | Value |
 |--------|-------|
 | `helpers.tool_calls` | Array of every tool call in this evaluation. Empty when there is none. |
-| `helpers.tool_call` | The tool call, defined whenever the evaluation has exactly one: always on agent hooks and the gateway, and also on a chat response or an ingested trace that holds a single call. |
+| `helpers.tool_call` | The tool call, defined whenever the evaluation has exactly one: always on agent hooks and the gateway, and also on a chat response or an ingested trace that holds a single tool-call object. |
 | `helpers.tool_name` | `helpers.tool_call.name` |
 | `helpers.tool_server` | `helpers.tool_call.server`. Undefined when the call has no server. |
 | `helpers.tool_args` | `helpers.tool_call.arguments`. Undefined when the arguments are not a JSON object. |
 | `helpers.is_tool_request` | True when `helpers.tool_call` is before the tool runs. |
 | `helpers.is_tool_response` | True when `helpers.tool_call` is after the tool ran. |
 
-An ingested trace can hold several tool calls, and `helpers.tool_call` is undefined then.
-Iterate `helpers.tool_calls` (`some call in helpers.tool_calls`) unless the policy runs
-only on agent hooks and the gateway.
+An ingested trace records a call after it ran. A tool span with both arguments and a result
+gives two objects for the same call: one with `phase: "request"` (the arguments) and one
+with `phase: "response"` (the arguments and the result). A trace can also hold several
+calls. In both cases `helpers.tool_call` is undefined. Iterate `helpers.tool_calls`
+(`some call in helpers.tool_calls`) unless the policy runs only on agent hooks and the
+gateway. A rule that checks `call.phase == "request"` then fires once per call on every
+entry path, ingested traces included.
 
 ### The tool-call object
 
@@ -202,7 +206,7 @@ only on agent hooks and the gateway.
 | `arguments_raw` | The argument text, only when arguments arrived that are not a JSON object: cut off, invalid JSON, a scalar or an array. |
 | `arguments_truncated` | `true` when the arguments are known or inferred to be cut off. |
 | `result` | The tool result. Present only after the tool ran. |
-| `phase` | `request` (before the tool runs) or `response` (after it ran). |
+| `phase` | `request` (before the tool runs) or `response` (after it ran). A completed span on an ingested trace gives one object of each. |
 | `entry_path` | `hooks`, `gatewayMcp`, `gatewayChat` or `traces`. |
 | `call_id` | A call identifier, when the source gives one. |
 | `observation_id` | The observation the call was read from. Ingested traces only. |
