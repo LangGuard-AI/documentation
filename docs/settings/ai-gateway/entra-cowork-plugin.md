@@ -267,6 +267,47 @@ so a stale app can keep serving the old gateway settings.
 Turn the connector on, then click **Authenticate** on the first task that uses it
 and sign in with your Entra account.
 
+## Personal connections
+
+For an MCP server that needs each person's own account (for example Linear),
+everyone connects their own account once. Each person's calls then run with
+their own access in that service.
+
+### How a person connects
+
+Until they connect, Copilot lists one tool for the server, **Connect your
+&lt;server&gt; account**. When they use it, Copilot shows a link. The link opens
+your LangGuard site, signs them in with Microsoft (step 5a, Connect sign-in),
+then asks the service for permission. When the page says **Connected**, they go
+back to Copilot and ask again.
+
+The link is personal and works for 30 minutes. If someone else opens it, they
+are refused.
+
+### Which permissions are requested
+
+By default LangGuard asks only for read and search permissions. An admin can
+change this per server: **Settings → AI Gateway → MCP servers → the server's
+⋯ menu → Per-user access**. A change applies to new connections; people already
+connected keep their permissions until they connect again.
+
+### Disconnecting
+
+| Who | Where |
+|---|---|
+| The person | **My connections**: `https://<tenant>.app.langguard.ai/api/mcp-connect/connections`, also linked from the **Connected** page. They sign in with Microsoft and disconnect their own connections. |
+| An admin | **Per-user access → Connected people**: one row per person, with **Disconnect**. |
+| Automatically | A connection unused for 90 days is removed. Removing the MCP server removes every connection to it. |
+
+Each disconnect also revokes the permission inside the service. If the service
+does not confirm the revocation, LangGuard still deletes the connection and the
+admin sees a warning; the person can remove the app in the service's own
+settings.
+
+A person can also remove the permission inside the service itself. The next time
+Copilot uses the server, it offers a **Reconnect** link. The service may not show
+the app under LangGuard's name: Linear, for example, lists it as **MCP**.
+
 ## Regenerating the plugin
 
 The `.zip` carries your **Directory (tenant) ID** and your **Application ID
