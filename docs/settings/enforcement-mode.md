@@ -75,11 +75,54 @@ does not:
 Register and approve the tools you expect agents to call in the
 [Data Catalog](/features/data-catalog#approval-status) before enabling Enforce.
 
+### Policy evaluation errors
+
+A policy evaluation error occurs when the policy engine is reachable, but it cannot give
+a result for one policy. The engine returns an HTTP error, or an undefined document.
+LangGuard does not read this as "no violations". It evaluates the other policies as usual.
+
+The result depends on the mode of the failed policy and on this setting:
+
+| Failed policy mode | Shadow | Enforce |
+|--------------------|--------|---------|
+| **Enforce** | The call is not blocked. LangGuard records the error. | The call is blocked. |
+| **Permissive** | The call is not blocked. LangGuard records the error. | The call is not blocked. LangGuard records the error. |
+
+When the call is blocked:
+
+- The response has a `block` entry with the ID of the failed policy.
+- `applied_rule` is `policy_evaluation_error`.
+- `reason` names the policy: `Policy "<name>" could not be evaluated: <error>`.
+
+When LangGuard records the error and does not block:
+
+- The response has a `notify` entry with the policy ID and the same error text.
+- LangGuard writes an error log entry.
+- The decision audit record has a `policy_evaluation_errors` attribute. It lists the
+  policy ID, the error kind, and the error text.
+- LangGuard removes internal identifiers from the error text and limits its length.
+
+In Shadow mode, the `verdict` and `applied_rule` fields of the response still show the
+Enforce outcome: `BLOCK` and `policy_evaluation_error`. When the legacy outcome is
+different, the gateway records a shadow-divergence entry.
+
+If LangGuard cannot read this setting, it blocks the call. Only a successful read of
+Shadow mode lets the call run.
+
+Shadow mode applies only to the gateway path described in
+[What traffic this governs](#what-traffic-this-governs). It does not apply to Arbiter
+hooks or to chat traffic. On those paths, an Enforce policy that cannot be evaluated
+always fails closed. Chat traffic is blocked. Arbiter hooks return ASK. A Permissive
+policy that cannot be evaluated never blocks, on any path.
+
 ### Behaviour that is the same in both modes
 
-Some fail-closed behaviour is never shadowed. If the policy engine is unreachable, the
-call is blocked with a `system` violation in both modes. A plugin halt also blocks in
-both modes.
+Some fail-closed behaviour is never shadowed:
+
+- **Policy engine unreachable.** LangGuard cannot reach the policy engine. The call is
+  blocked with a `system` violation in both modes, for every policy mode. This is not a
+  policy evaluation error.
+- **Plugin halt.** A plugin halt blocks the call in both modes.
 
 ## Changing the mode
 
@@ -88,7 +131,8 @@ active** for Enforce) and who last changed it and when.
 
 - **Switching to Enforce** opens a confirmation dialog, because it starts blocking this
   tenant's gateway traffic. Review the shadow-divergence records first, then confirm
-  **Enable Enforce**.
+  **Enable Enforce**. A record with the applied rule `policy_evaluation_error` shows a
+  policy that cannot be evaluated. Fix that policy before you enable Enforce.
 - **Switching back to Shadow** applies immediately. It is always safe because it only
   stops blocking.
 
