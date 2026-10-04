@@ -136,8 +136,8 @@ An ingested trace looks like this:
 |-------|------|-------------|
 | `trace.id` | string | Unique trace identifier |
 | `trace.name` | string | Operation name |
-| `trace.input` | string | Trace input content. Before a tool runs (agent hooks and the gateway): the tool arguments as JSON text. |
-| `trace.output` | string | Trace output content. After a tool ran, the tool result as text on agent hooks and on some gateway paths, not on every one. Read a tool result with `helpers.tool_calls`, not from here. |
+| `trace.input` | string | Trace input content. Before a tool runs (agent hooks and the gateway): the tool arguments as JSON text. Text can be only on an observation: scan it with the [text matching helpers](#text-matching-helpers), not with a direct read. |
+| `trace.output` | string | Trace output content. After a tool ran, the tool result as text on agent hooks and on some gateway paths, not on every one. Read a tool result with `helpers.tool_calls`, not from here. Scan text with the [text matching helpers](#text-matching-helpers), not with a direct read. |
 | `trace.metadata` | object | Custom metadata (attributes, mappedGenAI, etc.) |
 | `trace.tags` | array | Trace tags |
 | `trace.observations` | array | Child observations. `type` is `GENERATION`, `SPAN`, `EVENT` or `TOOL`. |
@@ -179,7 +179,7 @@ Add `import data.langguard.helpers` to the policy. The helpers take no arguments
 | Helper | Value |
 |--------|-------|
 | `helpers.tool_calls` | Array of every tool call in this evaluation. Empty when there is none. |
-| `helpers.tool_call` | The tool call, defined whenever the evaluation has exactly one: always on agent hooks and the gateway, and also on a chat response or an ingested trace that holds a single tool-call object. |
+| `helpers.tool_call` | The tool call. Defined only when `helpers.tool_calls` has exactly one object. A tool-call evaluation from agent hooks or the gateway has one. It is undefined for an ingested trace span that has arguments and a result (two objects), for a trace with several calls, and where there is no tool call. |
 | `helpers.tool_name` | `helpers.tool_call.name` |
 | `helpers.tool_server` | `helpers.tool_call.server`. Undefined when the call has no server. |
 | `helpers.tool_args` | `helpers.tool_call.arguments`. Undefined when the arguments are not a JSON object. |
@@ -188,11 +188,23 @@ Add `import data.langguard.helpers` to the policy. The helpers take no arguments
 
 An ingested trace records a call after it ran. A tool span with both arguments and a result
 gives two objects for the same call: one with `phase: "request"` (the arguments) and one
-with `phase: "response"` (the arguments and the result). A trace can also hold several
-calls. In both cases `helpers.tool_call` is undefined. Iterate `helpers.tool_calls`
-(`some call in helpers.tool_calls`) unless the policy runs only on agent hooks and the
-gateway. A rule that checks `call.phase == "request"` then fires once per call on every
-entry path, ingested traces included.
+with `phase: "response"` (the arguments and the result). A span with arguments and no result
+(or with no arguments and no result) gives one `request` object. A span with a result and
+no arguments gives one `response` object. A trace can also hold several calls.
+`helpers.tool_call` is undefined when the trace has two or more objects. Iterate
+`helpers.tool_calls` (`some call in helpers.tool_calls`) unless the policy runs only on agent
+hooks and the gateway.
+
+Some evaluations have no tool call. The agent hooks checks on the user prompt and on the
+final model response inspect model text, so they have none. Gateway messages other than
+`tools/call`, such as `tools/list`, have none. Chat requests carry tool calls only on a
+non-streaming LiteLLM response, and that evaluation is a Model output evaluation: the
+guard `helpers.is_tool_call_input` is false there, so a rule guarded by it does not run.
+
+A rule guarded by `helpers.is_tool_call_input` that checks `call.phase == "request"` fires
+once per call on agent hooks and the gateway. On an ingested trace it fires once for each
+tool span that has arguments, or that has no result. A span that has only a result gives a
+`response` object, so the rule does not fire for it.
 
 ### The tool-call object
 
@@ -325,6 +337,71 @@ test_under_limit_passes if {
 opa test . -v
 ```
 
+## Text Matching Helpers
+
+A policy that scans text must look at the trace and at its observations. A direct read of
+`input.trace.input` or `input.trace.output` misses text that is only on an observation,
+and an ingested trace can have no top-level input or output at all. Use the matcher
+helpers. Add `import data.langguard.helpers` to the policy.
+
+| Helper | Scans |
+|--------|-------|
+| `helpers.trace_matches(value, mode)` | The `input` and `output` of the trace. |
+| `helpers.obs_matches(value, mode)` | The `input` and `output` of every observation. |
+| `helpers.field_matches(path, value, mode)` | One dot-separated path (for example `metadata.model`) on the trace and on every observation. |
+
+Each helper returns a set of match objects with `location` (`trace` or `observation`),
+`span_id`, `field` and `matched_value`. A set is empty when nothing matches. To scan the
+trace and the observations in one rule, take the union of the two sets:
+
+```rego
+violation contains result if {
+    helpers.is_model_output
+    matches := helpers.trace_matches("password", "contains_icase") | helpers.obs_matches("password", "contains_icase")
+    some match in matches
+
+    result := {
+        "type": "password_in_trace",
+        "message": "The prompt or the model output contains a password",
+        "severity": "high",
+    }
+}
+```
+
+`trace_matches` and `obs_matches` scan both the `input` and the `output`. The checkpoint
+guard does not choose which text is scanned. A rule guarded by `helpers.is_model_output`
+that uses these two helpers also fires on text that is only in the prompt. To scan only
+the model output, use `helpers.field_matches("output", value, mode)`. It reads
+`trace.output` and the `output` of every observation. To scan only the prompt, use
+`helpers.field_matches("input", value, mode)`. This rule scans only the model output:
+
+```rego
+violation contains result if {
+    helpers.is_model_output
+    some match in helpers.field_matches("output", "password", "contains_icase")
+
+    result := {
+        "type": "password_in_output",
+        "message": "The model output contains a password",
+        "severity": "high",
+    }
+}
+```
+
+The `mode` is one of:
+
+| Mode | A text matches when |
+|------|---------------------|
+| `exact` | It equals `value`. |
+| `icase` | It equals `value`, ignoring case. |
+| `contains_icase` | It contains `value`, ignoring case. |
+| `regex` | `value`, as a regular expression, matches part of it. |
+
+Guard each rule with the [checkpoint helper](#checkpoint-helpers) for the moment it
+inspects: `helpers.is_model_input` for what is sent to a model, `helpers.is_model_output`
+for what a model produced. The guard sets the moment the rule runs. It does not set which
+text is scanned. Set that with `field_matches("input", ...)` or `field_matches("output", ...)`.
+
 ## Creating a Policy
 
 ### Via UI
@@ -355,25 +432,30 @@ For programmatic policy management, see the [API documentation](https://app.lang
 
 ### Pattern 1: Regex Matching
 
-Detect patterns in text:
+Detect patterns in the model output. The rule scans the `output` of the trace and of every
+observation with `helpers.field_matches` (see the
+[text matching helpers](#text-matching-helpers)) in the `regex` mode. Each pattern is a
+regular expression, and `(?i)` makes it ignore case. In a Rego string, write each
+backslash twice, for example `"\\bword\\b"`.
 
 ```rego
 package langguard.profanity_filter
 
 import rego.v1
+import data.langguard.helpers
 
-profanity_patterns := ["badword1", "badword2", "badword3"]
+profanity_patterns := ["(?i)badword1", "(?i)badword2", "(?i)badword3"]
 
 violation contains result if {
-    trace := input.trace
-    output := lower(trace.output)
+    helpers.is_model_output
     some pattern in profanity_patterns
-    contains(output, pattern)
+    some match in helpers.field_matches("output", pattern, "regex")
 
     result := {
         "type": "profanity_detected",
         "message": "Inappropriate content detected in output",
         "pattern": pattern,
+        "location": match.location,
     }
 }
 ```
