@@ -328,9 +328,11 @@ Good to know:
 - Pushing hooks triggers a one-time client security-approval dialog in each interactive
   session (`claude -p` skips it).
 - The gate scope is `mcp__*` tools; native tools auto-allow.
-- In [Enforce mode](/settings/enforcement-mode) a tool that is **not in your entity
-  catalog is blocked**, so register and approve the tools you want to allow in the
-  [Data Catalog](/features/data-catalog#approval-status).
+- A tool that is **not in your entity catalog** gets an **ASK** verdict, not an allow
+  (see [How verdicts are decided](/settings/arbiter-management#how-verdicts-are-decided)),
+  so register and approve the tools you want to allow in the
+  [Data Catalog](/features/data-catalog#approval-status). The
+  [Enforcement Mode](/settings/enforcement-mode) setting does not apply to these hooks.
 - Per-user attribution is coarse at the hook layer because of the shared fleet bearer.
   It is recovered through identity-stamped OTLP telemetry correlated by session ID.
 

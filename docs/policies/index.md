@@ -154,12 +154,13 @@ When LangGuard records an error and does not block, it also writes an error log 
 The decision audit record has a `policy_evaluation_errors` attribute that lists the
 failed policies. Other policies decide the call as usual.
 
-- **Shadow mode.** On the MCP gateway, [Shadow mode](/settings/enforcement-mode#policy-evaluation-errors)
-  (**Observe only**) records the error of an Enforce policy and does not block the call.
-  If LangGuard cannot read the mode, it blocks the call. Arbiter hooks and chat traffic
-  ignore Shadow mode.
+- **Shadow mode.** On the MCP gateway, [Shadow mode](/settings/enforcement-mode#shadow-mode)
+  (the default) never blocks a call. It records the error of an Enforce policy and does
+  not block the call. If LangGuard cannot read the mode, it blocks the call. Arbiter
+  hooks and chat traffic ignore Shadow mode.
 - **Policy engine unreachable.** This is a different failure. LangGuard cannot reach the
-  policy engine. The call always fails closed, and Shadow mode never changes this.
+  policy engine. The call fails closed on every path, except the MCP gateway in Shadow
+  mode, which records the failure and does not block the call.
 - **Traces.** When one policy cannot be evaluated for a trace, LangGuard does not record
   the trace as evaluated for that run. The trace keeps the state it had. LangGuard does
   not delete the existing open violations of that policy for the trace. Violations from
