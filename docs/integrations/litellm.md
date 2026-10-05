@@ -88,9 +88,10 @@ never returns a block for an MCP tool call. It records what Enforce mode would d
 requests do not use this setting. Shadow mode controls the LangGuard result only. If
 LangGuard does not answer (a timeout, a request that is too large, or an internal
 error), the `unreachable_fallback: fail_closed` setting that LangGuard installs makes
-LiteLLM block the call. A server or tool that the AI Gateway hides because of a Block
-decision is not offered to agents in either mode (see
-[What Shadow mode does not change](/settings/enforcement-mode#what-shadow-mode-does-not-change)).
+LiteLLM block the call. The MCP servers and tools that LiteLLM offers to agents follow
+the mode too: in Enforce mode a server or tool set to **Block** on the MCP Enforcement
+page is not offered, and in Shadow mode it is, with one exception (see
+[The AI Gateway tool list](/settings/enforcement-mode#the-ai-gateway-tool-list)).
 
 If LangGuard can't reach the LiteLLM admin API to push the configuration
 automatically, the setup dialog provides a **`config.yaml` snippet** you can paste

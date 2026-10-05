@@ -10,7 +10,7 @@ description: Switch the LangGuard MCP gateway between Shadow mode, which never b
 decision point (PDP), blocks your **MCP tool calls**. In **Shadow** mode the gateway
 never blocks a call. It records what Enforce mode would do. In **Enforce** mode it
 blocks. See [What Shadow mode does not change](#what-shadow-mode-does-not-change) for
-the two things that can still stop a call in Shadow mode.
+the one thing that can still stop a call in Shadow mode.
 
 **Navigation:** Settings → Enforcement Mode (`/settings/enforcement-mode`)
 
@@ -62,7 +62,8 @@ Enforce mode:
   approved, not in the catalog, banned, or has a high or critical SCOPE risk tier
 - A server or tool set to **Block** on the MCP Enforcement page, and a call that needs
   approval because of an **Escalate** decision there. The MCP Enforcement page shows a
-  notice when the mode is Shadow.
+  notice when the mode is Shadow. Your AI Gateway also keeps offering these servers and
+  tools to agents (see [The AI Gateway tool list](#the-ai-gateway-tool-list)).
 - A policy that cannot be evaluated (see [Policy evaluation errors](#policy-evaluation-errors))
 - **Policy engine unreachable**: LangGuard cannot reach the policy engine
 - A plugin halt
@@ -87,7 +88,8 @@ The true outcome stays visible:
   `verdict` (`ALLOW`, `BLOCK`, or `ASK`), the rule that fired (`applied_rule`), a
   `reason` where present, and the policy bundle revision.
 - Policy violations are listed in [Policy Violations](/policies/policy-violations), as in
-  Enforce mode.
+  Enforce mode. A violation found on the MCP gateway in Shadow mode shows as
+  **Detected**, not **Blocked**, because the call was not blocked.
 - When Enforce mode would block the call, the gateway logs it and writes a
   **shadow-divergence** record to the LangGuard decision audit log. The dashboard does
   not show this log. To see what Enforce mode would block, read the `verdict` and
@@ -97,16 +99,38 @@ The call runs, so sequence policies count it in the session history.
 
 Use Shadow to see how often Enforce would block a call before you turn it on.
 
+### The AI Gateway tool list
+
+On the LiteLLM AI Gateway, LangGuard sets which MCP servers and tools the gateway
+offers to agents. The Enforcement Mode decides what a **Block** decision on the MCP
+Enforcement page does to that list:
+
+- **Enforce mode:** a server that is set to **Block**, with no tool allowed, is not
+  offered to agents. Where the gateway can narrow the tool list of a server, a blocked
+  tool is not offered either. LiteLLM refuses a call to a tool that it does not offer,
+  before LangGuard sees the call.
+- **Shadow mode:** a **Block** decision does not remove a server or a tool from the list.
+  The call reaches LangGuard, which records it and does not block it. There is one
+  exception. Your AI Gateway can hold a tool list for a server that LangGuard set
+  earlier, for example in Enforce mode. If your AI Gateway cannot remove that list,
+  LangGuard changes it to all the tools that LangGuard knows on the server. A tool that
+  LangGuard does not know yet, for example a new tool, stays off the list. If the server
+  did not send all of its tools when LangGuard listed them, and the old list has a tool
+  that is not in that listing, LangGuard does not change the old list.
+- **If LangGuard cannot read this setting:** the list is the same as in Enforce mode.
+
+When you change the mode, LangGuard updates the list of your AI Gateway. The Settings,
+AI Gateway page shows the result for each server.
+
+These rules do not depend on the mode: a server that is not registered on your AI
+Gateway is not offered, and a server that nobody has decided on the MCP Enforcement page
+stays on the list.
+
 ### What Shadow mode does not change
 
-Shadow mode controls the result that LangGuard returns for a call. Two things can still
+Shadow mode controls the result that LangGuard returns for a call. One thing can still
 stop a call in Shadow mode:
 
-- **The AI Gateway tool list.** On the LiteLLM AI Gateway, a server that is set to
-  **Block** on the MCP Enforcement page, with no tool allowed, is not offered to agents.
-  Where the gateway can narrow the tool list of a server, a blocked tool is not offered
-  either. LiteLLM refuses a call to a tool that it does not offer, before LangGuard sees
-  the call. This does not depend on the Enforcement Mode.
 - **No result from LangGuard.** If LangGuard does not return a result, for example
   because of a timeout, a request that is too large, or an internal error, the failure
   setting of the gateway decides. The LiteLLM guardrail that LangGuard installs uses
@@ -136,7 +160,9 @@ Register and approve the tools you expect agents to call in the
 [Data Catalog](/features/data-catalog#approval-status) before enabling Enforce.
 
 In Enforce mode, "Policy engine unreachable" and a plugin halt also block the call, and
-a call that needs approval is blocked while LangGuard creates an approval request.
+a call that needs approval is blocked while LangGuard creates an approval request. Your
+AI Gateway stops offering the servers and tools set to **Block** (see
+[The AI Gateway tool list](#the-ai-gateway-tool-list)).
 
 ### If LangGuard cannot read this setting
 
@@ -204,7 +230,9 @@ The page shows the current mode with a badge (**Observe only, never blocks** for
   to after you enable Enforce.
 - **Switching back to Shadow** applies immediately. LangGuard stops blocking on the MCP
   gateway, including "Policy engine unreachable", plugin halts, and approval requests
-  (see [What Shadow mode does not change](#what-shadow-mode-does-not-change)).
+  (see [What Shadow mode does not change](#what-shadow-mode-does-not-change)). LangGuard
+  also puts the servers and tools set to **Block** back on the tool list of your AI
+  Gateway.
 
 After enabling Enforce, monitor your gateway traffic in the
 [Trace Explorer](/features/trace-explorer) and
