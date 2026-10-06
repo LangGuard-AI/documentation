@@ -158,6 +158,15 @@ The practical consequence: a tool that is not registered and approved in your ca
 gets **ASK**, which becomes a **deny** on Codex and shell. Approve the tools you expect
 agents to use before switching a fleet to strict mode.
 
+One more check runs after the table. It applies when the policy engine is reachable, but
+it cannot evaluate one policy that is in **enforce** mode (an HTTP error or no result).
+The verdict is then **ASK**, unless the table gave **BLOCK**. A BLOCK verdict stays
+BLOCK. The reason names the failed policy, and the applied rule is
+`policy_evaluation_error`. A **permissive** policy that cannot be evaluated does not
+change the verdict. LangGuard records the error as a `notify` entry. This is separate
+from the first row of the table, which applies when the policy engine is unreachable.
+See [Policy evaluation errors](/settings/enforcement-mode#policy-evaluation-errors).
+
 ## Device drawer
 
 Clicking a row opens a drawer with four tabs:

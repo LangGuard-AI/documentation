@@ -96,8 +96,11 @@ The descriptor tells a caller everything it needs to know about the contract:
 
 - **`type: validation`** — the PDP never mutates a call; it only judges it.
 - **`hooks`** — it evaluates `tools/call` in both the `request` and `response` phase.
-- **`mode: enforce`** and **`failOpen: false`** — a failed validation blocks, and engine
-  trouble is reported as a blocking error rather than a silent pass.
+- **`mode: enforce`** and **`failOpen: false`** — a validation result with severity
+  `error` blocks, and engine trouble is reported as a blocking error rather than a silent
+  pass. A JSON-RPC error (see [Errors](#errors)) must also be treated as a block. On the
+  gateway surface in [Shadow mode](/settings/enforcement-mode#shadow-mode), a result never
+  has severity `error` (see [Gateway surface](#gateway-surface)).
 
 ## `interceptor/invoke`
 
@@ -125,6 +128,17 @@ Evaluates one MCP tool call. The same method serves two callers, selected by
 
 This is the default when `config.langguard.surface` is absent. It is the path governed by
 the [Enforcement Mode](/settings/enforcement-mode) setting.
+
+In Shadow mode (the default), the gateway surface never returns a blocking result.
+`validation.severity` is never `error`, `langguard.status` is `notify` or `success`, every
+entry in `violations` has `status` `notify`, and no `policy_escalation` is returned.
+`validation.valid` is `false` when there is any violation, also when nothing blocks: a
+caller must block only on severity `error`. `langguard.verdict`, `applied_rule` and
+`reason` still carry the true outcome, so a caller can see that Enforce mode would block
+the call. Shadow mode controls the validation result only. A JSON-RPC error, for example
+a `timeoutMs` that expires (`-32000`) or an internal error (`-32603`), is the same in
+every mode, and the caller's own failure handling decides (the descriptor declares
+`failOpen: false`). The examples below show Enforce mode.
 
 **Identity.** LangGuard reads caller identity from two places. Values under
 `config.langguard` win; `context.principal.claims` is a lower-precedence fallback for
@@ -246,8 +260,8 @@ as the call ID for correlation (one is generated if absent).
 | `bundle_revision` | Revision of the policy bundle that produced the decision. |
 | `policy_escalation` | Present only when the call was blocked pending human approval. See below. |
 
-**Escalation.** When a policy's response is *Escalate*, the call is blocked on the wire
-and `langguard.policy_escalation` carries a trimmed envelope:
+**Escalation.** In Enforce mode, when a policy's response is *Escalate*, the call is
+blocked on the wire and `langguard.policy_escalation` carries a trimmed envelope:
 
 ```json
 "policy_escalation": {
@@ -309,18 +323,23 @@ Arbiter Management.
 ## How verdicts map to the spec
 
 The SEP-2624 severity model has no notion of "ask". Only `error` blocks, so LangGuard
-projects its three-way verdict conservatively:
+projects its three-way verdict conservatively. A result with `valid: false` and severity
+`warn` must not block the call.
 
-| `langguard.verdict` | `validation.valid` | `validation.severity` |
+| Surface and outcome | `validation.valid` | `validation.severity` |
 |---------------------|--------------------|-----------------------|
-| `ALLOW` with no violations | `true` | `info` |
-| `ALLOW` with notify-only violations (gateway) | `true` | `warn` |
-| `BLOCK` | `false` | `error` |
-| `ASK` | `false` | `error` |
+| Gateway: no violations (`langguard.status` `success`) | `true` | `info` |
+| Gateway: notify-only violations, `ALLOW` | `false` | `warn` |
+| Gateway, Enforce mode: `BLOCK` or `ASK` | `false` | `error` |
+| Gateway, Shadow mode: `BLOCK` or `ASK` (not blocked) | `false` | `warn` |
+| Hooks: `ALLOW` and no `block` | `true` | `info` |
+| Hooks: `BLOCK`, `ASK`, or `block: true` | `false` | `error` |
 
 A caller that can pause for human approval should read `langguard.verdict` and treat
-`ASK` accordingly. A caller that only understands the spec fields fails closed, which is
-the intended default.
+`ASK` accordingly. On the gateway surface in Shadow mode, `ASK` only shows the Enforce
+outcome: the call is not blocked and no approval request is created, so do not pause
+the call. A caller that only understands the spec fields fails closed, which is the
+intended default.
 
 Each entry in `validation.messages` corresponds to one violation, with `path` set to the
 policy ID and `severity` set to `warn` for notify violations or `error` for blocking ones.

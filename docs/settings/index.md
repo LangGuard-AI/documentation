@@ -80,7 +80,7 @@ Configure cost-per-token rates for different models to power cost metrics in Tra
 ---
 
 ### [Enforcement Mode](/settings/enforcement-mode)
-Switch the gateway between observe-only Shadow mode and active Enforce mode for this tenant's inline agent and LLM traffic.
+Switch the MCP gateway between Shadow mode, which never blocks and records what Enforce mode would do, and Enforce mode, which blocks your MCP tool calls.
 
 ---
 

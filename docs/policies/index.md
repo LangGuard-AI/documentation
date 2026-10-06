@@ -136,6 +136,40 @@ Each policy can operate in one of three modes:
 - **Promote to Enforce** — Once you're confident the policy is correctly calibrated, switch to Enforce mode
 - **Use Disabled sparingly** — Only disable policies you no longer need; consider Permissive mode instead for policies you want to pause temporarily
 
+### When a Policy Cannot Be Evaluated
+
+A policy can fail to evaluate. For example, the policy engine returns an error for the
+Rego code, or the package name does not match the policy. This is a **policy evaluation
+error**. The policy engine is still reachable. LangGuard does not read the failure as
+"no violations".
+
+The mode of the failed policy decides what LangGuard does:
+
+| Mode | Result |
+|------|--------|
+| **Enforce** | The call fails closed. LangGuard blocks gateway and chat calls. Arbiter hooks return ASK. The applied rule is `policy_evaluation_error`, and the reason names the policy. |
+| **Permissive** | The call is not blocked. LangGuard records the error as a `notify` entry with the policy ID and the error text. |
+
+When LangGuard records an error and does not block, it also writes an error log entry.
+The decision audit record has a `policy_evaluation_errors` attribute that lists the
+failed policies. Other policies decide the call as usual.
+
+- **Shadow mode.** On the MCP gateway, [Shadow mode](/settings/enforcement-mode#shadow-mode)
+  (the default) never blocks a call. It records the error of an Enforce policy and does
+  not block the call. If LangGuard cannot read the mode, it blocks the call. Arbiter
+  hooks and chat traffic ignore Shadow mode.
+- **Policy engine unreachable.** This is a different failure. LangGuard cannot reach the
+  policy engine. The call fails closed on every path, except the MCP gateway in Shadow
+  mode, which records the failure and does not block the call.
+- **Traces.** When one policy cannot be evaluated for a trace, LangGuard does not record
+  the trace as evaluated for that run. The trace keeps the state it had. LangGuard does
+  not delete the existing open violations of that policy for the trace. Violations from
+  other policies are still stored. This is the same for every mode.
+
+To find a policy that cannot be evaluated, look for `could not be evaluated` in the
+`block` and `notify` entries of the response. You can also look for the
+`policy_evaluation_errors` attribute in the decision audit record.
+
 ## Best Practices
 
 ### 1. Start with Built-in Policies

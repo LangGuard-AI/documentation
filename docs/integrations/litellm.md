@@ -82,6 +82,17 @@ When you enable **Install LangGuard guardrails** during setup, LangGuard:
 3. Routes each call through LangGuard policy evaluation, which can allow, flag, or
    block the request
 
+MCP tool calls through the LiteLLM MCP gateway follow the
+[Enforcement Mode](/settings/enforcement-mode). In Shadow mode (the default) LangGuard
+never returns a block for an MCP tool call. It records what Enforce mode would do. Chat
+requests do not use this setting. Shadow mode controls the LangGuard result only. If
+LangGuard does not answer (a timeout, a request that is too large, or an internal
+error), the `unreachable_fallback: fail_closed` setting that LangGuard installs makes
+LiteLLM block the call. The MCP servers and tools that LiteLLM offers to agents follow
+the mode too: in Enforce mode a server or tool set to **Block** on the MCP Enforcement
+page is not offered, and in Shadow mode it is, with one exception (see
+[The AI Gateway tool list](/settings/enforcement-mode#the-ai-gateway-tool-list)).
+
 If LangGuard can't reach the LiteLLM admin API to push the configuration
 automatically, the setup dialog provides a **`config.yaml` snippet** you can paste
 into your proxy to wire up the guardrail manually.
