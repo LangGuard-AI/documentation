@@ -73,6 +73,19 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Google Cloud',
+      link: {
+        type: 'doc',
+        id: 'google-cloud/index',
+      },
+      items: [
+        'google-cloud/installation',
+        'google-cloud/existing-infrastructure',
+        'google-cloud/service-mesh',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Policies',
       link: {
         type: 'doc',
