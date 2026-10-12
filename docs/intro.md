@@ -49,6 +49,10 @@ Manage the lifecycle of your AI assets with a Kanban board and policy-gated stag
 
 Run LangGuard natively inside your own Databricks workspace as a [Databricks App](/databricks-app) — full data residency, real-time AI Gateway enforcement, and storage in your Unity Catalog.
 
+### Deploy on Google Cloud
+
+Install LangGuard into your own [Google Cloud](/google-cloud) project — a new private GKE cluster with Cloud SQL and Vertex AI, or the cluster, network, database and service mesh you already run.
+
 ### Multi-tenant Support
 
 Built for enterprise with full multi-tenancy, role-based access, and subdomain isolation.
