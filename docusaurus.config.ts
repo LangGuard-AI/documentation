@@ -13,6 +13,9 @@ const config: Config = {
 
   url: 'https://docs.langguard.ai',
   baseUrl: '/',
+  // GitHub Pages 301-redirects /page to /page/, so canonical and sitemap URLs
+  // must carry the trailing slash or Google sees them as redirects.
+  trailingSlash: true,
 
   organizationName: 'LangGuard-AI',
   projectName: 'langguard-docs',
