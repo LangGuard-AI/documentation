@@ -34,7 +34,7 @@ From the `langguard-install/gcp` directory of the bundle:
 The example uses `--no-load-balancer` because the mesh gateway serves ingress. The
 installer then creates no load balancer, and you route traffic to the LangGuard Services.
 Remove the flag to use the installer's load balancer. See
-[Without a load balancer](/google-cloud/existing-infrastructure#without-a-load-balancer)
+[Without a load balancer](/private-install/google-cloud/existing-infrastructure#without-a-load-balancer)
 for the paths, ports and requirements.
 
 :::warning Pass the same file on every run
@@ -282,6 +282,9 @@ Features that you configure in LangGuard need their own endpoints registered:
   `oauth2.googleapis.com` on TCP 443, from `langguard-dashboard`.
 - Google Cloud integration: the Vertex AI, Cloud Trace, Cloud Logging and Compute Engine
   APIs, from `opencite`.
+- Email: the SMTP relay host on TCP 587, or `email.<aws_ses_region>.amazonaws.com` on TCP
+  443, from `langguard-dashboard`. See
+  [Sign-in and Email](/private-install/google-cloud/sign-in-and-email#email).
 - Other integrations (agent platforms, model providers): the endpoints of each service.
 
 ## Verification

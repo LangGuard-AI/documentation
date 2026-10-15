@@ -21,7 +21,7 @@ relabel, remote-control, deactivate, and forget devices.
 :::info Admin only
 Arbiter Management is available to workspace **admins**. It is not shown when LangGuard
 runs as a Databricks App, where inline enforcement is configured under
-[AI Gateway Enforcement](/databricks-app/ai-gateway) instead.
+[AI Gateway Enforcement](/private-install/databricks-app/ai-gateway) instead.
 :::
 
 To install Arbiter on developer machines or deploy it to your cloud, use the

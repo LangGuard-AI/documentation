@@ -29,12 +29,12 @@ multi-tenant routing; the app is provisioned, secured, and billed per workspace.
   in your Unity Catalog and Lakebase, governed by your existing UC permissions.
 - **Native AI Gateway enforcement** — LangGuard can sit inline in front of your
   Mosaic AI Gateway / Model Serving endpoints and **allow, notify, or block**
-  model calls in real time. See [AI Gateway Enforcement](/databricks-app/ai-gateway).
+  model calls in real time. See [AI Gateway Enforcement](/private-install/databricks-app/ai-gateway).
 - **Automatic capture** — model and agent activity is captured from the workspace
   with no per-agent instrumentation, via native OTLP ingestion and AI Gateway
-  inference tables. See [Data Capture](/databricks-app/data-capture).
+  inference tables. See [Data Capture](/private-install/databricks-app/data-capture).
 - **Unity Catalog governance** — every LangGuard table is a real UC object you can
-  query, secure, and audit. See [Unity Catalog Data](/databricks-app/unity-catalog).
+  query, secure, and audit. See [Unity Catalog Data](/private-install/databricks-app/unity-catalog).
 
 ## Architecture at a glance
 
@@ -62,7 +62,7 @@ Unlike the LangGuard SaaS pipeline, the Databricks App has **no `otel-ingest`
 service and no inbound webhook chain**. Instead the app:
 
 1. **Enforces** model calls that route through its `/v1/chat/completions` proxy
-   (the [AI Gateway](/databricks-app/ai-gateway) path), and
+   (the [AI Gateway](/private-install/databricks-app/ai-gateway) path), and
 2. **Exports** the resulting traces as OTLP directly to your workspace's native
    Databricks OTLP endpoint, which lands them in a Unity Catalog Delta table, and
 3. **Polls** those Delta tables (plus AI Gateway inference tables and
@@ -80,11 +80,11 @@ everything in the workspace — even agents it doesn't directly proxy:
 | **Native OTLP export** | Traces LangGuard emits for proxied calls | Observe |
 | **Pollers** | AI Gateway inference tables + `system.ai_gateway.usage` for endpoints that don't proxy | Observe |
 
-See [Data Capture](/databricks-app/data-capture) for the full flow.
+See [Data Capture](/private-install/databricks-app/data-capture) for the full flow.
 
 ## Next steps
 
-- [Installation](/databricks-app/installation) — deploy the app to your workspace
-- [AI Gateway Enforcement](/databricks-app/ai-gateway) — guard your model endpoints
-- [Data Capture](/databricks-app/data-capture) — how traces and activity are collected
-- [Unity Catalog Data](/databricks-app/unity-catalog) — where everything is stored
+- [Installation](/private-install/databricks-app/installation) — deploy the app to your workspace
+- [AI Gateway Enforcement](/private-install/databricks-app/ai-gateway) — guard your model endpoints
+- [Data Capture](/private-install/databricks-app/data-capture) — how traces and activity are collected
+- [Unity Catalog Data](/private-install/databricks-app/unity-catalog) — where everything is stored

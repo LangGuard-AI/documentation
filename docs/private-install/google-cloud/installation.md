@@ -16,7 +16,7 @@ uses Google Cloud managed services:
   a bastion host, Cloud VPN or Cloud Interconnect.
 
 To install into a cluster, network, database or registry that you already operate, see
-[Existing infrastructure](/google-cloud/existing-infrastructure).
+[Existing infrastructure](/private-install/google-cloud/existing-infrastructure).
 
 ## The bundle
 
@@ -180,7 +180,7 @@ The installer then enables no APIs. Before it changes anything, it checks that t
 necessary APIs are enabled. This check needs `roles/serviceusage.serviceUsageViewer`. If an
 API is missing, the installer stops and prints the `gcloud services enable` command for
 the missing APIs. For the list of APIs that it checks, see
-[Existing infrastructure](/google-cloud/existing-infrastructure#google-cloud-apis).
+[Existing infrastructure](/private-install/google-cloud/existing-infrastructure#google-cloud-apis).
 
 ## Install
 
@@ -223,7 +223,7 @@ two APIs in [Google Cloud APIs](#google-cloud-apis) must be enabled.
 | `--opencite-image-tag` | Version in `images/manifest.env` | OpenCITE image tag. |
 | `--dns-zone-name` | Derived from `--domain` | Name of the Cloud DNS zone. The default is the domain with each dot changed to a dash, plus `-zone`, for example `app-mycompany-com-zone`. |
 | `--use-existing-dns-zone` | | Write the records to the existing zone that `--dns-zone-name` names, or to the zone with the derived name. The installer does not create a zone. See [Delegate DNS](#delegate-dns). |
-| `--auth` | `userpass` | Sign-in method. `userpass` is the only supported value. The installer generates an admin password. |
+| `--auth` | `userpass` | Sign-in method. `userpass` is the only supported value. The installer generates an admin password. See [Sign-in and Email](/private-install/google-cloud/sign-in-and-email). |
 | `--admin-email` | `admin@<domain>` | Admin sign-in email. |
 | `--state-bucket` | `<project>-tf-state` | Terraform state bucket. If it does not exist, the installer creates it with object versioning. |
 | `--tfvars <file>` | | Your own Terraform variables. See [Your own Terraform variables](#your-own-terraform-variables). |
@@ -233,7 +233,7 @@ two APIs in [Google Cloud APIs](#google-cloud-apis) must be enabled.
 These flags select infrastructure that you already operate: `--use-existing-network`,
 `--use-existing-cluster`, `--use-existing-cloudsql`, `--registry`, `--no-load-balancer`,
 `--no-enable-apis` and `--no-network-policies`. See
-[Existing infrastructure](/google-cloud/existing-infrastructure).
+[Existing infrastructure](/private-install/google-cloud/existing-infrastructure).
 
 Run `./install.sh --help` for the full list.
 
@@ -289,6 +289,7 @@ This page uses these variables:
 | `master_authorized_networks`, `enable_private_endpoint` | Control plane access. See [Cluster access](#cluster-access). |
 | `enable_gcp_discovery` | Agent discovery identity. See [Agent discovery](#agent-discovery). |
 | `langguard_enabled_flags`, `langguard_disabled_flags` | See [Feature flags](#feature-flags). |
+| `email_provider`, `email_from_address`, `smtp_host`, `aws_ses_region` | Outbound email. See [Sign-in and Email](/private-install/google-cloud/sign-in-and-email#email). |
 
 Example:
 
@@ -504,6 +505,9 @@ The certificate is ready when its status is `Active`.
 
 Open `https://<your-domain>` and complete the first-run setup. Sign in with the admin
 email and the password that the installer printed.
+
+Before you invite other users, configure outbound email. See
+[Sign-in and Email](/private-install/google-cloud/sign-in-and-email#email).
 
 ### Operational access
 

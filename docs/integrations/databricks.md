@@ -17,7 +17,7 @@ evaluation.
 This page covers connecting a Databricks workspace to the **LangGuard SaaS**. If
 you want LangGuard deployed natively in your own workspace — with full data
 residency, real-time AI Gateway enforcement, and storage in your Unity Catalog —
-see the [**Databricks App**](/databricks-app) section instead.
+see the [**Databricks App**](/private-install/databricks-app) section instead.
 :::
 
 ## Overview
@@ -130,7 +130,7 @@ catalog).
 
 ## Next steps
 
-- [Databricks App](/databricks-app) — run LangGuard natively inside Databricks
+- [Databricks App](/private-install/databricks-app) — run LangGuard natively inside Databricks
 - [Discovery & Inventory](/features/discovery) — browse discovered agents and models
 - [Data Catalog](/features/data-catalog) - Browse synced entities
 - [Policies](/policies) - Apply governance to imported traces

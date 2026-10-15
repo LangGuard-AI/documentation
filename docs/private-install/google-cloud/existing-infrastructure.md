@@ -8,7 +8,7 @@ description: Install LangGuard into a GKE cluster, VPC, Cloud SQL instance and c
 
 You can install LangGuard into a GKE cluster, VPC, Cloud SQL instance and container
 registry that you already operate. This install uses the same bundle and installer as a
-[new-project install](/google-cloud/installation). Flags tell the installer which
+[new-project install](/private-install/google-cloud/installation). Flags tell the installer which
 components to skip.
 
 ## Component selection
@@ -22,7 +22,7 @@ components to skip.
 | Load balancer | `--no-load-balancer` | The installer creates no external HTTP(S) load balancer, GKE Ingress, static IP address, managed certificate or DNS records. |
 | DNS zone | `--use-existing-dns-zone --dns-zone-name <name>` | The installer writes the `A` record for `<domain>` to the zone. It grants `roles/dns.admin` on the zone to the `lg-app-<env>` and `lg-provisioning-<env>` service accounts. Applies only with the installer's load balancer. |
 | Google Cloud APIs | `--no-enable-apis` | The installer and Terraform enable no APIs. The installer checks them before it makes a change, and stops if one is missing. |
-| NetworkPolicies | `--no-network-policies` | The installer creates no NetworkPolicies. See [NetworkPolicies](/google-cloud/service-mesh#networkpolicies). |
+| NetworkPolicies | `--no-network-policies` | The installer creates no NetworkPolicies. See [NetworkPolicies](/private-install/google-cloud/service-mesh#networkpolicies). |
 
 The installer creates each component that you do not select with a flag:
 
@@ -51,7 +51,7 @@ necessary.
 ### Your own Terraform variables
 
 Put other Terraform variables, including the
-[service mesh settings](/google-cloud/service-mesh), in a tfvars file of your own and give
+[service mesh settings](/private-install/google-cloud/service-mesh), in a tfvars file of your own and give
 it with `--tfvars <file>`. The installer applies this file after the generated
 `gcp/terraform/environments/<env>.tfvars`, so your values take precedence. The variables
 are documented in `gcp/terraform/variables.tf` and `gcp/terraform/existing-infra.tf`.
@@ -60,7 +60,7 @@ are documented in `gcp/terraform/variables.tf` and `gcp/terraform/existing-infra
 The installer stops if your file sets a variable that the installer writes to the
 generated file, for example `create_cluster`, `image_registry`, `enable_project_apis` or
 `dns_zone_name`. Use the flag for these variables. For the full list, see
-[Your own Terraform variables](/google-cloud/installation#your-own-terraform-variables).
+[Your own Terraform variables](/private-install/google-cloud/installation#your-own-terraform-variables).
 
 Some flags set variables that the installer does not check, for example `--ai-model` and
 `--cloudsql-tier`. If your file sets one of these variables, your value replaces the
@@ -85,8 +85,8 @@ The installer always creates these resources:
     and `tenant-provisioning-cert-manager`.
   - A HorizontalPodAutoscaler and a PodDisruptionBudget for `langguard-dashboard`.
   - ConfigMaps and Secrets.
-  - Three Jobs on each apply (see [Jobs](/google-cloud/service-mesh#jobs)).
-  - The [NetworkPolicies](/google-cloud/service-mesh#networkpolicies), unless you set
+  - Three Jobs on each apply (see [Jobs](/private-install/google-cloud/service-mesh#jobs)).
+  - The [NetworkPolicies](/private-install/google-cloud/service-mesh#networkpolicies), unless you set
     `--no-network-policies`.
 - **In the project:**
   - A Cloud Storage bucket for the Terraform state, `<project>-tf-state` or the
@@ -208,7 +208,7 @@ ERROR: these APIs are not enabled in my-gcp-project:
 ### IAM
 
 The account that runs the installer needs these roles, in addition to the roles in the
-installation [IAM prerequisites](/google-cloud/installation#iam):
+installation [IAM prerequisites](/private-install/google-cloud/installation#iam):
 
 | Resource | Role | Required |
 |---|---|---|
@@ -233,7 +233,7 @@ installation [IAM prerequisites](/google-cloud/installation#iam):
 ### Tooling
 
 The tools are the same as in the installation
-[prerequisites](/google-cloud/installation#tools). With `--registry`, you do not need
+[prerequisites](/private-install/google-cloud/installation#tools). With `--registry`, you do not need
 `skopeo` or `gunzip`.
 
 ## Install
@@ -255,7 +255,7 @@ cd langguard-install/gcp
 
 This example installs into a meshed cluster. Your platform team enabled the APIs, and
 ingress goes through your own gateway. The file `../mesh.tfvars` holds the
-[service mesh settings](/google-cloud/service-mesh):
+[service mesh settings](/private-install/google-cloud/service-mesh):
 
 ```bash
 ./install.sh \
@@ -279,7 +279,7 @@ a backend.
 LangGuard does not install, configure or require a service mesh. In a meshed cluster, you
 set sidecar injection, Job behavior and startup order through variables in your `--tfvars`
 file, and you allow mesh traffic through the NetworkPolicies. See
-[Service Mesh](/google-cloud/service-mesh) for the variables, the examples for Istio, Cloud
+[Service Mesh](/private-install/google-cloud/service-mesh) for the variables, the examples for Istio, Cloud
 Service Mesh and Linkerd, and the egress destinations to register.
 
 ## Using an existing registry
@@ -311,7 +311,7 @@ registry.example.com/langguard/opencite:0.2.14
 :::warning
 The image names are fixed. Load the images under exactly these names before you run the
 installer. Use the images from the same bundle as the installer (`BUNDLE_FORMAT=2` in
-`manifest.env`). See [Bundle version](/google-cloud/installation#bundle-version).
+`manifest.env`). See [Bundle version](/private-install/google-cloud/installation#bundle-version).
 :::
 
 The installer does not connect to the registry. If the path or a tag is incorrect, the
@@ -392,7 +392,7 @@ The installer's load balancer uses these settings. Use the same values in your i
   path only if you set `enable_cloud_armor = true` in your `--tfvars` file. The default is
   `false`.
 - If you did not set `--no-network-policies`, allow your ingress through the
-  [NetworkPolicies](/google-cloud/service-mesh#networkpolicies). Without a policy of your
+  [NetworkPolicies](/private-install/google-cloud/service-mesh#networkpolicies). Without a policy of your
   own, only Google load balancer ranges and pods in `langguard` can reach the dashboard.
 
 :::warning
@@ -428,8 +428,8 @@ kubectl -n langguard exec deploy/langguard-dashboard -- python3 -c \
   `iam.gke.io/gcp-service-account` annotation on the Kubernetes service account is
   missing.
 - If the command times out, an egress NetworkPolicy blocks the metadata server (see
-  [NetworkPolicies](/google-cloud/service-mesh#networkpolicies)), or the mesh does not let
-  the pod reach the metadata server (see [Egress](/google-cloud/service-mesh#egress)).
+  [NetworkPolicies](/private-install/google-cloud/service-mesh#networkpolicies)), or the mesh does not let
+  the pod reach the metadata server (see [Egress](/private-install/google-cloud/service-mesh#egress)).
 
 ## After install
 
@@ -439,11 +439,11 @@ Record them.
 With the installer's load balancer:
 
 - Without `--use-existing-dns-zone`, delegate your domain to the Cloud DNS zone that the
-  installer created. See [Delegate DNS](/google-cloud/installation#delegate-dns).
+  installer created. See [Delegate DNS](/private-install/google-cloud/installation#delegate-dns).
 - With `--use-existing-dns-zone`, the `A` records are in your zone. You do not delegate
   DNS.
 - Wait for the Google-managed certificate. See
-  [Wait for the certificate](/google-cloud/installation#wait-for-the-certificate).
+  [Wait for the certificate](/private-install/google-cloud/installation#wait-for-the-certificate).
 
 With `--no-load-balancer`, route `https://<domain>` from your own ingress to the LangGuard
 Services. See [Without a load balancer](#without-a-load-balancer).
@@ -452,36 +452,36 @@ Then open `https://<domain>`, complete the first-run setup, and sign in with the
 email and the password that the installer printed.
 
 Feature flags and agent discovery are the same as in a new-infrastructure install. See
-[Feature flags](/google-cloud/installation#feature-flags) and
-[Agent discovery](/google-cloud/installation#agent-discovery).
+[Feature flags](/private-install/google-cloud/installation#feature-flags) and
+[Agent discovery](/private-install/google-cloud/installation#agent-discovery).
 
 ## Run the installer again
 
 Run `install.sh` again to change settings or to upgrade. Use the same flags and the same
 `--tfvars` file. If you omit the `--tfvars` file, the next apply removes the settings in
-it, for example the [service mesh](/google-cloud/service-mesh) labels and annotations.
+it, for example the [service mesh](/private-install/google-cloud/service-mesh) labels and annotations.
 Each run generates a new admin password. For the full list of effects, see
-[Run the installer again](/google-cloud/installation#run-the-installer-again).
+[Run the installer again](/private-install/google-cloud/installation#run-the-installer-again).
 
 To upgrade:
 
 1. Unpack the complete new bundle. See
-   [Bundle version](/google-cloud/installation#bundle-version).
+   [Bundle version](/private-install/google-cloud/installation#bundle-version).
 2. With `--registry`, load the images of the new bundle into your registry (see
    [Loading the images](#loading-the-images)). The installer reads the new tags from
    `images/manifest.env`. If `images/` is not present, give the new tags with
    `--image-tag` and `--opencite-image-tag`.
 3. From the `gcp/` directory of the new bundle, run `install.sh` with the same flags and
-   the same `--tfvars` file. See [Upgrade](/google-cloud/installation#upgrade).
+   the same `--tfvars` file. See [Upgrade](/private-install/google-cloud/installation#upgrade).
 
 ## Uninstall
 
-Use the installation [uninstall](/google-cloud/installation#uninstall) procedure, from
+Use the installation [uninstall](/private-install/google-cloud/installation#uninstall) procedure, from
 `langguard-install/gcp/terraform`. Give your `--tfvars` file to each command, after the
 generated file. If the installer created the cluster, the notes on control-plane access in
 that procedure also apply.
 
-1. Do [Step 1: Turn off deletion protection](/google-cloud/installation#step-1-turn-off-deletion-protection).
+1. Do [Step 1: Turn off deletion protection](/private-install/google-cloud/installation#step-1-turn-off-deletion-protection).
    This step is necessary with `--environment prod` (the default), because the Secret
    Manager secrets and the log bucket have deletion protection. It is also necessary if
    the installer created the Cloud SQL instance.
@@ -515,4 +515,4 @@ existing VPC, cluster or Cloud SQL instance, and it never disables APIs. Excepti
   ```
 
 - The Terraform state bucket stays. See the list of items that stay at the end of the
-  installation [uninstall](/google-cloud/installation#uninstall) procedure.
+  installation [uninstall](/private-install/google-cloud/installation#uninstall) procedure.

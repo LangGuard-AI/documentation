@@ -15,7 +15,7 @@ reads from.
 
 ### 1. `/v1/chat` proxy (real-time, enforced)
 
-Calls routed through a [Guarded Endpoint](/databricks-app/ai-gateway) are evaluated
+Calls routed through a [Guarded Endpoint](/private-install/databricks-app/ai-gateway) are evaluated
 pre- and post-call and can be **blocked**. For each call, LangGuard builds an OTLP
 trace and exports it (path 2 below). This is the only path that can enforce.
 
@@ -43,7 +43,7 @@ A few important properties of this path:
 - **App service principal** — OTLP writes need the `all-apis` scope, which user
   OBO tokens don't carry, so the app SP credential is used.
 - **External storage required** — the target schema must be backed by
-  customer-managed external storage (see [Installation](/databricks-app/installation)).
+  customer-managed external storage (see [Installation](/private-install/databricks-app/installation)).
 - **Fire-and-forget** — export never blocks the response path; failures are
   retried once and otherwise dropped, so enforcement latency is unaffected.
 
@@ -60,7 +60,7 @@ the app polls Unity Catalog directly:
   agents/endpoints with inference tables enabled are captured even without OTLP.
 - **`system.ai_gateway.usage`** — OpenCITE polls this system table for
   cross-endpoint token/cost aggregates (optional; requires the `system` catalog
-  grant described in [Installation](/databricks-app/installation)).
+  grant described in [Installation](/private-install/databricks-app/installation)).
 
 ### GUI-aware polling cadence
 
@@ -86,6 +86,6 @@ No per-agent instrumentation is required.
 
 ## Next steps
 
-- [Unity Catalog Data](/databricks-app/unity-catalog) — where captured data is stored
+- [Unity Catalog Data](/private-install/databricks-app/unity-catalog) — where captured data is stored
 - [Trace Explorer](/features/trace-explorer) — view captured traces
 - [Discovery & Inventory](/features/discovery) — the agents and models discovered

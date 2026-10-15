@@ -14,7 +14,7 @@ split across two governed stores:
 - **Lakebase PostgreSQL** — application metadata (policies, entities, config,
   secrets-backed settings)
 
-Both are provisioned automatically during [installation](/databricks-app/installation).
+Both are provisioned automatically during [installation](/private-install/databricks-app/installation).
 
 ## Unity Catalog (Delta)
 
@@ -68,7 +68,7 @@ a schema named `catalog`:
 | `policies`, `policy_violations`, `policy_stats` | Governance policies and results |
 | `entities`, `entity_usage_stats`, `entity_lineage` | Discovered AI assets and lineage |
 | `api_keys` | Hashed API keys |
-| `arbiter_guarded_endpoints` | [Guarded Endpoint](/databricks-app/ai-gateway) wrapper configs |
+| `arbiter_guarded_endpoints` | [Guarded Endpoint](/private-install/databricks-app/ai-gateway) wrapper configs |
 | `endpoint_enforcement_settings` | Per-endpoint enforce/observe toggle |
 | `model_pricing` | Per-model token pricing (drives cost computation) |
 | `app_config`, `session` | Internal config (poller checkpoints) and web sessions |
@@ -93,6 +93,6 @@ lineage, and auditing to every LangGuard table.
 
 ## Next steps
 
-- [Data Capture](/databricks-app/data-capture) — how these tables get populated
+- [Data Capture](/private-install/databricks-app/data-capture) — how these tables get populated
 - [Trace Explorer](/features/trace-explorer) — query the trace views from the UI
 - [Cost Estimates](/settings/cost-estimates) — manage model pricing
