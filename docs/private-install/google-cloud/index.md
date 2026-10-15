@@ -55,14 +55,14 @@ for the Terraform state, if the bucket does not exist. Then it runs four steps:
 
 With `--registry`, the installer skips steps 1 and 2 and pushes no images. With
 `--use-existing-cluster`, `--admin-cidr` is not allowed, and the installer does not change
-the control plane of your cluster. See [Existing Infrastructure](/google-cloud/existing-infrastructure).
+the control plane of your cluster. See [Existing Infrastructure](/private-install/google-cloud/existing-infrastructure).
 For the full sequence, see
-[What happens during install](/google-cloud/installation#what-happens-during-install).
+[What happens during install](/private-install/google-cloud/installation#what-happens-during-install).
 
 You can run `install.sh` again to change settings or to upgrade. Each run writes the
 Terraform variables file again from the flags, so give the same flags as in the first run.
 Each run also generates and prints a new admin password. See
-[Run the installer again](/google-cloud/installation#run-the-installer-again).
+[Run the installer again](/private-install/google-cloud/installation#run-the-installer-again).
 
 ## Architecture
 
@@ -132,7 +132,7 @@ How the parts connect:
   to Vertex AI, Cloud Trace, Cloud Logging and Compute Engine. When you connect the
   Google Agent Platform integration in LangGuard, `opencite` uses this identity to
   discover agents in your project. You do not need a service account key. See
-  [Agent discovery](/google-cloud/installation#agent-discovery).
+  [Agent discovery](/private-install/google-cloud/installation#agent-discovery).
 - **Images and secrets.** The nodes pull the LangGuard images from Artifact Registry.
   OPA, Redis, the Presidio analyzer, PostgreSQL (for the grants Job) and the Cloud SQL
   Auth Proxy are public upstream images. The nodes pull them from Docker Hub, Microsoft
@@ -143,7 +143,7 @@ How the parts connect:
   NAT. After the install, the control plane accepts connections only from your admin
   CIDR. You can change it to a private endpoint. During each installer run, the control
   plane accepts connections from any address until the last step completes. See
-  [Cluster access](/google-cloud/installation#cluster-access).
+  [Cluster access](/private-install/google-cloud/installation#cluster-access).
 
 :::note AI gateway not included
 This deployment does not install the LangGuard AI gateway. Vertex AI here serves
@@ -166,15 +166,17 @@ infrastructure you supply.
 | Ingress | External HTTPS load balancer, managed certificate, Cloud DNS | The same, or your own ingress or mesh gateway with `--no-load-balancer` |
 | Google Cloud APIs | Enabled by the installer | Enabled by the installer, or only checked with `--no-enable-apis` |
 | Control plane access | Restricted to `--admin-cidr` | Not changed on an existing cluster |
-| Guide | [Installation](/google-cloud/installation) | [Existing Infrastructure](/google-cloud/existing-infrastructure) |
+| Guide | [Installation](/private-install/google-cloud/installation) | [Existing Infrastructure](/private-install/google-cloud/existing-infrastructure) |
 
 If your cluster runs a service mesh (Istio, Cloud Service Mesh or Linkerd), also read
-[Service Mesh](/google-cloud/service-mesh).
+[Service Mesh](/private-install/google-cloud/service-mesh).
 
 ## Next steps
 
-- [Installation](/google-cloud/installation): install LangGuard with new infrastructure in
+- [Installation](/private-install/google-cloud/installation): install LangGuard with new infrastructure in
   your Google Cloud project
-- [Existing Infrastructure](/google-cloud/existing-infrastructure): install into a
+- [Existing Infrastructure](/private-install/google-cloud/existing-infrastructure): install into a
   cluster, network, database or registry that you already operate
-- [Service Mesh](/google-cloud/service-mesh): run LangGuard in a meshed GKE cluster
+- [Service Mesh](/private-install/google-cloud/service-mesh): run LangGuard in a meshed GKE cluster
+- [Sign-in and Email](/private-install/google-cloud/sign-in-and-email): configure the admin
+  password sign-in and outbound email

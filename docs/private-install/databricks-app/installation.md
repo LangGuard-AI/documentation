@@ -114,7 +114,7 @@ installer populates these for you:
 | `lakebase-endpoint-path` | Lakebase endpoint (for OAuth credential generation) |
 | `session-secret` | Web session secret |
 | `encryption-key` | Data encryption key |
-| `proxy-shared-key` | Shared bearer token between an AI Gateway endpoint and the LangGuard `/v1/chat` proxy (see [AI Gateway](/databricks-app/ai-gateway)) |
+| `proxy-shared-key` | Shared bearer token between an AI Gateway endpoint and the LangGuard `/v1/chat` proxy (see [AI Gateway](/private-install/databricks-app/ai-gateway)) |
 
 ## After deployment
 
@@ -127,6 +127,6 @@ LangGuard **admin** role.
 
 ## Next steps
 
-- [AI Gateway Enforcement](/databricks-app/ai-gateway) — guard your model endpoints
-- [Data Capture](/databricks-app/data-capture) — how activity is collected
-- [Unity Catalog Data](/databricks-app/unity-catalog) — where your data lives
+- [AI Gateway Enforcement](/private-install/databricks-app/ai-gateway) — guard your model endpoints
+- [Data Capture](/private-install/databricks-app/data-capture) — how activity is collected
+- [Unity Catalog Data](/private-install/databricks-app/unity-catalog) — where your data lives

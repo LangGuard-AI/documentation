@@ -50,6 +50,25 @@ const config: Config = {
     ],
   ],
 
+  plugins: [
+    [
+      '@docusaurus/plugin-client-redirects',
+      {
+        // Databricks App and Google Cloud moved under Private Install. Keep the
+        // old URLs working for existing links.
+        createRedirects(existingPath: string) {
+          for (const section of ['databricks-app', 'google-cloud']) {
+            const prefix = `/private-install/${section}`;
+            if (existingPath.startsWith(prefix)) {
+              return `/${section}${existingPath.slice(prefix.length)}`;
+            }
+          }
+          return undefined;
+        },
+      },
+    ],
+  ],
+
   themeConfig: {
     image: 'img/langguard-social-card.png',
     colorMode: {

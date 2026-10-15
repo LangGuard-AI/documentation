@@ -59,33 +59,6 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Databricks App',
-      link: {
-        type: 'doc',
-        id: 'databricks-app/index',
-      },
-      items: [
-        'databricks-app/installation',
-        'databricks-app/ai-gateway',
-        'databricks-app/data-capture',
-        'databricks-app/unity-catalog',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Google Cloud',
-      link: {
-        type: 'doc',
-        id: 'google-cloud/index',
-      },
-      items: [
-        'google-cloud/installation',
-        'google-cloud/existing-infrastructure',
-        'google-cloud/service-mesh',
-      ],
-    },
-    {
-      type: 'category',
       label: 'Policies',
       link: {
         type: 'doc',
@@ -122,6 +95,44 @@ const sidebars: SidebarsConfig = {
         'settings/cost-estimates',
         'settings/enforcement-mode',
         'settings/ai-gateway/entra-cowork-plugin',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Private Install',
+      link: {
+        type: 'doc',
+        id: 'private-install/index',
+      },
+      items: [
+        {
+          type: 'category',
+          label: 'Databricks App',
+          link: {
+            type: 'doc',
+            id: 'private-install/databricks-app/index',
+          },
+          items: [
+            'private-install/databricks-app/installation',
+            'private-install/databricks-app/ai-gateway',
+            'private-install/databricks-app/data-capture',
+            'private-install/databricks-app/unity-catalog',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Google Cloud',
+          link: {
+            type: 'doc',
+            id: 'private-install/google-cloud/index',
+          },
+          items: [
+            'private-install/google-cloud/installation',
+            'private-install/google-cloud/existing-infrastructure',
+            'private-install/google-cloud/service-mesh',
+            'private-install/google-cloud/sign-in-and-email',
+          ],
+        },
       ],
     },
     {

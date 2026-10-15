@@ -82,7 +82,7 @@ enforcement on.
 
 ## What gets recorded
 
-Each guarded call emits an OTLP trace (see [Data Capture](/databricks-app/data-capture))
+Each guarded call emits an OTLP trace (see [Data Capture](/private-install/databricks-app/data-capture))
 carrying GenAI semantic-convention attributes plus LangGuard extensions:
 
 - `langguard.policy.status` — `allow` / `notify` / `block`
@@ -118,6 +118,6 @@ you tune before enforcing.
 
 ## Next steps
 
-- [Data Capture](/databricks-app/data-capture) — how guarded calls become traces
+- [Data Capture](/private-install/databricks-app/data-capture) — how guarded calls become traces
 - [Creating Policies](/policies/creating-policies) — author the rules that enforce
-- [Unity Catalog Data](/databricks-app/unity-catalog) — where guarded-endpoint config lives
+- [Unity Catalog Data](/private-install/databricks-app/unity-catalog) — where guarded-endpoint config lives
