@@ -216,8 +216,7 @@ two APIs in [Google Cloud APIs](#google-cloud-apis) must be enabled.
 | `--cloudsql-tier` | `db-custom-2-7680` | Cloud SQL machine tier. See [Sizing](#sizing). |
 | `--node-machine` | `e2-standard-2` | GKE node machine type. See [Sizing](#sizing). |
 | `--ai-model` | `google/gemini-2.5-flash` | Not used with Vertex AI. The application selects the Vertex AI models itself. See [AI](#ai). |
-| `--image-tag` | Version in `images/manifest.env` | Application image tag. |
-| `--discovery-image-tag` | Version in `images/manifest.env` | `langguard-discovery` image tag. |
+| `--image-tag` | Version in `images/manifest.env` | Tag of the three LangGuard images. |
 | `--dns-zone-name` | Derived from `--domain` | Name of the Cloud DNS zone. The default is the domain with each dot changed to a dash, plus `-zone`, for example `app-mycompany-com-zone`. |
 | `--use-existing-dns-zone` | | Write the records to the existing zone that `--dns-zone-name` names, or to the zone with the derived name. The installer does not create a zone. See [Delegate DNS](#delegate-dns). |
 | `--auth` | `userpass` | Sign-in method. `userpass` is the only supported value. The installer generates an admin password. See [Sign-in and Email](/private-install/google-cloud/sign-in-and-email). |
@@ -268,7 +267,6 @@ flag for these variables:
 | `create_network_policies` | `--no-network-policies` |
 | `image_registry` | `--registry` |
 | `container_image_tag` | `--image-tag` |
-| `discovery_image_tag` | `--discovery-image-tag` |
 | `dns_domain` | `--domain` |
 | `dns_zone_name` | `--dns-zone-name` |
 | `use_existing_dns_zone` | `--use-existing-dns-zone` |
@@ -651,6 +649,8 @@ Bundles that contain the `opencite` image run the earlier catalog. This bundle r
 - The Terraform variables `use_ghcr_images`, `opencite_use_artifact_registry`,
   `ghcr_username`, `ghcr_token`, `enable_backup` and `log_retention_days` no longer exist. If your `--tfvars` file sets one of
   them, Terraform shows a warning and ignores the value. Remove them from the file.
+- `--opencite-image-tag` no longer exists. `--image-tag` sets the tag of all three LangGuard
+  images.
 - `cloudsql-proxy-admin` restarts with the new Google service account
   `lg-sqladmin-<environment>`. It becomes ready only once it can connect with that
   identity, so the Jobs wait for its grants to take effect. Terraform then removes `lg-provisioning-<environment>`,

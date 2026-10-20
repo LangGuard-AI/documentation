@@ -283,9 +283,8 @@ Service Mesh and Linkerd, and the egress destinations to register.
 ## Using an existing registry
 
 `--registry` takes a path prefix without a tag. The installer adds the image name and the
-tag. The tags default to the versions in `images/manifest.env`. If that file is not
-present, you must give `--image-tag` and `--discovery-image-tag`. Also give them if your
-registry uses other tags.
+tag. The three images use one tag, the version in `images/manifest.env`. If that file is not
+present, you must give `--image-tag`. Also give it if your registry uses another tag.
 
 ```bash
 ./install.sh \
@@ -297,7 +296,7 @@ registry uses other tags.
   --use-existing-cloudsql my-gcp-project:us-central1:my-postgres
 ```
 
-If `images/manifest.env` contains `LANGGUARD_VERSION=1.38.0` and `DISCOVERY_TAG=1.38.0`, this
+If `images/manifest.env` contains `LANGGUARD_VERSION=1.38.0`, this
 command uses these images:
 
 ```
@@ -326,7 +325,7 @@ from the bundle root, on a host that has credentials for the registry:
 
 ```bash
 . images/manifest.env
-for img in langguard-dashboard:$LANGGUARD_VERSION otel-ingest:$LANGGUARD_VERSION langguard-discovery:$DISCOVERY_TAG; do
+for img in langguard-dashboard:$LANGGUARD_VERSION otel-ingest:$LANGGUARD_VERSION langguard-discovery:$LANGGUARD_VERSION; do
   name=${img%%:*}
   gunzip -c images/$name.tar.gz > /tmp/$name.tar
   skopeo copy --all --preserve-digests \
@@ -468,8 +467,8 @@ To upgrade:
    [Bundle version](/private-install/google-cloud/installation#bundle-version).
 2. With `--registry`, load the images of the new bundle into your registry (see
    [Loading the images](#loading-the-images)). The installer reads the new tags from
-   `images/manifest.env`. If `images/` is not present, give the new tags with
-   `--image-tag` and `--discovery-image-tag`.
+   `images/manifest.env`. If `images/` is not present, give the new tag with
+   `--image-tag`.
 3. From the `gcp/` directory of the new bundle, run `install.sh` with the same flags and
    the same `--tfvars` file. See [Upgrade](/private-install/google-cloud/installation#upgrade).
 
