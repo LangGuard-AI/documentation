@@ -36,7 +36,7 @@ Keep this layout. The installer reads the images from `../images`, and the Terra
 reads `.opa-version`.
 
 `images/` holds the three LangGuard application images: `langguard-dashboard`,
-`otel-ingest` and `opencite`. The installer pushes them to an Artifact Registry
+`otel-ingest` and `langguard-discovery`. The installer pushes them to an Artifact Registry
 repository in your project. You do not need a registry credential from LangGuard.
 
 `gcp/install.sh` is the one command you run. It takes your project and domain as flags.
@@ -99,8 +99,7 @@ The diagram shows an install with new infrastructure.
   private IP · IAM auth ·      Google Cloud APIs
   regional HA
 
-  Also in your project: Artifact Registry · Secret Manager ·
-  Cloud Logging sink · Cloud Monitoring alert policies
+  Also in your project: Artifact Registry · Cloud Monitoring alert policies
 ```
 
 How the parts connect:
@@ -114,16 +113,17 @@ How the parts connect:
   resolves.
 - **Telemetry.** `otel-ingest` receives OpenTelemetry data over OTLP/HTTP and OTLP/gRPC.
   It stores traces in Cloud SQL, queues them for processing in `redis`, and forwards a
-  copy to `opencite`. `opencite` discovers agents, tools, models and MCP servers.
+  copy to `opencite`. `opencite` runs the `langguard-discovery` catalog, which discovers
+  agents, tools, models and MCP servers.
 - **Policy and PII.** `langguard-dashboard` evaluates policies with `opa` and detects PII
   with `presidio-analyzer`. It uses `redis` for job queues, rate limits and cache. It
   stores user sessions in Cloud SQL.
 - **Database.** The workloads connect to Cloud SQL through the Cloud SQL Auth Proxy
   (`cloudsql-proxy`) as an IAM database user. The application has no database password.
   The installer creates Cloud SQL without a public IP. Each Terraform apply runs
-  Kubernetes Jobs for the schema migrations and the database grants. These Jobs connect
+  Kubernetes Jobs for the schema migration and the database grants. These Jobs connect
   through `cloudsql-proxy-admin` as the built-in database user `lg_admin`. Terraform
-  generates its password and stores it in a Kubernetes Secret and in Secret Manager.
+  generates its password and stores it in a Kubernetes Secret.
 - **AI.** `langguard-dashboard` calls Vertex AI with the Google service account of the
   application, through Workload Identity. No API key is used. Vertex AI powers
   LangGuard's own AI features, for example policy authoring and custom checks.
@@ -137,8 +137,8 @@ How the parts connect:
   OPA, Redis, the Presidio analyzer, PostgreSQL (for the grants Job) and the Cloud SQL
   Auth Proxy are public upstream images. The nodes pull them from Docker Hub, Microsoft
   Container Registry and `gcr.io` through Cloud NAT. Terraform stores the application
-  secrets in Secret Manager and in Kubernetes Secrets in the `langguard` namespace. The
-  workloads read the Kubernetes Secrets.
+  secrets in Kubernetes Secrets in the `langguard` namespace. It does not write them to
+  Secret Manager.
 - **Cluster access.** The nodes have no public IP and reach the internet through Cloud
   NAT. After the install, the control plane accepts connections only from your admin
   CIDR. You can change it to a private endpoint. During each installer run, the control

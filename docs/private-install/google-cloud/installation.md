@@ -37,7 +37,7 @@ langguard-install/
 Keep this layout. The installer reads the images from `../images`.
 
 The bundle contains the LangGuard images `langguard-dashboard`, `otel-ingest` and
-`opencite` as `images/*.tar.gz`. The installer pushes them to an Artifact Registry
+`langguard-discovery` as `images/*.tar.gz`. The installer pushes them to an Artifact Registry
 repository in your project. You do not need a registry credential from LangGuard.
 
 The install is not air-gapped. The installer host needs access to the Google Cloud APIs,
@@ -80,17 +80,16 @@ The installer deploys into one region of your project:
   only from inside the VPC (see [Cluster access](#cluster-access)).
 - Cloud SQL for PostgreSQL 16 on a private IP address.
 - Workloads in the `langguard` namespace: `langguard-dashboard`, `otel-ingest`,
-  `opencite`, `opa`, `redis`, `presidio-analyzer`, `cloudsql-proxy` and
-  `cloudsql-proxy-admin`.
+  `opencite` (the `langguard-discovery` catalog), `opa`, `redis`, `presidio-analyzer`,
+  `cloudsql-proxy` and `cloudsql-proxy-admin`.
 - An external HTTPS load balancer (GKE Ingress) with a static IP address and a
   Google-managed certificate.
 - A Cloud DNS zone for your domain, with an `A` record for `<domain>` that points to the
   load balancer.
 - An Artifact Registry repository `langguard-dashboard`.
-- Secret Manager secrets, and Google service accounts that the workloads use through
-  Workload Identity.
-- Cloud Monitoring alert policies, a Cloud Logging sink to a Cloud Storage bucket, and log
-  exclusions.
+- Google service accounts that the workloads use through Workload Identity. See
+  [Google service accounts](/private-install/google-cloud/existing-infrastructure#google-service-accounts).
+- Cloud Monitoring alert policies and Cloud Logging exclusions.
 
 This deployment serves one organization: one application, one database and one set of
 users.
@@ -137,11 +136,10 @@ to each service in this table:
 | Compute Engine networking | VPC, subnet, Cloud Router, Cloud NAT, firewall rules, static IP addresses, private services access range |
 | Service Networking | Private services access connection for Cloud SQL |
 | IAM | Service accounts, Workload Identity bindings, project IAM role grants |
-| Secret Manager | Secrets |
 | Artifact Registry | Repository and images |
 | Cloud DNS | Zone and records |
-| Cloud Storage | Terraform state bucket, log bucket |
-| Cloud Logging | Log sink, log exclusions |
+| Cloud Storage | Terraform state bucket |
+| Cloud Logging | Log exclusions |
 | Cloud Monitoring | Alert policies |
 | Service Usage | API enablement. With `--no-enable-apis`, `roles/serviceusage.serviceUsageViewer` is still necessary, to list the enabled APIs. |
 
@@ -149,7 +147,7 @@ to each service in this table:
 
 | Tool | Notes |
 |---|---|
-| `terraform` 1.5 or later | |
+| `terraform` 1.7 or later | |
 | `gcloud`, with `gsutil` | `gsutil` creates the Terraform state bucket. |
 | `kubectl` | The installer checks that it is installed. To use `kubectl` with the cluster, also install the `gke-gcloud-auth-plugin` gcloud component. |
 | `skopeo` | Pushes the multi-architecture images. You do not need a Docker daemon. |
@@ -160,9 +158,8 @@ to each service in this table:
 The installer enables these APIs:
 
 `compute`, `container`, `cloudresourcemanager`, `iam`, `logging`, `monitoring`,
-`secretmanager`, `cloudbuild`, `certificatemanager`, `servicenetworking`,
-`artifactregistry`, `dns`, `sqladmin` and `aiplatform`, all with the suffix
-`.googleapis.com`.
+`certificatemanager`, `servicenetworking`, `artifactregistry`, `dns`, `sqladmin` and
+`aiplatform`, all with the suffix `.googleapis.com`.
 
 The uninstall does not disable them.
 
@@ -215,12 +212,12 @@ two APIs in [Google Cloud APIs](#google-cloud-apis) must be enabled.
 | Flag | Default | Description |
 |---|---|---|
 | `--region` | `us-central1` | Google Cloud region. Also the Vertex AI location. |
-| `--environment` | `prod` | `dev`, `staging` or `prod`. Part of the resource names. With `prod`, the cluster, the secrets and the log bucket have deletion protection (see [Uninstall](#uninstall)). |
+| `--environment` | `prod` | `dev`, `staging` or `prod`. Part of the resource names. With `prod`, the cluster has deletion protection (see [Uninstall](#uninstall)). |
 | `--cloudsql-tier` | `db-custom-2-7680` | Cloud SQL machine tier. See [Sizing](#sizing). |
 | `--node-machine` | `e2-standard-2` | GKE node machine type. See [Sizing](#sizing). |
 | `--ai-model` | `google/gemini-2.5-flash` | Not used with Vertex AI. The application selects the Vertex AI models itself. See [AI](#ai). |
 | `--image-tag` | Version in `images/manifest.env` | Application image tag. |
-| `--opencite-image-tag` | Version in `images/manifest.env` | OpenCITE image tag. |
+| `--discovery-image-tag` | Version in `images/manifest.env` | `langguard-discovery` image tag. |
 | `--dns-zone-name` | Derived from `--domain` | Name of the Cloud DNS zone. The default is the domain with each dot changed to a dash, plus `-zone`, for example `app-mycompany-com-zone`. |
 | `--use-existing-dns-zone` | | Write the records to the existing zone that `--dns-zone-name` names, or to the zone with the derived name. The installer does not create a zone. See [Delegate DNS](#delegate-dns). |
 | `--auth` | `userpass` | Sign-in method. `userpass` is the only supported value. The installer generates an admin password. See [Sign-in and Email](/private-install/google-cloud/sign-in-and-email). |
@@ -242,8 +239,7 @@ Run `./install.sh --help` for the full list.
 The installer gives the generated admin password to Terraform in an environment variable.
 It does not write the password to `terraform/environments/<environment>.tfvars`.
 
-Terraform stores the password in Kubernetes secrets, in Secret Manager and in the
-Terraform state. The state also contains the generated password of the `lg_admin`
+Terraform stores the password in Kubernetes secrets and in the Terraform state. The state also contains the generated password of the `lg_admin`
 database user. Restrict access to the state bucket.
 
 ### Your own Terraform variables
@@ -272,13 +268,13 @@ flag for these variables:
 | `create_network_policies` | `--no-network-policies` |
 | `image_registry` | `--registry` |
 | `container_image_tag` | `--image-tag` |
-| `opencite_image_tag` | `--opencite-image-tag` |
+| `discovery_image_tag` | `--discovery-image-tag` |
 | `dns_domain` | `--domain` |
 | `dns_zone_name` | `--dns-zone-name` |
 | `use_existing_dns_zone` | `--use-existing-dns-zone` |
 
-The installer sets `create_artifact_registry`, `artifact_registry_name` and
-`enable_tenant_provisioning` itself. You cannot change them.
+The installer sets `create_artifact_registry`, `artifact_registry_name`,
+`enable_tenant_provisioning` and `catalog_impl` itself. You cannot change them.
 
 This page uses these variables:
 
@@ -335,13 +331,12 @@ addresses. The installer shows a warning. Run the installer again to complete st
 or restrict the control plane yourself.
 :::
 
-Steps 3/4 and 4/4 each run three Kubernetes Jobs in the `langguard` namespace:
+Steps 3/4 and 4/4 each run two Kubernetes Jobs in the `langguard` namespace:
 
 | Job | Function |
 |---|---|
 | `db-migration` | Applies the LangGuard database schema with `/app/langguard ops db-migrate`, as the `lg_admin` database user. Terraform updates the `langguard-dashboard` Deployment only after this Job completes. |
-| `opencite-migration-cloudsql` | Applies the OpenCITE database schema. |
-| `cloudsql-app-grants` | Gives the application's IAM database user `SELECT`, `INSERT`, `UPDATE` and `DELETE` on the tables in the `public`, `catalog`, `opencite` and `drizzle` schemas. It runs after the two migration Jobs. |
+| `cloudsql-app-grants` | Creates the `discovery` schema and makes the application's IAM database user its owner. `langguard-discovery` applies its own schema there when it starts. Gives the same user `SELECT`, `INSERT`, `UPDATE` and `DELETE` on the tables in the `public`, `catalog`, `opencite` and `drizzle` schemas. It runs after `db-migration`. |
 
 Each Job name ends with a timestamp. Terraform waits up to 5 minutes for each Job.
 Kubernetes deletes a finished Job, and its logs, after 10 minutes.
@@ -362,7 +357,7 @@ selects in the region. The cluster runs 3 to 9 nodes.
 | Production | `e2-standard-4` | 4 / 16 GB |
 
 Do not use nodes with less than 8 GB of memory. GKE reserves approximately 1 GB, and
-OpenCITE can use up to approximately 2 GB.
+the catalog (`opencite`) can use up to approximately 2 GB.
 
 To change the node counts, set `node_pool_config` in your `--tfvars` file. Give all of
 the fields. The object replaces the generated value, so `--node-machine` then has no
@@ -535,8 +530,9 @@ create new Jobs, run the installer again.
 - The application connects to Cloud SQL through `cloudsql-proxy` (Cloud SQL Auth Proxy)
   as an IAM database user. This user has no password.
 - The Jobs connect through `cloudsql-proxy-admin` as the built-in `lg_admin` user. Its
-  generated password is in the Kubernetes secret `cloudsql-admin-credentials` and in the
-  Secret Manager secret `cloudsql-postgres-credentials-<environment>`.
+  generated password is in the Kubernetes secret `cloudsql-admin-credentials`.
+  `cloudsql-proxy-admin` runs as the Google service account `lg-sqladmin-<environment>`,
+  which has only `roles/cloudsql.client`.
 - Cloud SQL has no public IP address. The instance accepts only encrypted connections.
 
 ### AI
@@ -638,6 +634,37 @@ The Terraform state is in the state bucket, so the new bundle continues the same
 installation. The installer pushes the new images. Terraform runs the `db-migration` Job,
 then updates the Deployments.
 
+#### Upgrade from a bundle with OpenCITE
+
+Bundles that contain the `opencite` image run the earlier catalog. This bundle runs
+`langguard-discovery`. The first apply with this bundle makes these changes:
+
+- The `opencite` Deployment runs the `langguard-discovery` image. The catalog uses the
+  new `discovery` schema. The `opencite` schema and its data stay in the database, but the
+  catalog does not read them.
+- `cloudsql-proxy-admin` restarts with the new Google service account
+  `lg-sqladmin-<environment>`. Terraform removes `lg-provisioning-<environment>`,
+  `lg-build-<environment>`, `lg-registry-<environment>` and `lg-backup-<environment>`,
+  and their role grants. The apply also removes the project role grants that
+  [Google service accounts](/private-install/google-cloud/existing-infrastructure#google-service-accounts)
+  no longer lists.
+- Terraform stops managing the Secret Manager secrets and the log bucket. It does not
+  delete them, because the `prod` secrets have deletion protection. The secrets contain
+  copies of the application credentials. Delete them when you do not need them:
+
+  ```bash
+  gcloud secrets list --project <project> --filter='labels.managed-by=terraform'
+  gcloud secrets delete <name> --project <project>
+  ```
+
+  The log bucket is `<project>-langguard-dashboard-logs-<environment>`. The log sink
+  `langguard-dashboard-logs-<environment>` is removed. Delete the bucket when you do not
+  need the logs in it:
+
+  ```bash
+  gcloud storage rm -r gs://<project>-langguard-dashboard-logs-<environment>
+  ```
+
 ## Uninstall
 
 Do the uninstall on the host that ran `install.sh`, from `langguard-install/gcp/terraform`.
@@ -678,15 +705,9 @@ terraform init -reconfigure \
   -backend-config="prefix=langguard-<environment>"
 ```
 
-With `--environment prod` (the default), Terraform also protects the cluster, the Secret
-Manager secrets and the log bucket. No variable turns this off. Edit these files in
-`gcp/terraform/`:
-
-| File | Setting | Change to |
-|---|---|---|
-| `gke.tf` | `deletion_protection` of the cluster | `deletion_protection = false` |
-| `secrets.tf` | `secret_deletion_protection` in `locals` | `secret_deletion_protection = false` |
-| `monitoring.tf` | `force_destroy` of the log bucket | `force_destroy = true` |
+With `--environment prod` (the default), Terraform also protects the cluster. No variable
+turns this off. In `gcp/terraform/gke.tf`, change `deletion_protection` of the cluster to
+`deletion_protection = false`.
 
 Apply the change. The installer always sets deletion protection on the Cloud SQL instance,
 so also set `cloudsql_deletion_protection=false`:
@@ -744,8 +765,10 @@ Delete it later with
 - The control plane is private, or it accepts connections only from your admin CIDRs.
   During step 3/4 of each installer run, it accepts connections from all addresses.
 - The application connects to the database as an IAM database user, without a password.
-  The `lg_admin` password and the application secrets are in Secret Manager, in
-  Kubernetes secrets and in the Terraform state. Restrict access to the state bucket.
+  The `lg_admin` password and the application secrets are in Kubernetes secrets and in
+  the Terraform state. Restrict access to the state bucket.
+- Each Google service account has only the roles that its workload uses. See
+  [Google service accounts](/private-install/google-cloud/existing-infrastructure#google-service-accounts).
 - No external registry credential is used. The LangGuard images come from the bundle and
   are served from your Artifact Registry.
 - Option B gives the strongest protection. Use Option A when a small, known set of admin
