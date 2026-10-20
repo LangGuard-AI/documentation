@@ -64,8 +64,8 @@ NetworkPolicies continue to select the correct pods.
 
 ## Jobs
 
-Each apply runs two Jobs: `db-migration` and `cloudsql-app-grants`. Each Job name ends in
-a timestamp, for example
+Each apply runs three Jobs: `cloudsql-discovery-schema`, `db-migration` and
+`cloudsql-app-grants`. Each Job name ends in a timestamp, for example
 `db-migration-20261006120000`. Terraform waits up to 5 minutes for each Job to complete.
 
 A classic sidecar container continues to run after the Job's container exits. The Job then
