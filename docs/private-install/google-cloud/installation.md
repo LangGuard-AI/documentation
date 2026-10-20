@@ -639,17 +639,20 @@ then updates the Deployments.
 Bundles that contain the `opencite` image run the earlier catalog. This bundle runs
 `langguard-discovery`. The first apply with this bundle makes these changes:
 
-- The `opencite` Deployment runs the `langguard-discovery` image. The catalog uses the
-  new `discovery` schema. The `opencite` schema and its data stay in the database, but the
-  catalog does not read them.
+- The `opencite` Deployment runs the `langguard-discovery` image, in the new `discovery`
+  schema. When it first starts, its `migrate` init container copies the OpenCITE catalog
+  into that schema (`migrate-from-python --if-empty`). The `opencite` schema is not
+  changed. If the copy cannot start, or stops before it completes, the catalog pod does not
+  start. `kubectl -n langguard logs <pod> -c migrate` shows the reason.
 - Terraform deletes the `ghcr-pull-secret` Secret and removes it from the pods. The
   affected pods restart once. The nodes continue to pull the images from your registry
   with their own identity.
 - The Terraform variables `use_ghcr_images`, `opencite_use_artifact_registry`,
-  `ghcr_username` and `ghcr_token` no longer exist. If your `--tfvars` file sets one of
+  `ghcr_username`, `ghcr_token`, `enable_backup` and `log_retention_days` no longer exist. If your `--tfvars` file sets one of
   them, Terraform shows a warning and ignores the value. Remove them from the file.
 - `cloudsql-proxy-admin` restarts with the new Google service account
-  `lg-sqladmin-<environment>`. Terraform removes `lg-provisioning-<environment>`,
+  `lg-sqladmin-<environment>`. The apply waits two minutes for its grants to take effect.
+  Terraform then removes `lg-provisioning-<environment>`,
   `lg-build-<environment>`, `lg-registry-<environment>` and `lg-backup-<environment>`,
   and their role grants. The apply also removes the project role grants that
   [Google service accounts](/private-install/google-cloud/existing-infrastructure#google-service-accounts)
@@ -659,16 +662,17 @@ Bundles that contain the `opencite` image run the earlier catalog. This bundle r
   copies of the application credentials. Delete them when you do not need them:
 
   ```bash
-  gcloud secrets list --project <project> --filter='labels.managed-by=terraform'
+  gcloud secrets list --project <project> \
+    --filter='labels.project=langguard-dashboard AND labels.environment=<environment>'
   gcloud secrets delete <name> --project <project>
   ```
 
-  The log bucket is `<project>-langguard-dashboard-logs-<environment>`. The log sink
-  `langguard-dashboard-logs-<environment>` is removed. Delete the bucket when you do not
-  need the logs in it:
+  The log bucket is `<project>-<cluster>-logs-<environment>`. `<cluster>` is
+  `langguard-dashboard`, or the cluster name that you gave with `--use-existing-cluster`.
+  Terraform deletes the log sink. Delete the bucket when you do not need the logs in it:
 
   ```bash
-  gcloud storage rm -r gs://<project>-langguard-dashboard-logs-<environment>
+  gcloud storage rm -r gs://<project>-<cluster>-logs-<environment>
   ```
 
 ## Uninstall
