@@ -86,7 +86,7 @@ The installer always creates these resources:
     `support-bundle-reader`.
   - A HorizontalPodAutoscaler and a PodDisruptionBudget for `langguard-dashboard`.
   - ConfigMaps and Secrets.
-  - Two Jobs on each apply (see [Jobs](/private-install/google-cloud/service-mesh#jobs)).
+  - Three Jobs on each apply (see [Jobs](/private-install/google-cloud/service-mesh#jobs)).
   - The [NetworkPolicies](/private-install/google-cloud/service-mesh#networkpolicies), unless you set
     `--no-network-policies`.
 - **In the project:**
@@ -141,7 +141,7 @@ cluster that the installer creates uses `lg-nodes-<env>`. The full definitions a
   |---|---|---|
   | `docker.io/openpolicyagent/opa` | `opa` | None |
   | `docker.io/library/redis:7-alpine` | `redis` | None |
-  | `docker.io/library/postgres:16-alpine` | `cloudsql-app-grants` Job | None |
+  | `docker.io/library/postgres:16-alpine` | `cloudsql-discovery-schema` and `cloudsql-app-grants` Jobs | None |
   | `mcr.microsoft.com/presidio-analyzer` | `presidio-analyzer` | None |
   | `gcr.io/cloud-sql-connectors/cloud-sql-proxy` | `cloudsql-proxy`, `cloudsql-proxy-admin` | `cloudsql_proxy_image` |
 
@@ -481,15 +481,16 @@ generated file. If the installer created the cluster, the notes on control-plane
 that procedure also apply.
 
 1. Do [Step 1: Turn off deletion protection](/private-install/google-cloud/installation#step-1-turn-off-deletion-protection).
-   This step is necessary if the installer created the Cloud SQL instance. On an existing
-   cluster, there is no cluster deletion protection to turn off.
+   This step is necessary if the installer created the Cloud SQL instance, or created the
+   cluster with `--environment prod` (the default).
 2. Destroy. In this example, your `--tfvars` file is `../../mesh.tfvars`:
 
    ```bash
    terraform destroy \
      -var-file="environments/<env>.tfvars" \
      -var-file="../../mesh.tfvars" \
-     -var="cloudsql_deletion_protection=false"
+     -var="cloudsql_deletion_protection=false" \
+     -var="cluster_deletion_protection=false"
    ```
 
 :::note

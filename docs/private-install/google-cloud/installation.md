@@ -53,7 +53,7 @@ The cluster nodes pull these public images through Cloud NAT:
 | `openpolicyagent/opa` | `opa` |
 | `redis:7-alpine` | `redis` |
 | `mcr.microsoft.com/presidio-analyzer` | `presidio-analyzer` |
-| `postgres:16-alpine` | `cloudsql-app-grants` Job |
+| `postgres:16-alpine` | `cloudsql-discovery-schema` and `cloudsql-app-grants` Jobs |
 | `gcr.io/cloud-sql-connectors/cloud-sql-proxy` | `cloudsql-proxy`, `cloudsql-proxy-admin` |
 
 ### Bundle version
@@ -331,12 +331,13 @@ addresses. The installer shows a warning. Run the installer again to complete st
 or restrict the control plane yourself.
 :::
 
-Steps 3/4 and 4/4 each run two Kubernetes Jobs in the `langguard` namespace:
+Steps 3/4 and 4/4 each run three Kubernetes Jobs in the `langguard` namespace:
 
 | Job | Function |
 |---|---|
 | `db-migration` | Applies the LangGuard database schema with `/app/langguard ops db-migrate`, as the `lg_admin` database user. Terraform updates the `langguard-dashboard` Deployment only after this Job completes. |
-| `cloudsql-app-grants` | Creates the `discovery` schema and makes the application's IAM database user its owner. `langguard-discovery` applies its own schema there when it starts. Gives the same user `SELECT`, `INSERT`, `UPDATE` and `DELETE` on the tables in the `public`, `catalog`, `opencite` and `drizzle` schemas. It runs after `db-migration`. |
+| `cloudsql-discovery-schema` | Creates the `discovery` schema and makes the application's IAM database user its owner. `langguard-discovery` applies its own schema there when it starts. Terraform starts the catalog only after this Job completes. |
+| `cloudsql-app-grants` | Gives the application's IAM database user `SELECT`, `INSERT`, `UPDATE` and `DELETE` on the tables in the `public`, `catalog`, `opencite` and `drizzle` schemas. It runs after `db-migration`. |
 
 Each Job name ends with a timestamp. Terraform waits up to 5 minutes for each Job.
 Kubernetes deletes a finished Job, and its logs, after 10 minutes.
@@ -651,8 +652,8 @@ Bundles that contain the `opencite` image run the earlier catalog. This bundle r
   `ghcr_username`, `ghcr_token`, `enable_backup` and `log_retention_days` no longer exist. If your `--tfvars` file sets one of
   them, Terraform shows a warning and ignores the value. Remove them from the file.
 - `cloudsql-proxy-admin` restarts with the new Google service account
-  `lg-sqladmin-<environment>`. The apply waits two minutes for its grants to take effect.
-  Terraform then removes `lg-provisioning-<environment>`,
+  `lg-sqladmin-<environment>`. It becomes ready only once it can connect with that
+  identity, so the Jobs wait for its grants to take effect. Terraform then removes `lg-provisioning-<environment>`,
   `lg-build-<environment>`, `lg-registry-<environment>` and `lg-backup-<environment>`,
   and their role grants. The apply also removes the project role grants that
   [Google service accounts](/private-install/google-cloud/existing-infrastructure#google-service-accounts)
@@ -715,17 +716,15 @@ terraform init -reconfigure \
   -backend-config="prefix=langguard-<environment>"
 ```
 
-With `--environment prod` (the default), Terraform also protects the cluster. No variable
-turns this off. In `gcp/terraform/gke.tf`, change `deletion_protection` of the cluster to
-`deletion_protection = false`.
-
-Apply the change. The installer always sets deletion protection on the Cloud SQL instance,
-so also set `cloudsql_deletion_protection=false`:
+The installer always sets deletion protection on the Cloud SQL instance. With
+`--environment prod` (the default), the cluster also has deletion protection. Turn both
+off:
 
 ```bash
 terraform apply \
   -var-file="environments/<environment>.tfvars" \
-  -var="cloudsql_deletion_protection=false"
+  -var="cloudsql_deletion_protection=false" \
+  -var="cluster_deletion_protection=false"
 ```
 
 This apply also clears the admin password in the secrets, because only the installer
@@ -736,7 +735,8 @@ supplies it. Continue to step 2.
 ```bash
 terraform destroy \
   -var-file="environments/<environment>.tfvars" \
-  -var="cloudsql_deletion_protection=false"
+  -var="cloudsql_deletion_protection=false" \
+  -var="cluster_deletion_protection=false"
 ```
 
 Make sure that the resources are removed:
