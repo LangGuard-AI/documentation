@@ -314,7 +314,8 @@ installer. Use the images from the same bundle as the installer (`BUNDLE_FORMAT=
 
 The installer does not connect to the registry. If the path or a tag is incorrect, the
 pods show `ImagePullBackOff`, and the install stops when the `db-migration` Job does not
-complete in 5 minutes. The pods have no `imagePullSecrets`, so the nodes must pull from the
+complete in 5 minutes. The installer creates no image pull secret and the pods have no
+`imagePullSecrets`, so the nodes must pull from the
 registry with their own identity. For example, use Artifact Registry and give the node
 service account `roles/artifactregistry.reader`.
 

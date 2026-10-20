@@ -642,6 +642,12 @@ Bundles that contain the `opencite` image run the earlier catalog. This bundle r
 - The `opencite` Deployment runs the `langguard-discovery` image. The catalog uses the
   new `discovery` schema. The `opencite` schema and its data stay in the database, but the
   catalog does not read them.
+- Terraform deletes the `ghcr-pull-secret` Secret and removes it from the pods. The
+  affected pods restart once. The nodes continue to pull the images from your registry
+  with their own identity.
+- The Terraform variables `use_ghcr_images`, `opencite_use_artifact_registry`,
+  `ghcr_username` and `ghcr_token` no longer exist. If your `--tfvars` file sets one of
+  them, Terraform shows a warning and ignores the value. Remove them from the file.
 - `cloudsql-proxy-admin` restarts with the new Google service account
   `lg-sqladmin-<environment>`. Terraform removes `lg-provisioning-<environment>`,
   `lg-build-<environment>`, `lg-registry-<environment>` and `lg-backup-<environment>`,
