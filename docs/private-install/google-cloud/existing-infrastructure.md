@@ -297,13 +297,13 @@ registry uses other tags.
   --use-existing-cloudsql my-gcp-project:us-central1:my-postgres
 ```
 
-If `images/manifest.env` contains `LANGGUARD_VERSION=1.38.0` and `DISCOVERY_TAG=0.3.0`, this
+If `images/manifest.env` contains `LANGGUARD_VERSION=1.38.0` and `DISCOVERY_TAG=1.38.0`, this
 command uses these images:
 
 ```
 registry.example.com/langguard/langguard-dashboard:1.38.0
 registry.example.com/langguard/otel-ingest:1.38.0
-registry.example.com/langguard/langguard-discovery:0.3.0
+registry.example.com/langguard/langguard-discovery:1.38.0
 ```
 
 :::warning
