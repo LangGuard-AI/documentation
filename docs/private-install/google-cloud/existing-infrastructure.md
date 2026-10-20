@@ -20,7 +20,7 @@ components to skip.
 | Cloud SQL | `--use-existing-cloudsql <project:region:instance>` | The installer uses the instance and creates its own database and users in it. It creates no instance and no private services access. |
 | Container registry | `--registry <path>` | The nodes pull the images from the given path. The installer pushes no images and creates no Artifact Registry repository. |
 | Load balancer | `--no-load-balancer` | The installer creates no external HTTP(S) load balancer, GKE Ingress, static IP address, managed certificate or DNS records. |
-| DNS zone | `--use-existing-dns-zone --dns-zone-name <name>` | The installer writes the `A` record for `<domain>` to the zone. It grants `roles/dns.admin` on the zone to the `lg-app-<env>` and `lg-provisioning-<env>` service accounts. Applies only with the installer's load balancer. |
+| DNS zone | `--use-existing-dns-zone --dns-zone-name <name>` | The installer writes the `A` record for `<domain>` to the zone. It grants no roles on the zone. Applies only with the installer's load balancer. |
 | Google Cloud APIs | `--no-enable-apis` | The installer and Terraform enable no APIs. The installer checks them before it makes a change, and stops if one is missing. |
 | NetworkPolicies | `--no-network-policies` | The installer creates no NetworkPolicies. See [NetworkPolicies](/private-install/google-cloud/service-mesh#networkpolicies). |
 
@@ -73,19 +73,20 @@ The installer always creates these resources:
 
 - **In the cluster:**
   - The `langguard` namespace.
-  - Deployments and Services for `langguard-dashboard`, `otel-ingest`, `opencite`, `opa`,
-    `presidio-analyzer`, `redis`, `cloudsql-proxy` and `cloudsql-proxy-admin`.
-  - The Kubernetes service accounts `langguard-dashboard`, `tenant-provisioning`,
-    `opencite` and `external-dns`. Workload Identity maps the first three to Google
-    service accounts (`opencite` only with `enable_gcp_discovery = true`, the default).
+  - Deployments and Services for `langguard-dashboard`, `otel-ingest`, `opencite` (the
+    `langguard-discovery` catalog), `opa`, `presidio-analyzer`, `redis`, `cloudsql-proxy`
+    and `cloudsql-proxy-admin`.
+  - The Kubernetes service accounts `langguard-dashboard`, `cloudsql-admin`, `opencite`
+    and `external-dns`. Workload Identity maps the first three to Google service accounts
+    (`opencite` only with `enable_gcp_discovery = true`, the default).
     `otel-ingest` and `cloudsql-proxy` run as `langguard-dashboard`.
-    `cloudsql-proxy-admin` runs as `tenant-provisioning`. `opa`, `presidio-analyzer` and
+    `cloudsql-proxy-admin` runs as `cloudsql-admin`. `opa`, `presidio-analyzer` and
     `redis` run as the `default` service account of the namespace.
-  - Three Roles, each with a RoleBinding: `managed-cert-manager`, `support-bundle-reader`
-    and `tenant-provisioning-cert-manager`.
+  - Two Roles, each with a RoleBinding: `managed-cert-manager` and
+    `support-bundle-reader`.
   - A HorizontalPodAutoscaler and a PodDisruptionBudget for `langguard-dashboard`.
   - ConfigMaps and Secrets.
-  - Three Jobs on each apply (see [Jobs](/private-install/google-cloud/service-mesh#jobs)).
+  - Two Jobs on each apply (see [Jobs](/private-install/google-cloud/service-mesh#jobs)).
   - The [NetworkPolicies](/private-install/google-cloud/service-mesh#networkpolicies), unless you set
     `--no-network-policies`.
 - **In the project:**
@@ -94,31 +95,31 @@ The installer always creates these resources:
     `--plan-only`. The uninstall does not remove it.
   - Google service accounts with Workload Identity bindings and project IAM grants (see
     [Google service accounts](#google-service-accounts)).
-  - Secret Manager secrets.
   - Cloud Monitoring alert policies.
-  - A Cloud Logging sink into a new Cloud Storage bucket, and log exclusions.
+  - Cloud Logging exclusions.
 - **In the Cloud SQL instance:** the application database, the `lg_admin` user and the IAM
   database user.
 
-On an existing cluster, the alert policies, log sink and log exclusions select only the
+On an existing cluster, the alert policies and log exclusions select only the
 `langguard` namespace. The installer creates no node alert policies. To skip the log
 exclusions, set `enable_log_exclusions = false` in your tfvars file.
 
 ### Google service accounts
 
-| Service account | Project roles | To turn off |
-|---|---|---|
-| `lg-app-<env>` | `roles/compute.viewer`, `roles/cloudsql.client`, `roles/cloudsql.instanceUser`, `roles/aiplatform.user`. With a DNS zone, also `roles/dns.admin` on that zone. | Not possible |
-| `lg-provisioning-<env>` | `roles/compute.viewer`, `roles/cloudsql.client`. With a DNS zone, also `roles/dns.admin` on that zone. | Not possible |
-| `lg-discovery-<env>` | `roles/aiplatform.viewer`, `roles/cloudtrace.user`, `roles/logging.viewer`, `roles/compute.viewer` | `enable_gcp_discovery = false` |
-| `lg-backup-<env>` | `roles/gkebackup.admin`, `roles/storage.objectAdmin` | `enable_backup = false` |
-| `lg-nodes-<env>` | `roles/logging.logWriter`, `roles/monitoring.metricWriter`, `roles/monitoring.viewer`, `roles/stackdriver.resourceMetadata.writer`, `roles/container.defaultNodeServiceAccount` | Not possible |
-| `lg-registry-<env>` | `roles/artifactregistry.reader` | Not possible |
-| `lg-build-<env>` | `roles/cloudbuild.builds.builder`, `roles/artifactregistry.writer`, `roles/container.developer`, `roles/logging.logWriter` | Not possible |
+The install creates only the service accounts and roles that the application and the
+Google Cloud integration use:
 
-Set the variables in the last column in your `--tfvars` file. Only the node pool of a
+| Service account | Roles | Used by | To turn off |
+|---|---|---|---|
+| `lg-app-<env>` | `roles/cloudsql.client`, `roles/cloudsql.instanceUser`, `roles/aiplatform.user` | `langguard-dashboard`, `otel-ingest`, `cloudsql-proxy`: IAM database login and Vertex AI | Not possible |
+| `lg-sqladmin-<env>` | `roles/cloudsql.client` | `cloudsql-proxy-admin`: the `lg_admin` connection for the Jobs | Not possible |
+| `lg-discovery-<env>` | `roles/aiplatform.viewer`, `roles/cloudtrace.user`, `roles/logging.viewer`, `roles/compute.viewer` | `opencite`: the Google Agent Platform integration | `enable_gcp_discovery = false` |
+| `lg-nodes-<env>` | `roles/container.defaultNodeServiceAccount`. Without `--registry`, also `roles/artifactregistry.reader` on the `langguard-dashboard` repository. | GKE nodes: logs, metrics and image pulls | Not possible |
+
+Set the variable in the last column in your `--tfvars` file. Only the node pool of a
 cluster that the installer creates uses `lg-nodes-<env>`. The full definitions are in
-`gcp/terraform/iam.tf`.
+`gcp/terraform/iam.tf`, `gcp/terraform/cloudsql.tf`,
+`gcp/terraform/vertex-ai.tf` and `gcp/terraform/artifact-registry.tf`.
 
 ## Prerequisites
 
@@ -177,12 +178,11 @@ and DNS zone must all be in `--project`.
 | `iam.googleapis.com` | Workload service accounts | Always |
 | `iamcredentials.googleapis.com` | Workload Identity token exchange | Always |
 | `cloudresourcemanager.googleapis.com` | Project IAM grants | Always |
-| `secretmanager.googleapis.com` | Application secrets | Always |
 | `sqladmin.googleapis.com` | Database, users, Cloud SQL Auth Proxy | Always |
 | `aiplatform.googleapis.com` | Vertex AI | Always |
-| `logging.googleapis.com` | Log sink, log exclusions | Always |
+| `logging.googleapis.com` | Log exclusions | Always |
 | `monitoring.googleapis.com` | Alert policies | Always |
-| `storage.googleapis.com` | Terraform state bucket, log bucket | Always |
+| `storage.googleapis.com` | Terraform state bucket | Always |
 | `servicenetworking.googleapis.com` | Cloud SQL private services access | Without `--use-existing-cloudsql` |
 | `artifactregistry.googleapis.com` | Registry for the bundled images | Without `--registry` |
 | `dns.googleapis.com` | DNS zone and records | Without `--no-load-balancer` |
@@ -190,8 +190,7 @@ and DNS zone must all be in `--project`.
 The table lists the APIs that must be enabled. By default, Terraform enables all of them
 except `iamcredentials.googleapis.com` and `storage.googleapis.com`. Make sure that these
 two APIs are enabled before you install, with or without `--no-enable-apis`. Terraform
-also enables `cloudbuild.googleapis.com` and `certificatemanager.googleapis.com`, which the
-installer does not check.
+also enables `certificatemanager.googleapis.com`, which the installer does not check.
 
 With `--no-enable-apis`, neither Terraform nor the installer enables an API. The installer
 reads the enabled APIs of `--project` before it changes anything. If an API is missing, the
@@ -225,7 +224,6 @@ installation [IAM prerequisites](/private-install/google-cloud/installation#iam)
   needs permission to create RBAC objects. `roles/container.developer` cannot do this.
 - Without `--use-existing-cloudsql`, the installer reserves a range and creates a private
   services access peering in your VPC.
-- With `--use-existing-dns-zone`, the installer changes the IAM policy of the zone.
 - Without `--registry`, the installer creates the repository if it does not exist, pushes
   the images, and changes the IAM policy of the repository. `roles/artifactregistry.writer`
   cannot create a repository or change its IAM policy.
@@ -286,7 +284,7 @@ Service Mesh and Linkerd, and the egress destinations to register.
 
 `--registry` takes a path prefix without a tag. The installer adds the image name and the
 tag. The tags default to the versions in `images/manifest.env`. If that file is not
-present, you must give `--image-tag` and `--opencite-image-tag`. Also give them if your
+present, you must give `--image-tag` and `--discovery-image-tag`. Also give them if your
 registry uses other tags.
 
 ```bash
@@ -299,13 +297,13 @@ registry uses other tags.
   --use-existing-cloudsql my-gcp-project:us-central1:my-postgres
 ```
 
-If `images/manifest.env` contains `LANGGUARD_VERSION=1.38.0` and `OPENCITE_TAG=0.2.14`, this
+If `images/manifest.env` contains `LANGGUARD_VERSION=1.38.0` and `DISCOVERY_TAG=0.3.0`, this
 command uses these images:
 
 ```
 registry.example.com/langguard/langguard-dashboard:1.38.0
 registry.example.com/langguard/otel-ingest:1.38.0
-registry.example.com/langguard/opencite:0.2.14
+registry.example.com/langguard/langguard-discovery:0.3.0
 ```
 
 :::warning
@@ -327,7 +325,7 @@ from the bundle root, on a host that has credentials for the registry:
 
 ```bash
 . images/manifest.env
-for img in langguard-dashboard:$LANGGUARD_VERSION otel-ingest:$LANGGUARD_VERSION opencite:$OPENCITE_TAG; do
+for img in langguard-dashboard:$LANGGUARD_VERSION otel-ingest:$LANGGUARD_VERSION langguard-discovery:$DISCOVERY_TAG; do
   name=${img%%:*}
   gunzip -c images/$name.tar.gz > /tmp/$name.tar
   skopeo copy --all --preserve-digests \
@@ -470,7 +468,7 @@ To upgrade:
 2. With `--registry`, load the images of the new bundle into your registry (see
    [Loading the images](#loading-the-images)). The installer reads the new tags from
    `images/manifest.env`. If `images/` is not present, give the new tags with
-   `--image-tag` and `--opencite-image-tag`.
+   `--image-tag` and `--discovery-image-tag`.
 3. From the `gcp/` directory of the new bundle, run `install.sh` with the same flags and
    the same `--tfvars` file. See [Upgrade](/private-install/google-cloud/installation#upgrade).
 
@@ -482,9 +480,8 @@ generated file. If the installer created the cluster, the notes on control-plane
 that procedure also apply.
 
 1. Do [Step 1: Turn off deletion protection](/private-install/google-cloud/installation#step-1-turn-off-deletion-protection).
-   This step is necessary with `--environment prod` (the default), because the Secret
-   Manager secrets and the log bucket have deletion protection. It is also necessary if
-   the installer created the Cloud SQL instance.
+   This step is necessary if the installer created the Cloud SQL instance. On an existing
+   cluster, there is no cluster deletion protection to turn off.
 2. Destroy. In this example, your `--tfvars` file is `../../mesh.tfvars`:
 
    ```bash
