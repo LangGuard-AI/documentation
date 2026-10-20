@@ -1,85 +1,47 @@
 ---
 sidebar_position: 5
 title: Tags Management
-description: Create and manage tags for organizing AI assets
+description: See tag usage and manage department tags, stage tags, and categorization rules
 ---
-
-import ThemedImage from '@theme/ThemedImage';
 
 # Tags Management
 
-Tags help you organize and categorize AI assets across LangGuard. Manage your workspace's tag library from the settings page.
+The Tags page shows how tags are used on your AI assets. It also holds the department and stage options and the categorization rules.
 
 **Navigation:** Settings > Tags (`/settings/tags`)
 
-<ThemedImage
-  alt="Tags Management"
-  sources={{
-    light: '/img/settings-tags-light.png',
-    dark: '/img/settings-tags.png',
-  }}
-/>
-
 ## Overview
 
-Tags are labels you apply to AI assets (agents, models, tools) to categorize them by team, environment, compliance status, or any custom dimension. Tags are used across:
+A tag is a key and a value, for example `team: analytics`. You add tags to entities (agents, models, tools, and other assets). Use tags to filter the [Data Catalog](/features/data-catalog) and to group assets in [Discovery](/features/discovery).
 
-- **Discovery** — Categorize discovered assets
-- **Data Catalog** — Label data entities
+To add a tag to an entity, open its drawer and click **Add tag** in the metadata section. You can also click **Add Tag** in the Data Catalog list view.
 
-## Creating Tags
+## Tag analytics
 
-1. Navigate to **Settings > Tags**
-2. Click **Create Tag**
-3. Enter a **tag name** (e.g., "production", "pii", "team:analytics")
-4. Select a **color** for visual identification
-5. Click **Save**
+| Tile | Description |
+|------|-------------|
+| **Total Tags** | Every tag on every entity, counted once per entity. One tag on five agents counts as five. It is not the number of different tags. |
+| **Total Entities** | The number of entities in the catalog. |
+| **Tagged Entities** | The number of entities that have one or more tags. |
+| **Coverage** | Tagged Entities divided by Total Entities, as a percentage. |
 
-## Managing Tags
+**Top Tags** shows the 10 tags (key and value) on the most entities.
 
-The tags page displays all tags in your workspace:
+**Tags by Key** shows each tag key, the number of entities that have it, and the number of different values.
 
-| Column | Description |
-|--------|-------------|
-| **Name** | The tag label |
-| **Color** | Visual color indicator |
-| **Usage Count** | Number of assets using this tag |
-| **Actions** | Edit or delete |
+To remove a tag key from all entities, click the trash icon next to the key in **Tags by Key** and confirm. This removes every value of that key from every entity. You cannot undo it.
 
-### Editing Tags
+## Department and stage tags
 
-Click a tag to edit its name or color. Changes apply everywhere the tag is used.
+**Department Tags** and **Stage Tags** list the values that you can select for the department and the stage of an entity.
 
-### Deleting Tags
+- To add a value, click **Add Department** or **Add Stage**.
+- To edit or delete a value, open the menu on its row.
 
-Delete unused tags to keep your tag library clean:
+When you delete a value, entities that use it keep it. You cannot select the value for other entities.
 
-1. Click the **Delete** button on the tag
-2. Confirm the action
-3. The tag is removed from all assets that had it applied
+If an identity integration syncs departments, that integration manages the department values. It replaces the values with the departments in your directory. To edit them by hand, turn off department sync on that integration. Only one integration can sync departments.
 
-:::caution
-Deleting a tag removes it from all assets. This cannot be undone.
-:::
+## Categorization rules
 
-## Applying Tags
-
-Tags are applied to assets from their respective pages:
-
-- In **Discovery**, select an asset and use the tag picker
-- In **Data Catalog**, click "Add Tag" on an entity detail view
-
-## System tags
-
-In addition to the tags you create, LangGuard applies some **system tags**
-automatically from discovered metadata — most notably a `department` tag on agents.
-These power the **business-unit** grouping in [Discovery](/features/discovery), so
-you can see assets organized by team or department without tagging them by hand.
-System tags never overwrite tags you've set manually.
-
-## Best Practices
-
-- **Use consistent naming conventions** — Decide on a format (e.g., `team:analytics`, `env:production`) and stick to it
-- **Use colors meaningfully** — Assign colors by category (e.g., red for compliance, blue for team)
-- **Clean up unused tags** — Periodically review and delete tags with zero usage
-- **Keep the tag list manageable** — Too many tags reduce their usefulness
+Categorization rules set the team, stage, and owner of entities automatically when the entities match. The card shows the number of rules. Click **Manage rules** to create or edit them.
