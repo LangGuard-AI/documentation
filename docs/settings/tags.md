@@ -31,7 +31,7 @@ To add a tag to an entity, open its drawer and click **Add tag** in the metadata
 
 To remove a tag key from all entities, click the trash icon next to the key in **Tags by Key** and confirm. This removes every value of that key from every entity. You cannot undo it.
 
-## Department and stage tags
+## Department and stage tags {#system-tags}
 
 **Department Tags** and **Stage Tags** list the values that you can select for the department and the stage of an entity.
 
