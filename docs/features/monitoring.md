@@ -1,242 +1,123 @@
 ---
 sidebar_position: 3
 title: Monitoring
-description: Real-time monitoring dashboards for AI operations
+description: Triage policy violations and approval requests in one queue
 ---
-
-import ThemedImage from '@theme/ThemedImage';
 
 # Monitoring
 
-LangGuard provides comprehensive monitoring capabilities to help you understand the health and performance of your AI operations.
+The **Monitoring** page is a triage queue. It lists the policy violations that need attention and the approval requests that wait for a decision.
 
-## Dashboard Overview
+## Views
 
-<ThemedImage
-  alt="Monitoring Dashboard"
-  sources={{
-    light: '/img/monitoring-dashboard-light.png',
-    dark: '/img/monitoring-dashboard.png',
-  }}
-/>
+The views rail at the top of the page has three views.
 
-The main dashboard displays key metrics and recent activity at a glance:
+| View | Shows |
+|------|-------|
+| **Open** (default) | Violations with the status Open. The tab shows the count. |
+| **Acknowledged** | Violations with the status Acknowledged. The tab shows the count. Use **Acknowledged by** (**Anyone** or **Me**) to show only your own. |
+| **Approvals** | Approval requests. Use **Status** to show **Pending** (default), **Approved**, **Denied**, **Expired**, or **All**. The tab shows the number of pending requests. |
 
-- **Summary cards** - Total Traces, Active Agents, Total Errors, and Avg Response Time
-- **Real-time AI Usage Search** - Natural language search for traces with quick search filters
-- **Latest traces** - Live feed of recent agent execution traces with status indicators
-- **Real-time AI Usage Findings** - Security and compliance alerts including token requests, permission alerts, and key rotations
+Resolved and False positive violations leave the queue. For the statuses, see [Policy violations](/policies/policy-violations#violation-statuses).
 
-### Key Metrics
+## Filters and grouping
 
-The dashboard header shows aggregate metrics:
+Use the toolbar to narrow the queue:
 
-| Metric | Description |
-|--------|-------------|
-| **Total Traces** | Number of traces ingested |
-| **Success Rate** | Percentage of successful traces |
-| **Avg Latency** | Mean trace duration |
-| **Active Agents** | Agents with recent activity |
-| **Policy Violations** | Count of triggered policies |
+- **Filter by agent or user**. A text search.
+- A severity filter (**All severities** by default).
+- **Filter by category** and **Filter by policy**.
+- **Show disabled policies**. By default, the queue hides violations of disabled policies. When you show them, these rows have the chip **Not evaluated**.
+- **Group by**. **Severity** (default), **Policy**, or **Agent**. In the **Agent** grouping, violations with no agent go in the **Unattributed** band.
 
-### Time Range Selection
+**Clear filters** removes the filters. The view and the filters are in the page URL, so you can share a link to a filtered queue.
 
-Use the time range selector to adjust the analysis period:
+## Severity bands
 
-- Last Hour
-- Last 24 Hours (default)
-- Last 7 Days
-- Last 30 Days
-- Custom Range
+With **Group by** set to **Severity**, the queue has one band for each severity, in the order **Critical**, **High**, **Medium**, **Low**. A band with no violations does not show. The severity of a violation is the severity of its policy when LangGuard recorded the violation.
 
-All metrics update automatically when you change the time range.
+Each band header shows:
 
-## Metrics Deep Dive
+- The count, for example "38 violations in 6 rows". Rolled-up rows make the two numbers different.
+- **oldest open**. The age of the oldest violation in the band.
 
-### Success Rate
+The queue loads the newest 500 violations. If there are more, a count ends in `+` and is a minimum. In the **Open** view, grouped by severity with no filters, the band counts come from the server and are exact.
 
-The success rate shows the percentage of traces that completed without errors:
+## Rolled-up rows
 
-```
-Success Rate: 94.2%
-───────────────────────────────
-████████████████████░░░░ 94.2%
-```
+Repeats of one policy by the same agent fold into one row. When a violation has no agent, repeats by the same user fold together. The row shows the newest violation and a repeat chip, for example `14x`, with the number of violations in the row. A row action applies to every violation in the row.
 
-**Interpretation**:
-- **≥ 95%** - Excellent (green)
-- **85-95%** - Acceptable (yellow)
-- **< 85%** - Needs attention (red)
+## Needs approval band
 
-### Latency
+In the **Open** view, the **Needs approval** band is at the top of the queue. It lists every pending approval request. The queue filters do not apply to this band. Select a request to review it, or select the band title to open the **Approvals** view. Each request shows how long it has waited and when it expires.
 
-Track response times across your agents:
+For what approval requests are and how to decide them, see [Approvals and remembered rules](/policies/approvals).
 
-- **P50** (Median) - Half of requests complete within this time
-- **P95** - 95% of requests complete within this time
-- **P99** - 99% of requests complete within this time
-- **Average** - Mean duration
+## Blocked and Detected
 
-```
-Latency Distribution (P95)
-────────────────────────────────
-< 100ms  ████████ 40%
-100-500ms ██████████████ 35%
-500ms-1s ████████ 15%
-> 1s     ████ 10%
-```
+A violation row can show where LangGuard found the violation and a chip that tells what LangGuard did.
 
-### Token Usage
+| Chip | Meaning |
+|------|---------|
+| **Blocked** | LangGuard stopped the call or withheld the result. |
+| **Detected** | LangGuard recorded the violation and did not stop the call. |
 
-Monitor token consumption for cost management:
+A violation is **Blocked** only when the policy is in Enforce mode and the place where LangGuard found it can stop calls. Checks on ingested traces never block, because the call ran before LangGuard received the trace. On the MCP gateway in [Shadow mode](/settings/enforcement-mode#shadow-mode), violations are always **Detected**.
 
-- **Input Tokens** - Tokens in requests
-- **Output Tokens** - Tokens in responses
-- **Total Tokens** - Combined usage
-- **Cost Estimate** - Based on model pricing
+## Row actions
 
-### Volume Trends
+Each violation row has status actions. The actions that show depend on the status.
 
-See request patterns over time:
-
-```
-Requests per Hour (Last 24h)
-100 |                    ╭────╮
- 75 |              ╭─────╯    ╰───╮
- 50 |         ╭────╯              ╰───╮
- 25 | ────────╯                        ╰────
-  0 └───────────────────────────────────────
-    12am   6am   12pm   6pm   12am
-```
-
-## Agent Health
-
-### Agent Status Cards
-
-Each discovered agent has a health card showing:
-
-```
-┌──────────────────────────────────────┐
-│  CustomerService Agent         [●●●] │
-├──────────────────────────────────────┤
-│  Status: ● Healthy                   │
-│  Success Rate: 94.2%   ▲ +2.3%      │
-│  Avg Latency: 1.2s     ▼ -0.1s      │
-│  Traces (24h): 1,234                 │
-│  Last Active: 5 minutes ago          │
-└──────────────────────────────────────┘
-```
-
-### Health Status Indicators
-
-| Status | Meaning |
+| Status | Actions |
 |--------|---------|
-| 🟢 Healthy | Success rate ≥ 95%, no recent errors |
-| 🟡 Warning | Success rate 85-95% or elevated latency |
-| 🔴 Critical | Success rate < 85% or many errors |
-| ⚪ Inactive | No activity in selected time range |
+| Open | **Acknowledge**, **Resolve**, **False positive** |
+| Acknowledged | **Resolve**, **False positive**, **Reopen** |
+| Resolved or False positive | **Reopen** |
 
-## Integration Health
+On a rolled-up row, the label shows the count, for example **Resolve 14**.
 
-### Connection Status
+Expand a row to see its details and the links **Open trace**, **Open agent**, and **Open policy**.
 
-Monitor the health of your data source connections:
+To act on many rows, select them. The bulk bar shows **Acknowledge**, **Resolve**, and **False positive**. For approval requests, the bulk bar shows only **Deny**, and a shared note is required. You approve requests one at a time.
 
-```
-┌─────────────────────────────────────────┐
-│  Integrations                            │
-├─────────────────────────────────────────┤
-│  Databricks (Production)  ● Connected   │
-│  Last Sync: 2 minutes ago               │
-│  Traces Synced: 12,456                  │
-├─────────────────────────────────────────┤
-│  Azure AI Foundry         ● Connected   │
-│  Last Sync: 5 minutes ago               │
-│  Traces Synced: 3,421                   │
-└─────────────────────────────────────────┘
-```
+Status changes require the Member or Admin role. A Viewer can read the queue but cannot change it.
 
-### Sync History
+## Violation drawer
 
-View recent sync operations:
+Select a violation row to open the drawer. The drawer shows:
 
-| Time | Integration | Status | Items |
-|------|-------------|--------|-------|
-| 2 min ago | Databricks | ✓ Success | 45 traces |
-| 7 min ago | Databricks | ✓ Success | 52 traces |
-| 12 min ago | Azure AI Foundry | ✓ Success | 23 traces |
-| 17 min ago | Databricks | ⚠ Warning | 0 traces (rate limited) |
+- **Status**, with the status actions at the bottom of the drawer.
+- **Policy**, **Agent**, and **User**.
+- **Found at**. Where LangGuard found the violation, with the **Blocked** or **Detected** chip.
+- **MTTA**. The time to acknowledge this violation.
+- **Description** of the policy.
+- **Details**. The facts that the policy recorded. Matched text can contain secrets or personal data, so it stays hidden until a Member or Admin selects **Reveal evidence**.
+- **Last 24h trend**. Violations of this policy for each hour.
+- **Related**. Links to the trace, the agent and user traces, and the policy.
 
-## Policy Violations
+## Keyboard shortcuts
 
-### Violation Summary
+Press `?` or `Cmd+K` (`Ctrl+K` on Windows and Linux) to open the command palette. Its footer lists these shortcuts.
 
-The dashboard shows recent policy violations:
-
-```
-Policy Violations (Last 24h)
-────────────────────────────────
-Critical:  3  ████
-High:      8  ██████████
-Medium:   15  ████████████████████
-Low:       7  █████████
-```
-
-### Recent Violations
-
-Quick list of recent policy triggers:
-
-| Time | Policy | Agent | Severity |
-|------|--------|-------|----------|
-| 5 min ago | PII Detection | EmailBot | Critical |
-| 12 min ago | Metadata Tagging | ChatBot | Low |
-| 1 hour ago | Credential Surface Discovery | DataAgent | Critical |
-
-Click any violation to view details in the Trace Explorer.
-
-## Real-time Updates
-
-### Auto-Refresh
-
-The dashboard automatically refreshes based on your sync interval:
-
-- Metrics update after each sync
-- Agent status refreshes in real-time
-- New violations appear immediately
-
-### Manual Refresh
-
-Click the refresh button (↻) to force an update.
-
-## Best Practices
-
-### 1. Set Up Baselines
-
-Establish baseline metrics for comparison:
-
-- Document normal success rates
-- Record typical latency ranges
-- Track average daily volumes
-
-### 2. Monitor Trends
-
-Look for patterns rather than absolute values:
-
-- Gradual latency increases
-- Declining success rates
-- Volume anomalies
-
-### 3. Regular Reviews
-
-Schedule periodic reviews:
-
-- Daily: Quick health check
-- Weekly: Trend analysis
-- Monthly: Deep dive and optimization
+| Key | Action |
+|-----|--------|
+| `j` / `k` | Move between rows |
+| `x` | Select the focused row |
+| `Enter` | Open the focused row |
+| `e` | Acknowledge |
+| `r` | Resolve |
+| `f` | Mark false positive |
+| `u` | Reopen |
+| `a` / `d` | On an approval row, open the drawer at **Approve** or **Deny**. One key never decides a request. |
+| `g` then `a` | Go to the **Approvals** view |
+| `g` then `0` to `3` | Jump to the Critical, High, Medium, or Low band |
+| `/` | Search agents |
+| `Esc` | Close the drawer or clear the selection |
 
 ---
 
-## Next Steps
+## Next steps
 
-- [Trace Explorer](/features/trace-explorer) - Investigate specific traces
-- [Policies](/policies) - Set up governance rules
+- [Policy violations](/policies/policy-violations). Violation statuses and evidence.
+- [Approvals and remembered rules](/policies/approvals). Decide escalated calls.
+- [Trace Explorer](/features/trace-explorer). Investigate a trace.

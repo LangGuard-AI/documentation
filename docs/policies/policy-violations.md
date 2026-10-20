@@ -4,318 +4,113 @@ title: Policy Violations
 description: Understanding and managing policy violations
 ---
 
-import ThemedImage from '@theme/ThemedImage';
-
 # Policy Violations
 
-When traces trigger enabled policies, LangGuard records violations with full context for investigation and remediation.
+When a call or a trace breaks an enabled policy, LangGuard records a violation. You triage violations on the [Monitoring](/features/monitoring) page and see them in the trace details.
 
-<ThemedImage
-  alt="Policy Detail and Violations"
-  sources={{
-    light: '/img/policies-violations-light.png',
-    dark: '/img/policies-violations.png',
-  }}
-/>
+## Understanding violations
 
-## Understanding Violations
+A violation is one finding of one policy in a trace. One trace can have many violations. LangGuard records violations when the policy is in Enforce mode or in Monitor mode. A disabled policy records no violations.
 
-### Violation Structure
+If a later check finds the same violation in the same trace again, LangGuard keeps its status. A violation in a new trace is a new violation with the status Open.
+
+### Violation structure
 
 Each violation includes:
 
 | Field | Description |
 |-------|-------------|
-| **Policy** | Which policy was triggered |
-| **Severity** | Critical, High, Medium, Low |
-| **Trace** | The trace that triggered it |
-| **Message** | Human-readable explanation |
-| **Evidence** | What specifically triggered it |
-| **Timestamp** | When it was detected |
-| **Status** | New, Acknowledged, Resolved |
-
-### Example Violation
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│  Policy Violation                                            │
-├──────────────────────────────────────────────────────────────┤
-│  Policy: PII Data Detection                                  │
-│  Severity: 🔴 Critical                                       │
-│  Status: New                                                 │
-│                                                              │
-│  Message:                                                    │
-│  Email address detected in output                            │
-│                                                              │
-│  Evidence:                                                   │
-│  Pattern: user@example.com                                   │
-│  Location: output.response.text                              │
-│                                                              │
-│  Trace: customer_query (tr_abc123)                           │
-│  Agent: CustomerService                                      │
-│  Time: March 15, 2024 10:30:00 AM                            │
-│                                                              │
-│  [View Trace] [Acknowledge] [Mark Resolved]                  │
-└──────────────────────────────────────────────────────────────┘
-```
+| **Policy** | The policy that found the violation. |
+| **Severity** | Critical, High, Medium, or Low. This is the severity of the policy when LangGuard recorded the violation. |
+| **Agent** and **User** | The agent and the user of the call, when known. |
+| **Trace** | The trace that contains the violation. |
+| **Message** | An explanation of the violation. |
+| **Evidence** | What the policy matched, and where. See [Evidence display](#evidence-display). |
+| **Found at** | Where LangGuard found the violation, and if it was **Blocked** or **Detected**. |
+| **Status** | Open, Acknowledged, Resolved, or False positive. |
 
-## Viewing Violations
-
-### Violations Dashboard
-
-Navigate to **Policies > Violations**:
-
-```
-┌───────────────────────────────────────────────────────────────┐
-│  Policy Violations                              [Filter ▼]    │
-├───────────────────────────────────────────────────────────────┤
-│  Time       │ Policy          │ Severity │ Agent    │ Status  │
-├─────────────┼─────────────────┼──────────┼──────────┼─────────┤
-│  10:30 AM   │ PII Detection   │ Critical │ ChatBot  │ New     │
-│  10:28 AM   │ Metadata Tag    │ Low      │ DataBot  │ New     │
-│  10:15 AM   │ Credential Srf  │ Critical │ QueryBot │ Ack     │
-│  10:00 AM   │ Trace Logging   │ Low      │ ChatBot  │ Resolved│
-└─────────────┴─────────────────┴──────────┴──────────┴─────────┘
-```
-
-### Filtering
-
-Filter violations by:
+**Blocked** means that LangGuard stopped the call or withheld the result. **Detected** means that LangGuard recorded the violation and did not stop the call. Checks on ingested traces never block. For the full rule, see [Blocked and Detected](/features/monitoring#blocked-and-detected).
 
-- **Severity**: Critical, High, Medium, Low
-- **Status**: New, Acknowledged, Resolved
-- **Policy**: Specific policy name
-- **Agent**: Agent that triggered violation
-- **Time Range**: Last hour, 24h, 7d, custom
-
-### Searching
-
-Search across violations:
-
-```
-Search: email agent:CustomerService severity:critical
-```
-
-## Violation Details
-
-### From Trace Explorer
-
-1. Open any trace in Trace Explorer
-2. Click the **Violations** tab
-3. View all violations for that trace
-
-### From Violation List
-
-1. Click any violation row
-2. View full details in drawer:
-   - Policy information
-   - Evidence
-   - Trace context
-   - Related violations
-
-## Managing Violations
-
-### Violation Statuses
-
-| Status | Meaning | Next Actions |
-|--------|---------|--------------|
-| **New** | Just detected | Review, Acknowledge |
-| **Acknowledged** | Being investigated | Resolve, Add notes |
-| **Resolved** | Issue addressed | Archive |
-
-### Acknowledging Violations
-
-Mark that you've seen and are investigating:
-
-1. Select violation(s)
-2. Click **Acknowledge**
-3. Optionally add notes
+## Managing violations
 
-### Resolving Violations
+### Violation statuses
 
-Mark as addressed:
+| Status | Meaning | Actions |
+|--------|---------|---------|
+| **Open** | Nobody has acted on it yet. | **Acknowledge**, **Resolve**, **False positive** |
+| **Acknowledged** | Someone is working on it. | **Resolve**, **False positive**, **Reopen** |
+| **Resolved** | The issue is handled. Closed. | **Reopen** |
+| **False positive** | The policy found the violation by mistake. Closed. | **Reopen** |
 
-1. Select violation(s)
-2. Click **Mark Resolved**
-3. Add resolution notes (recommended)
+The [Monitoring](/features/monitoring) page shows the actions on each row and at the bottom of the violation drawer. Status changes require the Member or Admin role.
 
-### Bulk Actions
+### Acknowledging violations
 
-Manage multiple violations:
+Acknowledge a violation to show that you work on it.
 
-1. Check multiple violations
-2. Use bulk action menu:
-   - **Acknowledge All**
-   - **Mark All Resolved**
-   - **Export Selected**
+1. On the **Monitoring** page, find the violation in the **Open** view.
+2. Select **Acknowledge** on the row, or open the row and select **Acknowledge** in the drawer.
 
-## Violation Analysis
+The violation moves to the **Acknowledged** view. LangGuard records who acknowledged it and when. The drawer shows the time to acknowledge as **MTTA**.
 
-### By Severity
+You can also select **Acknowledge** on an open violation in the trace details.
 
-View breakdown by severity:
+### Resolving violations
 
-```
-Violation Distribution (Last 7 Days)
-────────────────────────────────────
-Critical: ████ 4
-High:     ██████████ 12
-Medium:   ████████████████████ 25
-Low:      █████████ 9
-```
+When the issue is handled, select **Resolve**. The violation leaves the queue.
 
-### By Policy
+### False positives
 
-See which policies trigger most:
+If the policy found the violation by mistake, select **False positive**. The violation leaves the queue. The policy does not change. To stop more false positives, change the policy. See [Creating policies](/policies/creating-policies).
 
-```
-Top Policies (Last 7 Days)
-────────────────────────────────────
-1. PII Detection        18 violations
-2. Metadata Tagging     15 violations
-3. Credential Surface   12 violations
-4. Unapproved Tool       5 violations
-```
+### Reopening violations
 
-### By Agent
+Select **Reopen** to set a violation back to Open.
 
-Identify problematic agents:
+### Linked incidents
 
-```
-Violations by Agent (Last 7 Days)
-────────────────────────────────────
-CustomerService    22 violations
-DataProcessor      15 violations
-EmailBot           8 violations
-```
+If a PagerDuty alert destination opened an incident for a violation, LangGuard resolves that incident when you set the violation to Resolved or False positive. Other destination types do not receive this update. See [Alert Destinations](/settings/webhooks#pagerduty).
 
-### Trends
+### Bulk actions
 
-Track violations over time:
+To change many violations at once:
 
-```
-Daily Violations (Last 30 Days)
-30 |                    ╭─╮
-   |                 ╭──╯ ╰╮
-20 |    ╭───╮    ╭──╯      ╰──╮
-   | ╭──╯   ╰────╯            ╰───
-10 |─╯
-   └────────────────────────────────
-    1  5  10  15  20  25  30
-```
+1. On the **Monitoring** page, select the rows.
+2. In the bulk bar, select **Acknowledge**, **Resolve**, or **False positive**.
 
-## Trace Details with Violations
+An action on a rolled-up row applies to every violation in that row.
 
-### Overview Card
+## Evidence display
 
-In trace details, violations appear prominently:
+The **Details** section of the violation drawer shows the facts that the policy recorded, for example **Message** and **Location**. Matched text can contain secrets or personal data. It stays hidden until you select **Reveal evidence**. Select **Hide evidence** to hide it again. Only a Member or Admin can reveal evidence. A Viewer sees that the evidence is hidden.
 
-```
-┌──────────────────────────────────────────┐
-│  Policy Violations (2)                   │
-├──────────────────────────────────────────┤
-│  🔴 Critical: PII Data Detection         │
-│     Email address in output              │
-├──────────────────────────────────────────┤
-│  🟡 Low: Metadata Tagging                │
-│     Required field missing: ai_app_id    │
-└──────────────────────────────────────────┘
-```
+In the trace details, expand a violation to see its **Evidence**. The evidence shows the pattern that matched, the matched content, and the **Location**.
 
-### Evidence Display
+## Trace details with violations
 
-Click to expand violation evidence:
+To see the violations of one trace, open the trace in the [Trace Explorer](/features/trace-explorer). The **Overview** tab has the **Policy & Plugin Evaluation** card. The card shows **Compliant**, or the number of violations with counts by severity.
 
-```
-Evidence:
-├── Pattern Matched: email
-├── Value: "user@example.com"
-├── Location: output.response.text
-├── Position: characters 145-165
-└── Context: "...contact us at user@example.com for..."
-```
+Expand a violation in the card to see:
 
-For programmatic access to violations, see the [API documentation](https://app.langguard.ai/swagger).
+- **Evidence**
+- **Policy Description**
+- **View Policy**, which opens the policy
+- **Acknowledge**, on an open violation
 
-## Incident Response
+If a policy stopped the call before it ran, the card shows **Blocked at interception**.
 
-### Incident Response
+## Triage workflow
 
-When critical violations occur:
-
-1. **Triage** - Review violation details
-2. **Investigate** - Check trace and evidence
-3. **Acknowledge** - Mark as being worked
-4. **Remediate** - Fix the underlying issue
-5. **Resolve** - Mark complete with notes
-6. **Review** - Analyze to prevent recurrence
-
-### Regular Review
-
-Weekly violation review process:
-
-1. Filter to last 7 days
-2. Sort by severity (Critical first)
-3. Review each violation:
-   - Is the policy working correctly?
-   - Is this a true positive?
-   - What action is needed?
-4. Acknowledge reviewed items
-5. Create tickets for follow-up
-
-### False Positives
-
-When violations are false positives:
-
-1. Review the policy logic
-2. Adjust thresholds or patterns
-3. Mark violation as resolved
-4. Add note: "False positive - policy adjusted"
-5. Monitor for recurrence
-
-## Best Practices
-
-### 1. Don't Ignore Violations
-
-Every violation represents a potential issue. Establish a process for review.
-
-### 2. Tune Policies
-
-High false positive rates indicate policies need adjustment:
-
-- Narrow regex patterns
-- Adjust thresholds
-- Add exceptions
-
-### 3. Document Resolutions
-
-Always add notes when resolving:
-
-```
-Resolved: False positive. User email was in allowed list.
-Policy updated to exclude @company.com addresses.
-```
-
-### 4. Track Trends
-
-Rising violation counts may indicate:
-
-- New agent behavior
-- Changed data patterns
-- Policy needs adjustment
-
-### 5. Automate Where Possible
-
-For known-acceptable violations:
-
-- Create exceptions in policies
-- Use allowlists for approved patterns
-- Adjust severity levels appropriately
+1. Start with the **Critical** band in the **Open** view of the **Monitoring** page.
+2. Open the violation and read the evidence and the trace.
+3. Select **Acknowledge** when you start work.
+4. Fix the cause, then select **Resolve**. If the policy was wrong, select **False positive** and change the policy.
 
 ---
 
-## Next Steps
+## Next steps
 
+- [Monitoring](/features/monitoring) - Triage violations and approval requests
+- [Approvals and remembered rules](/policies/approvals) - Decide escalated calls
 - [Creating Policies](/policies/creating-policies) - Adjust or create policies
 - [Trace Explorer](/features/trace-explorer) - Investigate traces
-- [Troubleshooting](/troubleshooting/common-issues) - Common issues
