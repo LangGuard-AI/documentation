@@ -6,8 +6,8 @@ description: Switch the LangGuard MCP gateway between Shadow mode, which never b
 
 # Enforcement Mode
 
-**Enforcement Mode** controls whether the LangGuard MCP gateway, acting as the policy
-decision point (PDP), blocks your **MCP tool calls**. In **Shadow** mode the gateway
+**Enforcement Mode** controls whether the LangGuard MCP gateway blocks your
+**MCP tool calls**. In **Shadow** mode the gateway
 never blocks a call. It records what Enforce mode would do. In **Enforce** mode it
 blocks. See [What Shadow mode does not change](#what-shadow-mode-does-not-change) for
 the one thing that can still stop a call in Shadow mode.
@@ -188,7 +188,7 @@ The result depends on the mode of the failed policy and on this setting:
 | Failed policy mode | Shadow | Enforce |
 |--------------------|--------|---------|
 | **Enforce** | The call is not blocked. LangGuard records the error. | The call is blocked. |
-| **Permissive** | The call is not blocked. LangGuard records the error. | The call is not blocked. LangGuard records the error. |
+| **Monitor** | The call is not blocked. LangGuard records the error. | The call is not blocked. LangGuard records the error. |
 
 When the call is blocked:
 
@@ -213,7 +213,7 @@ If LangGuard cannot read this setting, an error of an Enforce policy blocks the 
 Shadow mode applies only to the MCP gateway path described in
 [What traffic this governs](#what-traffic-this-governs). It does not apply to Arbiter
 hooks or to chat traffic. On those paths, an Enforce policy that cannot be evaluated
-always fails closed. Chat traffic is blocked. Arbiter hooks return ASK. A Permissive
+always fails closed. Chat traffic is blocked. Arbiter hooks return ASK. A Monitor
 policy that cannot be evaluated never blocks, on any path.
 
 ## Changing the mode

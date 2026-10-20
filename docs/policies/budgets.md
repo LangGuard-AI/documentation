@@ -12,9 +12,10 @@ per-token, or cumulative spend limit.
 
 ## How cost is tracked
 
-Cost is derived from token usage and your **model pricing**. Set per-model input and
-output rates on the [Cost Estimates](/settings/cost-estimates) settings page; every
-trace's cost is then computed from the tokens it consumed. Costs roll up across the
+Cost is derived from token usage and your **model pricing**. Set the input and output
+rates of each model, per 1M tokens, on the [Cost Estimates](/settings/cost-estimates)
+settings page. LangGuard then computes the cost of each trace from the tokens it used.
+Costs roll up across the
 [Trace Explorer](/features/trace-explorer), [Monitoring](/features/monitoring), and
 the [AI Registry](/features/ai-registry).
 
@@ -31,8 +32,8 @@ policy turns spend into a guardrail. Configure it with:
 | `max_tokens_per_trace` | _(disabled)_ | Per-trace token ceiling |
 | `avg_cost_per_trace` | _(disabled)_ | Anomaly baseline — a trace 5× this is flagged |
 
-Like any policy, it can run in **permissive** mode (record violations) or
-**enforce** mode (block) — see [Policy modes](/policies#policy-modes).
+Like any policy, it can run in **Monitor** mode, which records violations, or in
+**Enforce** mode, which blocks. See [Policy modes](/policies#policy-modes).
 
 ## Time-windowed (rolling) budgets
 

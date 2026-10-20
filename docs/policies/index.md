@@ -66,10 +66,10 @@ Each policy includes:
 |-----------|-------------|
 | **Name** | Unique identifier |
 | **Description** | What the policy detects |
-| **Category** | Security & Access, Models & Compliance, Budget & Operations, Audit |
+| **Category** | Security, Compliance, Cost, Performance, or Custom |
 | **Severity** | Critical, High, Medium, Low |
 | **Rego Code** | The evaluation logic |
-| **Mode** | Enforce, Permissive, or Disabled |
+| **Mode** | Enforce, Monitor, or Disabled |
 | **Enabled** | Active or disabled |
 
 ### Example Policy
@@ -101,16 +101,16 @@ LangGuard includes pre-configured policies across all categories:
 
 | Policy | Category | Severity | Default |
 |--------|----------|----------|---------|
-| [Credential Surface Discovery](/policies/built-in-policies#credential-surface-discovery) | Security & Access | Critical | Enabled |
-| [PII Detection](/policies/built-in-policies#pii-detection) | Security & Access | Critical | Enabled |
-| [Non-Human Identity Violation](/policies/built-in-policies#non-human-identity-violation) | Security & Access | High | Disabled |
-| [Unapproved Tool Use](/policies/built-in-policies#unapproved-tool-use) | Security & Access | High | Enabled |
-| [Approved Model Version](/policies/built-in-policies#approved-model-version) | Models & Compliance | High | Disabled |
-| [Latency/Health Threshold](/policies/built-in-policies#latencyhealth-threshold) | Models & Compliance | Medium | Disabled |
-| [Cross-Boundary Access](/policies/built-in-policies#cross-boundary-access) | Models & Compliance | Critical | Enabled |
-| [Budget Overrun Detection](/policies/built-in-policies#budget-overrun-detection) | Budget & Operations | High | Disabled |
-| [Mandatory Trace Logging](/policies/built-in-policies#mandatory-trace-logging) | Audit | Low | Enabled |
-| [Metadata Tagging Requirements](/policies/built-in-policies#metadata-tagging-requirements) | Audit | Low | Enabled |
+| [Credential Surface Discovery](/policies/built-in-policies#credential-surface-discovery) | Security | Critical | Enabled |
+| [PII Detection](/policies/built-in-policies#pii-detection) | Security | Critical | Enabled |
+| [Non-Human Identity Violation](/policies/built-in-policies#non-human-identity-violation) | Security | High | Disabled |
+| [Unapproved Tool Use](/policies/built-in-policies#unapproved-tool-use) | Security | High | Enabled |
+| [Approved Model Version](/policies/built-in-policies#approved-model-version) | Compliance | High | Disabled |
+| [Latency/Health Threshold](/policies/built-in-policies#latencyhealth-threshold) | Compliance | Medium | Disabled |
+| [Cross-Boundary Access](/policies/built-in-policies#cross-boundary-access) | Compliance | Critical | Enabled |
+| [Budget Overrun Detection](/policies/built-in-policies#budget-overrun-detection) | Cost | High | Disabled |
+| [Mandatory Trace Logging](/policies/built-in-policies#mandatory-trace-logging) | Custom | Low | Enabled |
+| [Metadata Tagging Requirements](/policies/built-in-policies#metadata-tagging-requirements) | Custom | Low | Enabled |
 
 ## Documentation
 
@@ -122,19 +122,25 @@ LangGuard includes pre-configured policies across all categories:
 
 ## Policy Modes
 
-Each policy can operate in one of three modes:
+Each policy has one of three modes. To change the mode, use the **Mode** column on the
+**Policies** page.
 
 | Mode | Behavior |
 |------|----------|
-| **Enforce** | Violations are logged and the action is blocked. Use for critical policies that must prevent harmful behavior. |
-| **Permissive** | Violations are logged but the action is allowed to proceed. Use for monitoring and tuning new policies before enforcing them. |
-| **Disabled** | The policy is not evaluated. No violations are recorded. |
+| **Enforce** | LangGuard records violations and blocks the call where the checkpoint allows it. The **Response** column sets the action. **Block** stops the call. **Escalate** stops the call and queues it for human approval. |
+| **Monitor** | LangGuard records violations and blocks nothing. |
+| **Disabled** | LangGuard does not evaluate the policy and records no violations. |
 
-### Choosing a Mode
+In the API, the `mode` field stores Monitor as the value `permissive`.
 
-- **Start with Permissive** — When deploying a new policy, use Permissive mode first to observe what it catches without impacting operations
-- **Promote to Enforce** — Once you're confident the policy is correctly calibrated, switch to Enforce mode
-- **Use Disabled sparingly** — Only disable policies you no longer need; consider Permissive mode instead for policies you want to pause temporarily
+### Choosing a mode
+
+- **Start in Monitor.** Run a new policy in Monitor first. Check the violations it
+  records. A policy that the [policy composer](/policies/ai-authoring) saves always starts
+  in Monitor.
+- **Switch to Enforce.** When the violations look right, set the mode to Enforce.
+- **Use Disabled only for policies you do not need.** To keep a policy visible but stop
+  it from blocking, use Monitor.
 
 ### When a Policy Cannot Be Evaluated
 
@@ -148,7 +154,7 @@ The mode of the failed policy decides what LangGuard does:
 | Mode | Result |
 |------|--------|
 | **Enforce** | The call fails closed. LangGuard blocks gateway and chat calls. Arbiter hooks return ASK. The applied rule is `policy_evaluation_error`, and the reason names the policy. |
-| **Permissive** | The call is not blocked. LangGuard records the error as a `notify` entry with the policy ID and the error text. |
+| **Monitor** | The call is not blocked. LangGuard records the error as a `notify` entry with the policy ID and the error text. |
 
 When LangGuard records an error and does not block, it also writes an error log entry.
 The decision audit record has a `policy_evaluation_errors` attribute that lists the

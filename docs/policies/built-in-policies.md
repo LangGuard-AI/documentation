@@ -231,22 +231,34 @@ Checks that traces have required governance metadata fields and tags.
 
 ### Via UI
 
-1. Navigate to **Policies**
-2. Find the policy
-3. Toggle **Enabled**
+1. Go to **Policies**.
+2. Find the policy.
+3. In the **Mode** column, select **Enforce** or **Monitor**. **Disabled** turns the
+   policy off. See [Policy modes](/policies#policy-modes).
+
+To see which built-in policies are ready to turn on, select **Set up policies** on the
+**Policies** page. Use the **Monitor**, **Enforce**, and **Turn off** buttons there.
 
 ## Customizing Built-in Policies
 
-You can customize built-in policies by editing their configuration:
+LangGuard keeps the code of a built-in policy in step with the product. The next update
+undoes a change to it. To change a built-in policy, make your own copy:
 
-1. Click the policy to open details
-2. Click **Edit**
-3. Modify thresholds or patterns
-4. Click **Save**
+1. On the **Policies** page, select the edit button of the policy. You can also open the
+   policy and select **Edit policy**.
+2. In **Make your own copy of this policy?**, select **Create my copy**.
 
-:::note
-Customizations are applied immediately to new traces. Existing violations are not re-evaluated.
-:::
+LangGuard creates the copy, turns the built-in policy off, and opens the copy in the
+editor. Change the copy as you would change any custom policy.
+
+On the **Policies** page, the copy shows **Copy of a built-in**. The built-in policy
+shows **Replaced by your copy**. If you turn the built-in policy on again, it shows
+**Your copy is also running**.
+
+You do not need a copy to change the mode of a built-in policy. Use the **Mode** column.
+
+If a built-in policy is set as a gate in [MCP Enforcement](/features/mcp-enforcement),
+you cannot copy it. Remove the policy from those gates first.
 
 ## Policy Evaluation Order
 

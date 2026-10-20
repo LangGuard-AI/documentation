@@ -4,27 +4,18 @@ title: Creating Policies
 description: Write custom governance policies with Rego
 ---
 
-import ThemedImage from '@theme/ThemedImage';
-
 # Creating Policies
 
-There are two ways to create a custom policy in LangGuard: let the **AI Policy
-Authoring** wizard generate it from a plain-language description, or write the
+There are two ways to create a custom policy in LangGuard. The policy composer can
+write it from a plain-language description, or you can write the
 [Rego](https://www.openpolicyagent.org/docs/latest/policy-language/) yourself. This
-page covers both.
-
-<ThemedImage
-  alt="Create Policy Dialog"
-  sources={{
-    light: '/img/policies-create-light.png',
-    dark: '/img/policies-create.png',
-  }}
-/>
+page covers the Rego.
 
 :::tip Prefer to describe it in plain language?
-The **[AI Policy Authoring](/policies/ai-authoring)** wizard generates, red-teams,
-and explains a Rego policy from a plain-language description — no Rego expertise
-required. The rest of this page covers writing Rego by hand.
+The policy composer writes, checks, and tests a Rego policy from a plain-language
+description. You do not need to know Rego. See
+[AI Policy Authoring](/policies/ai-authoring). The rest of this page covers writing Rego
+by hand.
 :::
 
 ## Prerequisites
@@ -406,24 +397,37 @@ text is scanned. Set that with `field_matches("input", ...)` or `field_matches("
 
 ### Via UI
 
-1. Navigate to **Policies**
-2. Click **Create Policy**
-3. Fill in details:
-   - **Name**: Unique identifier (lowercase, underscores)
-   - **Display Name**: Human-readable name
-   - **Description**: What the policy detects
-   - **Category**: Security & Access, Models & Compliance, Budget & Operations, Audit
-   - **Severity**: Critical, High, Medium, Low
-4. Write Rego code in the editor
-5. Click **Create**
+1. Go to **Policies**.
+2. Select **Create Policy**.
+3. Select the **Advanced (Rego)** tab.
+4. Set the fields. The table below lists them.
+5. Write the Rego code in the editor.
+6. Select **Save policy**.
+
+| Field | Values |
+|-------|--------|
+| **Display name** | The name that the Policies page shows. It is required. |
+| **slug** | The identifier. Use lowercase letters, digits, hyphens, or underscores. To change it, select **(edit)**. |
+| **Description** | The text that the policy card shows. |
+| **Mode** | **Enforce**, **Monitor**, or **Disabled**. A new policy starts in **Monitor**. |
+| **Response** | **Block** or **Escalate**. It applies only in Enforce mode. |
+| **Priority** | The order in which policies run. Lower numbers run first. |
+| **Category** | **Compliance**, **Cost**, **Performance**, **Security**, or **Custom**. |
+| **Severity** | **Low**, **Medium**, **High**, or **Critical**. |
+| **Checkpoints** | The moments the policy inspects. Pick at least one. See [Checkpoint helpers](#checkpoint-helpers). |
+| **Target environments** | The environments that the policy applies to: dev, staging, or prod. |
+
+To limit the policy to some agents, identities, models, or tools, use
+**Who it applies to** on the same tab.
 
 LangGuard compiles the Rego when you save. A policy that does not compile is rejected
 and nothing is saved.
 
-:::tip Start in Permissive mode
-There is no sample-input test in the editor. To see what a new policy catches without
-blocking anything, set it to **Permissive** mode, check the violations it records, then
-switch it to **Enforce**. See [Policy Modes](/policies#policy-modes).
+:::tip Start in Monitor mode
+The **Advanced (Rego)** tab has no sample-input test. To see what a new policy catches
+without blocking anything, keep it in **Monitor** mode and check the violations it
+records. Then set its **Mode** to **Enforce** on the **Policies** page. See
+[Policy modes](/policies#policy-modes).
 :::
 
 For programmatic policy management, see the [API documentation](https://app.langguard.ai/swagger).
