@@ -1,14 +1,14 @@
 ---
 sidebar_position: 4
 title: Trace Explorer
-description: Search, filter, and analyze AI agent traces
+description: Search, filter, sort, and export AI agent traces, and open the details of one trace
 ---
 
 import ThemedImage from '@theme/ThemedImage';
 
 # Trace Explorer
 
-The Trace Explorer is your primary tool for investigating AI agent activity. Search across all traces, apply filters, and drill into details.
+The Trace Explorer lists the traces that LangGuard receives from your connected sources. To open it, select **Trace Explorer** in the sidebar. Search and filter the list, then select a trace to open its details.
 
 <ThemedImage
   alt="Trace Explorer"
@@ -18,334 +18,195 @@ The Trace Explorer is your primary tool for investigating AI agent activity. Sea
   }}
 />
 
-## Overview
+## What a trace is {#kpi-summary-cards}
 
-Access the Trace Explorer from the main navigation sidebar. It provides:
+A trace is one run of an agent or AI tool, from the first request to the final response. Each trace has a trace ID. A trace contains spans. A span is one step inside the trace, such as a model call or a tool call. Spans nest to show which step started which.
 
-- **KPI Summary Cards** - Key metrics at a glance
-- **Table View** - List all traces with sortable columns
-- **Advanced Filters** - Narrow results by multiple criteria
-- **Detail Drawer** - Full trace information without leaving the page
-- **Bulk Actions** - Select and operate on multiple traces
+Each row in the Trace Explorer table is one trace. The **Total traces** tile on the Discovery page counts the traces that started in the last 7 days.
 
-## KPI Summary Cards
+The Trace Explorer page has no summary cards. The line above the table shows how many traces match your filters in the selected time range.
 
-At the top of the Trace Explorer, summary cards display key performance indicators for the current filter selection:
+## Find traces
 
-| Card | Description |
-|------|-------------|
-| **Total Traces** | Number of traces matching current filters |
-| **Error Rate** | Percentage of traces with errors |
-| **Avg Latency** | Mean duration across all matching traces |
-| **Total Cost** | Estimated cost for all matching traces |
+Filters, sort, page size, and page number are part of the page URL. Copy the URL to share the same view.
 
-These cards update dynamically as you change filters or time ranges, giving you an instant overview before diving into individual traces.
+### Search
 
-## Table View
+The search box finds traces that contain the text you type. The match ignores case and can be part of a word. The search has no operators and no `field:value` syntax.
+
+The search checks these fields:
+
+- Trace ID
+- Operation
+- Agent
+- Model and provider
+- Source
+- Status
+- User ID, and the name or email of the person from your identity provider
+- Session ID
+- Error message
+- Tags and metadata
+
+The search starts when you stop typing. To start it at once, press **Enter** or select **Search**.
+
+### Time range
+
+The time range applies to every filter and to the search. The default is **Last 30 days**.
+
+The time range options are **Last 15 minutes**, **Last 1 hour**, **Last 6 hours**, **Last 24 hours**, **Last 7 days**, **Last 30 days**, **Last 90 days**, and **Custom range**. For a custom range, select a **Start Date** and an **End Date**, then select **Apply**.
+
+### Filters
+
+| Filter | What it shows |
+|--------|---------------|
+| **Agent** | Traces of the agents you select. **No agent** shows traces that have no agent. |
+| **Model** | Traces that used the model you select, on the trace or on one of its steps. You can select one model. |
+| **User** | Traces of the users you select. You can search the list by name, email, or key. **No user ID** shows traces that have no user. |
+| **Success**, **Warning**, **Error**, **Blocked** | Traces with that status. Select more than one to show traces with any of them. |
+| **High Latency** | Traces that took 3 seconds or more. |
+| **High Cost** | Traces with an estimated cost of $0.10 or more. |
+| **More filters** > **Operation** | Traces of the operations you select. |
+| **More filters** > **Tool** | Traces with a step whose name or model contains the text, for example `linear.get_issue`. |
+| **More filters** > **Latency (ms)** | Traces with a latency between the **Min** and **Max** values. |
+| **More filters** > **Tokens** | Traces with a token count between the **Min** and **Max** values. |
+| **More filters** > **Cost (USD)** | Traces with an estimated cost between the **Min** and **Max** values. |
+
+The **Agent**, **Model**, **User**, and **Operation** lists show the values in the selected time range, A to Z.
+
+To use **More filters**, set the fields and select **Apply**. **High Latency** sets the minimum latency to 3,000 ms. **High Cost** sets the minimum cost to $0.10. Active latency, token, cost, and tool filters show as chips next to **More filters**. To remove one, select the **x** on its chip.
+
+Different filters combine with AND. Values in one filter combine with OR. For example, **Agent** A and B with **Error** shows the traces of agent A or agent B that have the status Error.
+
+To filter from the table, move the pointer over a **Model**, **User**, or **Agent** cell and select the filter icon. To remove all filters, select **Clear all** above the table. **Clear all** keeps the time range.
+
+### Saved presets
+
+A preset saves the current filters and time range.
+
+To save a preset:
+
+1. Set the filters.
+2. Select **Save** next to the search box.
+3. Select **Save current filters**.
+4. Enter a **Name**. The **Description** is optional.
+5. Select **Save Preset**.
+
+You can save up to 20 presets. To apply a preset, select **Save**, then select the preset under **Saved Presets**. Applying a preset also resets the sort to the default. In the list, the star marks a preset as the default, and the trash icon deletes it.
+
+## Trace table
 
 ### Columns
 
-The trace table displays key information:
-
 | Column | Description |
 |--------|-------------|
-| **Name** | Trace/operation name |
-| **Agent** | Agent that executed the trace |
-| **Status** | Success, Warning, Error, or **Blocked** (denied by a policy) |
-| **Duration** | Execution time |
-| **Tokens** | Input + Output tokens |
-| **Cost** | Estimated cost |
-| **Time** | When the trace occurred |
-| **Source** | Integration source (Databricks, Azure AI Foundry, etc.) |
+| **Timestamp** | When the trace started. |
+| **Model** | The models the trace used. If it used more than one, the cell shows how many more. |
+| **User** | Who made the trace. This column shows only on wide screens. |
+| **Agent** | The agent that ran the trace. |
+| **Operation** | The operation name. An **A2A** badge marks an agent-to-agent trace. |
+| **Latency** | How long the trace took. |
+| **Status** | How the trace ended. See [Status values](#status-values). |
+| **Evaluation** | The result of the policy check for the trace. See [Evaluation values](#evaluation-values). |
+| **Source** | The integration that sent the trace. |
+| **Tokens** | Total tokens used. |
+| **Cost** | The estimated price of model use, in US dollars. LangGuard computes it from token counts and the rates in [Cost Estimates](/settings/cost-estimates). |
+
+### Status values
+
+| Status | Meaning |
+|--------|---------|
+| **Success** | The trace completed. |
+| **Warning** | The result is pending or unclear. |
+| **Error** | A step failed. |
+| **Blocked** | A policy stopped the call. |
+
+### Evaluation values
+
+The **Evaluation** column shows a shield. Move the pointer over the shield to see its label.
+
+| Shield | Meaning |
+|--------|---------|
+| Green | Compliant. No violations are recorded on the trace. |
+| Dashed | The trace is not evaluated yet. |
+| Red, with a count | At least one policy in **Enforce** mode found a violation. The label shows how many have Critical or High severity. |
+| Amber, with a count | Only policies in **Monitor** mode found violations. The label calls them warnings. |
+| Red, on a **Blocked** trace | A policy blocked the call at interception. The label reads **Blocked at interception**, with the number of violations when there are any. |
+
+For more about modes, see [Policy modes](/policies/#policy-modes).
 
 ### Sorting
 
-Click any column header to sort:
-
-- Click once: Sort ascending
-- Click twice: Sort descending
-- Click third: Remove sort
+You can sort by **Timestamp**, **Agent**, **Operation**, **Latency**, **Status**, **Tokens**, and **Cost**. Select a column header to sort ascending. Select it again to sort descending. The sort applies to all matching traces, not only to the current page. The default sort is **Timestamp**, newest first.
 
 ### Pagination
 
-Navigate through results:
+Below the table, **Items per page** sets the page size to 25, 50, 100, 250, or 500 traces. The default is 50. Use the first, previous, next, and last page buttons to move between pages.
 
-- **Page Size**: 25, 50, 100 rows per page
-- **Navigation**: First, Previous, Next, Last buttons
-- **Jump to Page**: Enter specific page number
+### Keyboard
 
-## Filtering
-
-### Quick Filters
-
-Use the filter bar above the table:
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  🔍 Search...    Time: [Last 24h ▼]    Status: [All ▼]    ...  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Available Filters
-
-| Filter | Options |
-|--------|---------|
-| **Search** | Full-text search across all fields |
-| **Time Range** | Last hour, 24h, 7d, 30d, Custom |
-| **Status** | Success, Warning, Error, Blocked, All |
-| **Agent** | Select from discovered agents |
-| **Source** | Filter by integration |
-| **Has Violations** | Only traces with policy violations |
-
-### Advanced Filters
-
-Click "Advanced" to access more filter options:
-
-- **Duration Range** - Min/max execution time
-- **Token Range** - Min/max token count
-- **Cost Range** - Min/max cost
-- **Custom Attributes** - Filter by metadata fields
-
-### Combining Filters
-
-Filters combine with AND logic:
-
-```
-Time: Last 24 hours
-AND Status: Error
-AND Agent: CustomerService
-```
-
-### Saving Filter Presets
-
-Save frequently used filter combinations:
-
-1. Configure your filters
-2. Click "Save Preset"
-3. Name your preset
-4. Access from the preset dropdown
-
-## Search
-
-### Full-Text Search
-
-The search box searches across:
-
-- Trace name/operation
-- Agent name
-- Input/output content
-- Metadata values
-- Error messages
-
-### Search Syntax
-
-Use operators for precise searches:
-
-| Operator | Example | Description |
-|----------|---------|-------------|
-| Exact phrase | `"customer query"` | Match exact phrase |
-| OR | `error OR failed` | Match either term |
-| NOT | `NOT test` | Exclude term |
-| Field | `agent:ChatBot` | Search specific field |
-
-### Examples
-
-```
-# Find traces with errors from ChatBot
-agent:ChatBot status:error
-
-# Find traces mentioning "payment" but not "test"
-payment NOT test
-
-# Find exact operation name
-"process_order"
-```
-
-## Trace Details
-
-### Opening Details
-
-Click any trace row to open the detail drawer:
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│  Trace Details                                         [×]    │
-├──────────────────────────────────────────────────────────────┤
-│  CustomerService Agent                                        │
-│  Operation: customer_support_query                            │
-│  Status: ● Success                                            │
-│                                                               │
-│  [Overview] [Timeline] [Input/Output] [Metadata] [Violations] │
-│                                                               │
-│  ... (tab content) ...                                        │
-└──────────────────────────────────────────────────────────────┘
-```
-
-### Overview Tab
-
-The overview is designed for glanceability, summarizing the trace across a few cards:
-
-- **Key metrics** — trace ID, start time, duration, model, token usage, and cost
-- **Status** — Success, Warning, Error, or **Blocked** when a policy denied the call
-- **Identity card** — who made the call: the caller identity, its classification
-  (**human**, **NHI** — non-human identity, or **OBO** — on-behalf-of), and the
-  entity's approval status
-- **Policy violations** — any violations raised on this trace, with severity
-- **Agent** — the agent that ran the trace, shown as a link straight to its
-  [Data Catalog](/features/data-catalog) entity
-### Timeline Tab
-
-Span breakdown showing execution flow:
-
-```
-customer_support_query [1.23s]
-├── fetch_user_context [0.05s]
-├── call_llm [0.85s] ─── OpenAI GPT-4
-│   ├── input_tokens: 850
-│   └── output_tokens: 400
-├── query_knowledge_base [0.25s]
-└── format_response [0.08s]
-```
-
-Each span shows:
-- Name and duration
-- Start/end times
-- Attributes and metadata
-- Nested child spans
-
-### Input/Output Tab
-
-View the actual data:
-
-**Input**:
-```json
-{
-  "user_message": "How do I reset my password?",
-  "session_id": "sess_abc123",
-  "context": { ... }
-}
-```
-
-**Output**:
-```json
-{
-  "response": "To reset your password, follow these steps...",
-  "confidence": 0.95,
-  "sources": [ ... ]
-}
-```
-
-### Metadata Tab
-
-Custom attributes attached to the trace:
-
-```yaml
-agent:
-  name: CustomerService
-  version: 2.1.0
-  type: RAG
-
-model:
-  name: gpt-4-turbo
-  provider: openai
-  temperature: 0.7
-
-user:
-  id: user_12345
-  type: human
-  tier: premium
-
-session:
-  id: sess_abc123
-  channel: web
-```
-
-### Violations Tab
-
-Policy violations for this trace:
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Policy Violations (2)                                       │
-├─────────────────────────────────────────────────────────────┤
-│  ⚠ LOW: Metadata Tagging Requirements                        │
-│  Policy: Required field missing: ai_app_id                   │
-├─────────────────────────────────────────────────────────────┤
-│  🔴 HIGH: PII Detected                                       │
-│  Pattern: Email address in output                            │
-│  Evidence: "user@example.com"                                │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## Actions
-
-### Single Trace Actions
-
-Right-click a trace or use the action menu:
-
-- **View Details** - Open detail drawer
-- **Copy Trace ID** - Copy to clipboard
-- **View in Source** - Open in source platform
-- **Export** - Download trace data
-
-### Bulk Actions
-
-Select multiple traces using checkboxes:
-
-1. Check individual traces or "Select All"
-2. Use the bulk action menu:
-   - **Export Selected** - Download as JSON/CSV
-   - **Acknowledge Violations** - Mark violations as reviewed
-
-## Tips & Best Practices
-
-### 1. Start Broad, Then Narrow
-
-Begin with a wide time range, then add filters to narrow down.
-
-### 2. Use Saved Presets
-
-Save filter combinations you use regularly:
-- "Production Errors (Last 24h)"
-- "My Agent (Last Week)"
-- "High-Cost Traces"
-
-### 3. Check Violations First
-
-When investigating issues, start with the Violations tab.
+When the table has focus, the Up Arrow and Down Arrow keys move between rows. **Enter** opens the selected trace. **Escape** removes the focus from the row.
 
 ## Export
 
-Export trace data for external analysis or reporting.
+**Export CSV** and **Export JSON** download the traces on the current page. Traces on other pages are not included. To export only some rows, select their checkboxes first. The header checkbox selects every trace on the current page. **Clear Selection** removes the selection.
 
-### Export Formats
+| Format | Contents |
+|--------|----------|
+| CSV | One row per trace, with the columns Timestamp, Trace ID, Agent, Operation, Duration, Status, Tokens, and Cost. |
+| JSON | The trace records as the table loads them, with the export time and the number of traces. Spans are not included. |
 
-- **CSV** — Spreadsheet-compatible format with one row per trace
-- **JSON** — Complete trace data including metadata and spans
+The export buttons do not show on small screens.
 
-### How to Export
+## Trace details
 
-1. Apply filters to scope the data you want to export
-2. Optionally select specific traces with checkboxes
-3. Click **Export** in the toolbar
-4. Choose CSV or JSON format
-5. Download the file
+Select a trace row to open the trace drawer. The drawer header shows the agent name, the status when it is not Success, the provider, the number of spans, the duration, and the trace ID.
 
-Exports respect your current filters — only matching traces are included.
+- To open the previous trace in the list, select the left arrow or press **K** or the Left Arrow key.
+- To open the next trace, select the right arrow or press **J** or the Right Arrow key.
+- To start a new policy from this trace, select **Create Policy**. The policy editor opens with Rego made from the trace. See [Creating policies](/policies/creating-policies).
 
-## Column Customization
+The drawer has these tabs:
 
-Customize which columns appear in the trace table:
+| Tab | Contents |
+|-----|----------|
+| **Overview** | A summary of the trace on cards. |
+| **Details** | The span tree and the details of each span. |
+| **Raw** | The full trace as JSON, with its policy violations. |
+| **Parameters** | MLflow parameters and tags. Databricks traces only. |
+| **Artifacts** | MLflow artifacts. Databricks traces only. |
+| **Assessments** | MLflow assessments, with their count. Databricks traces that have assessments only. |
 
-1. Click the **column settings** icon in the table header
-2. Toggle columns on or off
-3. Drag columns to reorder them
-4. Your column preferences are saved for future sessions
+### Overview tab
+
+The Overview tab shows these cards, from top to bottom:
+
+- **Summary.** One sentence with the agent, the number of operations, the tools and models it used, and how it ended. Select the agent name to open the agent details.
+- **Latency**, **Total Cost**, **Token Usage**, and **Status.** A `~` before the cost means LangGuard added it up from the steps of the trace.
+- **Policy & Plugin Evaluation.** **Compliant**, or the number of violations with counts by severity (Critical, High, Medium, Low). It also shows the violations from policies in Monitor mode, and **Blocked at interception** when a policy stopped the call before it ran. Compliant means no violation is recorded, not that every policy checked this trace. Select a violation to see its evidence and actions. See [Trace details with violations](/policies/policy-violations#trace-details-with-violations).
+- **Who.** The user behind the trace, with a classification badge: **Human**, **NHI** (non-human identity), or **OBO** (acting on behalf of a person). The card shows the profile from your identity provider when LangGuard has one. Otherwise it shows the recent activity of the user. It can also list the keys seen for the person. Select **View all traces by** the user to filter the Trace Explorer to that user. Select **Open details** to open the user. See [Identity classification](/features/identity#identity-classification).
+- **Tool Activity** and **Model Activity.** The tools and models the trace called.
+- **Trace Details** and **Observations Summary.** The trace ID, name, environment, session ID, timestamp, and token counts.
+- **Tags** and metadata sections, when the trace has them.
+- **Conversation.** The messages of the trace.
+
+### Details tab {#timeline-tab}
+
+The Details tab shows the spans of the trace as a tree. Child spans nest under the span that started them. To find a span, type in **Search spans**. Select a span to see its details.
+
+Each span has a kind badge. LLM is a model call, TOOL is a tool call, AGENT INVOCATION is a call to an agent, RETRIEVAL is a data lookup, EVENT is one recorded event, and SPAN is any other step.
+
+The span details have three tabs:
+
+| Tab | Contents |
+|-----|----------|
+| **In/Out** | The input and output of the span. |
+| **Attributes** | The attributes of the span. |
+| **RAW** | The span as JSON. |
 
 ---
 
-## Next Steps
+## Next steps
 
-- [Policy Violations](/policies/policy-violations) - Understand violation details
-- [Monitoring](/features/monitoring) - View aggregate metrics and trends
-- [Troubleshooting](/troubleshooting/common-issues) - Common issues and solutions
+- [Policy Violations](/policies/policy-violations). Understand violation details.
+- [Monitoring](/features/monitoring). View aggregate metrics and trends.
+- [Troubleshooting](/troubleshooting/common-issues). Common issues and solutions.
