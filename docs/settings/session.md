@@ -4,50 +4,28 @@ title: Session Settings
 description: Configure session timeout and idle timeout durations
 ---
 
-import ThemedImage from '@theme/ThemedImage';
-
 # Session Settings
 
-Control how long user sessions remain active in your LangGuard workspace.
+Control how long user sessions stay active. Administrators only. Session timeouts are not available in a Databricks App deployment.
 
-**Navigation:** Settings > Session (`/settings/session`)
+**Navigation:** Settings > General, **Session Timeouts** card (`/settings/general`)
 
-<ThemedImage
-  alt="Session Settings"
-  sources={{
-    light: '/img/settings-session-light.png',
-    dark: '/img/settings-session.png',
-  }}
-/>
+## Timeouts
 
-## Session Timeout
+| Field | Description |
+|-------|-------------|
+| **Idle Timeout (minutes)** | The session expires after this many minutes of inactivity. |
+| **Absolute Timeout (minutes)** | The session expires after this many minutes, whatever the activity. |
 
-Set the maximum duration a user session can remain active before requiring re-authentication.
+Each value must be between 15 and 43,200 minutes (30 days). The values apply to all users in your organization.
 
-1. Navigate to **Settings > Session**
-2. Set the **Session Timeout** duration (e.g., 8 hours, 24 hours, 7 days)
-3. Click **Save**
+1. Go to **Settings > General**.
+2. In **Session Timeouts**, enter the two values.
+3. Click **Save**.
 
-After the timeout expires, users are redirected to the login page.
+When a session expires, the user must sign in again. To go back to the platform defaults, click **Reset to Defaults**. The card shows the platform defaults below the fields.
 
-## Idle Timeout
+## Best practices
 
-Set how long a session can remain idle (no user activity) before it expires.
-
-1. Set the **Idle Timeout** duration (e.g., 30 minutes, 1 hour, 4 hours)
-2. Click **Save**
-
-When a session idles past the timeout, the user is automatically signed out and must re-authenticate.
-
-## Persistent Sessions
-
-Enable or disable the **Remember Me** option on the login page:
-
-- **Enabled** — Users can check "Remember Me" to extend their session across browser restarts
-- **Disabled** — Sessions always end when the browser is closed
-
-## Best Practices
-
-- **Set shorter idle timeouts** for workspaces handling sensitive data (15–30 minutes)
-- **Use session timeouts** that balance security with usability — 8–24 hours is typical
-- **Disable persistent sessions** if your security policy requires re-authentication on each browser session
+- Set a short idle timeout (15 to 30 minutes) if your users handle sensitive data.
+- Set an absolute timeout that matches your security policy for re-authentication.
