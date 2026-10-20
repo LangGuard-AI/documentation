@@ -15,7 +15,7 @@ Most settings require the **admin** role. Members and viewers have read-only acc
 ## Settings Sections
 
 ### [General](/settings/general)
-Configure your workspace name and display settings.
+Set your language. Administrators also set session timeouts and see enforcement usage.
 
 ---
 
@@ -39,8 +39,8 @@ Install Arbiter hooks in Claude Code, Codex, Cursor, and Google Antigravity, con
 
 ---
 
-### [Webhooks](/settings/webhooks)
-Set up outbound webhooks to receive notifications when events occur in LangGuard.
+### [Alert Destinations](/settings/webhooks)
+Send LangGuard events to webhooks, PagerDuty, or a Slack channel.
 
 ---
 
@@ -50,7 +50,7 @@ Reusable Rego checks that gate workflow lifecycle stages.
 ---
 
 ### [Tags](/settings/tags)
-Create and manage tags for organizing AI assets across Discovery and Data Catalog.
+See tag usage, and manage department tags, stage tags, and categorization rules.
 
 ---
 
@@ -65,7 +65,7 @@ Configure SSO with Microsoft Entra ID or Google Workspace, and set up role mappi
 ---
 
 ### [Session Settings](/settings/session)
-Configure session timeout and idle timeout durations.
+Configure the idle and absolute session timeouts on the General page.
 
 ---
 
@@ -75,7 +75,7 @@ Invite users, assign roles, and manage workspace membership.
 ---
 
 ### [Cost Estimates](/settings/cost-estimates)
-Configure cost-per-token rates for different models to power cost metrics in Trace Explorer and Monitoring.
+Set per-model token prices, per 1M tokens, for trace cost estimates.
 
 ---
 

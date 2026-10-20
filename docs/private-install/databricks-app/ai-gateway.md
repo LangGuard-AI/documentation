@@ -53,16 +53,14 @@ Each call resolves to one of three outcomes, recorded on the trace as
 Blocked traces are surfaced end-to-end in the [Trace Explorer](/features/trace-explorer)
 with a **blocked** status badge and the triggering violations.
 
-### Enforce vs. permissive per endpoint
+### Enforcement per endpoint {#enforce-vs-permissive-per-endpoint}
 
-Enforcement is controlled **per endpoint** with a toggle:
+Each endpoint has an **Enforcement** toggle. The toggle turns policy checks on or off for calls through that endpoint:
 
-- **Enforce mode** — a policy violation blocks the call and the caller receives an HTTP **403**.
-- **Permissive mode** — violations are recorded to the audit trail, but the call proceeds (observe-only).
+- **On**: LangGuard evaluates your policies on each call. A policy in Enforce mode blocks a violating call, and the caller receives an HTTP **403**. A policy in Monitor mode records the violation and lets the call continue.
+- **Off**: LangGuard does not evaluate policies. Calls pass through unchecked but are still recorded.
 
-Newly discovered endpoints inherit **enforcement on** by default. Onboard an
-endpoint in permissive mode, confirm the policy results look right, then leave
-enforcement on.
+New endpoints start with enforcement on. To onboard an endpoint safely, set your policies to Monitor mode, confirm that the policy results are correct, then set the policies to Enforce. For more information, see [Policy modes](/policies/#policy-modes).
 
 ![AI Gateway Enforcement settings in the LangGuard Databricks App](/img/databricks-ai-gateway.png)
 
@@ -113,7 +111,7 @@ There are two ways to route calls through LangGuard:
   `langguard-<model>-<hash>` that you plug into your agent YAML by name.
 
 Review results in the [Trace Explorer](/features/trace-explorer) and
-[Policy Violations](/policies/policy-violations), and use **permissive** mode while
+[Policy Violations](/policies/policy-violations), and use **Monitor** mode while
 you tune before enforcing.
 
 ## Next steps
