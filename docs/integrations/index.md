@@ -149,27 +149,41 @@ Trigger sync on-demand by clicking the **Sync Now** button on the integration ca
 
 ### Push-Based Ingestion
 
-For real-time ingestion, use OpenTelemetry:
+To send traces in real time, push them from an OpenTelemetry SDK or collector. LangGuard does not poll for this data. Send OTLP traces with an API key that has the **Ingest** scope:
 
 ```bash
 POST /v1/traces
 Headers:
-  x-tenant-slug: your-tenant
-  x-otel-signature: sha256=<hmac-signature>
+  Authorization: Bearer <API key>
+  Content-Type: application/json (or application/x-protobuf)
 ```
 
-See individual integration guides for setup.
+See [API Keys](/settings/api-keys#otlp-ingestion) and the individual integration guides for setup.
 
 ## Monitoring Integration Health
 
 ### Connection Status
 
+Each integration card shows a connection status:
+
 | Status | Meaning |
 |--------|---------|
-| 🟢 Connected | Credentials valid, sync working |
-| 🟡 Warning | Minor issues (rate limits, etc.) |
-| 🔴 Failed | Connection or auth failed |
-| ⚪ Disabled | Integration manually disabled |
+| **Connected** | The last connection test passed. |
+| **Untested** | The credentials are saved but not tested yet. This occurs after you add an integration without a test, change its credentials, or turn it on again. |
+| **Testing** | A connection test is running. |
+| **Failed** | The last connection test failed. Check the credentials and the permissions. |
+| **Credential Error** | LangGuard cannot read the stored credentials. Test and Sync are not available. Enter the credentials again. |
+| **Disabled** | The integration is turned off. |
+
+Use the switch on the card to turn an integration off. This stops its automatic syncs and keeps its configuration. Test and Sync are not available while it is off.
+
+Next to the connection status, the sync badge shows whether a sync is running:
+
+| Badge | Meaning |
+|-------|---------|
+| **Idle** | No sync is running. |
+| **Queued** | A sync waits in the queue. The badge can show the queue position, for example `#2`. |
+| **Syncing** | A sync is running. |
 
 ### Sync History
 
@@ -179,6 +193,8 @@ View recent sync operations:
 - Items fetched and ingested
 - Duration
 - Error messages (if any)
+
+**Fetched** counts the items read from the platform in that run. **Ingested** counts the items saved. Platforms whose traces arrive through discovery, such as Databricks, AWS Bedrock, and LiteLLM, show 0 in both columns.
 
 ### Troubleshooting
 
