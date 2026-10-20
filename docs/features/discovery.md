@@ -8,7 +8,7 @@ import ThemedImage from '@theme/ThemedImage';
 
 # Discovery & Inventory
 
-LangGuard automatically discovers and catalogs AI assets from your connected integrations, giving you a complete picture of your AI ecosystem. **Discovery is the landing page** when you open LangGuard — it's the first screen you see, summarizing every AI agent and model in your environment.
+LangGuard discovers and catalogs AI assets from your connected integrations and traces. **Discovery is the landing page** of LangGuard. It lists the AI agents, models, and users that LangGuard found in your traces.
 
 ## Overview
 
@@ -27,15 +27,14 @@ When you connect integrations like Databricks or Azure AI Foundry, LangGuard ana
 - Track tools and APIs called
 - Map dependencies between components
 
-This happens automatically during sync - no manual configuration required.
+LangGuard does this as new traces arrive. You do not need to configure it.
 
-The Discovery dashboard displays:
+The top of the Discovery page shows two rows of metric tiles for the last 7 days:
 
-- **Summary cards** - Quick counts of AI Tools, Agents, Downstream Systems, and Unsanctioned Assets
-- **AI Assets by Category** - Visual breakdown of asset types with drill-down capability
-- **AI Assets by Status** - Sanctioned vs. unsanctioned asset distribution
-- **AI Assets by Business Units** - Asset allocation across organizational units
-- **Lineage Map** - Visual representation of agent-to-model relationships
+| Row | Tiles |
+|-----|-------|
+| **Activity** | Total traces, Success rate, Avg latency, Total cost |
+| **Security** | Open critical and high, Violations blocked, Acknowledged, Unapproved models in use |
 
 ## What Gets Discovered
 
@@ -79,19 +78,26 @@ External systems agents interact with:
 
 ## Browsing Discovered Assets
 
-### The Agent Discovery home
+### The Discovery home {#the-agent-discovery-home}
 
-Discovery is the **landing page** of LangGuard (also called **Agent Discovery**).
-It presents every discovered asset as a browsable directory.
+Discovery is the landing page of LangGuard. It shows every discovered asset as a directory you can browse.
 
-Use the **Agents / Models** toggle at the top to switch what you're looking at:
+Use the **Agents**, **Models**, and **Users** switch at the top to choose what to show.
 
-- **Agents** — group by team, owner, risk, system, or MCP server
-- **Models** — group by provider or risk
+For agents and models, use **Group by** to put the cards in groups:
 
-Pick a layout — an **org tree** or **swimlane** view — to see how agents roll up to
-teams and owners. Each card shows the asset's status, recent activity, and key
-metrics; click a card to open its full details in the entity drawer.
+| Switch | Group by options |
+|--------|------------------|
+| **Agents** | Team, Owner, Stage, Risk, System, MCP server |
+| **Models** | Provider, Team, Stage, Risk |
+
+Use the view switch to choose a layout. **Tree** shows a tree of groups. **Lanes** shows one horizontal lane for each group. **Board** shows one column for each group.
+
+Use the risk filter (**All risks**) to show only the agents or models at one risk level. For the levels, see [Risk tiers](#risk-tiers).
+
+The **Users** tab lists who sent traffic. Use the **Kind** filter to show **People**, **Service accounts**, **Delegated**, or **Unknown** users. For more information, see [Identity classification](/features/identity#identity-classification).
+
+Select a card or a row to open its details in the entity drawer.
 
 ### Data Catalog
 
@@ -103,6 +109,28 @@ For Databricks and similar integrations, discovered entities appear in the **Dat
 - Columns (with metadata)
 
 See [Data Catalog](/features/data-catalog) for details.
+
+## Risk tiers {#risk-tiers}
+
+Discovery gives each agent and each model a risk level: **Low**, **Medium**, **High**, or **Critical**. The risk filter, **Group by Risk**, the risk pill on each card, and the risk pill in the agent drawer header use these levels.
+
+Agent risk counts the policy violations on the traces of the agent in the last 7 days. Violations of all statuses and all severities count.
+
+| Violations in the last 7 days | Agent risk |
+|-------------------------------|------------|
+| 0 | Low |
+| 1 to 3 | Medium |
+| 4 to 10 | High |
+| 11 or more | Critical |
+
+Model risk comes from the approval status of the model. For the statuses, see [Approval status](/features/data-catalog#approval-status).
+
+| Approval status | Model risk |
+|-----------------|------------|
+| Approved | Low |
+| Not approved | Medium |
+| Banned | Critical |
+| No status, or an unknown value | Low |
 
 ## How Discovery Works
 
@@ -153,24 +181,6 @@ Discovery runs continuously as new traces arrive:
 - Metrics are updated in real-time
 - Inactive agents are marked accordingly
 - Dependencies are refreshed
-
-## Discovery Settings
-
-### Enable/Disable Discovery
-
-Discovery is enabled by default. To disable:
-
-1. Go to **Settings > Integrations**
-2. Select your integration
-3. Toggle **Auto Discovery** off
-
-### Refresh Interval
-
-Discovery updates with each sync. Adjust sync frequency to control freshness:
-
-- Real-time: 1-minute sync interval
-- Near real-time: 5-minute sync interval
-- Periodic: Hourly or daily sync
 
 ## Best Practices
 
@@ -225,7 +235,6 @@ If the same agent appears multiple times:
 
 1. Check for naming inconsistencies in your traces
 2. Standardize agent identifiers at the source
-3. Contact support for manual merge (coming soon)
 
 ### Missing Dependencies
 
@@ -234,43 +243,6 @@ If tool usage isn't appearing:
 1. Ensure traces include tool/span information
 2. Check that tool calls are instrumented
 3. Verify the integration supports span data
-
-## Dashboard Views
-
-The Discovery dashboard includes several summary views that provide different perspectives on your AI ecosystem.
-
-### AI Platform Usage Summary
-
-See aggregated usage statistics per connected integration:
-
-- **Integration name** and type
-- **Total traces** ingested from each platform
-- **Active agents** per integration
-- **Last sync** timestamp and sync health
-
-This view helps you understand which platforms are most active and whether integrations are syncing as expected.
-
-### User Access Summary
-
-Understand who has access to AI assets across your organization:
-
-- **Users** with access to each integration
-- **Access level** per user (admin, member, viewer)
-- **Last active** timestamp
-- **Asset count** each user interacts with
-
-Use this view to identify over-permissioned users or access that needs review.
-
-### AI Assets by Business Units
-
-See how AI assets are distributed across organizational units:
-
-- **Business unit** breakdown (by team, department, or custom grouping)
-- **Asset count** per unit
-- **Approval status** distribution within each unit
-- **Drill-down** to see specific assets in each unit
-
-This view is especially useful for governance teams managing AI adoption across a large organization.
 
 ---
 

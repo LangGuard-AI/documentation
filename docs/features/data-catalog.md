@@ -8,13 +8,19 @@ import ThemedImage from '@theme/ThemedImage';
 
 # Data Catalog
 
-The Data Catalog provides a unified view of all AI entities discovered from your integrations, including agents, models, tools, downstream systems, and identities.
+The Data Catalog shows all AI entities that LangGuard discovered from your integrations and traces. Entities include agents, models, tools, MCP servers, downstream systems, and identities. In the app, the page is named **GRAIL Catalog** (Governance AI Runtime Links).
 
 ## Overview
 
-Access the Data Catalog from the main navigation sidebar. It displays all discovered entities with their type, source, approval status, and tags.
+Open **GRAIL Catalog** from the main navigation sidebar.
 
-### Grid View
+The page header shows the **Entities** count. This count includes every entity from all your sources. Search and filters do not change it, so it can be larger than the result count.
+
+The results area shows the number of matches. The page loads the first 100 entities. To load more, click **Load 100 more** at the bottom of the grid or list.
+
+Use the view buttons to switch between grid view, list view, and graph view.
+
+### Grid view
 
 <ThemedImage
   alt="Data Catalog Grid View"
@@ -24,9 +30,9 @@ Access the Data Catalog from the main navigation sidebar. It displays all discov
   }}
 />
 
-The grid view displays entities as cards showing the entity name, path, department, deployment stage, type badge, and approval status. Use the filters panel on the left to narrow results by resource type or tags.
+The grid view shows each entity as a card. A card shows the entity name, path, type badge, source, approval status, description, and tags. You can set the department and the stage directly on the card.
 
-### List View
+### List view
 
 <ThemedImage
   alt="Data Catalog List View"
@@ -36,9 +42,29 @@ The grid view displays entities as cards showing the entity name, path, departme
   }}
 />
 
-Switch to list view for a sortable table format showing entity name, type, source, and tags columns.
+The list view shows entities in a table. To sort, click a sortable column header.
 
-### Graph View
+| Column | Content | Sortable |
+|--------|---------|----------|
+| **Name** | The entity name and path | Yes |
+| **Type** | The resource type | Yes |
+| **State** | The MCP Enforcement decision for calls to a tool: Allowed, Blocked, Escalates, Needs review, or Unavailable. Unavailable means there is no decision to read, as on rows that are not MCP tools. | No |
+| **Source** | How LangGuard found the entity, for example Auto Discovery | No |
+| **Tags** | Tags on the entity | No |
+| **First seen** | When LangGuard first found the entity | Yes |
+| **Updated** | When the entity was last written. Each sync rewrites this date. | Yes |
+| **Size** | The storage size, for data assets that have one | No |
+| **Actions** | Actions for the row | No |
+
+To change a State decision, use [MCP Enforcement](/features/mcp-enforcement).
+
+Select rows with the checkboxes, then click **Add Tag** to tag all selected entities.
+
+### Group by
+
+In grid view and list view, use **Group by** to put results in groups. The options are **None**, **Type**, **Source**, and **MCP server**. Use **Expand all** or **Collapse all** to open or close all groups.
+
+### Graph view
 
 <ThemedImage
   alt="Data Catalog Graph View"
@@ -48,148 +74,176 @@ Switch to list view for a sortable table format showing entity name, type, sourc
   }}
 />
 
-The graph view visualizes relationships between entities — agents, tools, models, and downstream systems.
+The graph view shows the relationships between entities, for example agents, tools, models, and downstream systems.
 
-#### Graph Controls
+#### Graph controls
 
-- **Zoom** — Scroll to zoom in/out, or use the +/- controls
-- **Pan** — Click and drag the background to pan the view
-- **Select** — Click a node to select it and view its details
-- **Search** — Press **Ctrl+F** (⌘F on Mac) to search for a node by name and jump to it
-- **Recenter** — Click the recenter button to reset the view to fit all nodes
+- **Zoom.** Scroll to zoom in or out, or use the zoom buttons.
+- **Pan.** Drag the background to move the view.
+- **Highlight.** Click a node to highlight it, its direct neighbors, and the edges between them. Click the same node again or click the background to clear the highlight.
+- **Open details.** Double-click a node to open its details in the entity drawer.
+- **Search.** Press **Ctrl+F** (**Cmd+F** on Mac) to search for a node by name. Use the arrows to move between matches.
+- **Fit view.** Use the fit view button in the zoom controls to show all nodes.
+
+#### Graph settings
+
+In graph view, the Filters panel shows **Graph Settings**. Click **Reset** to go back to the default settings.
+
+| Setting | Options |
+|---------|---------|
+| **Layout** | Tree (Horizontal) or Force Directed |
+| **Group By** | No Grouping, Agent, Tool, Model, Identity, Department, or Resource Type |
+| **Node Visibility** | Connected Only hides nodes with no relationships. All Nodes shows every node. Orphans Only shows only the nodes with no relationships. |
+| **Show MCP tools** | When off, tools roll up into their MCP server node |
 
 #### Legend
 
-The graph legend (displayed in the corner of the graph view) explains the visual encoding:
+The legend in the top-right corner of the graph shows the node types and the edge types that are in the graph. Edge types include Uses, Reads, Writes, Trains, Transforms, Connects To, and Delegates To.
 
-- **Node types** — Different shapes or colors represent agents, models, tools, downstream systems, and identities
-- **Edge types** — Lines represent relationships (e.g., "Uses")
-- **Approval status** — Color coding indicates status: Approved (green), Under Review (yellow), or Not Approved (red)
+A badge on a node shows its approval status. A green badge means Approved. A red badge means Not approved or Banned.
 
-#### Entity Detail Panel
+### Entity drawer
 
-Click any node in the graph to open its detail panel, which shows:
+The entity drawer shows the details of an entity. To open it, click a card or a list row, or double-click a graph node.
 
-- **Entity name and type**
-- **Approval status** and deployment stage
-- **Connected entities** — What it connects to in the graph
-- **Tags** applied to the entity
-- **Recent activity** — Last seen and trace count
+The drawer has the tabs **Overview**, **Lineage**, and **Activity**. A table also has a **Schema** tab. The Overview tab shows activity tiles and the metadata of the entity, for example team, stage, approval, and tags.
 
-When you follow a connected entity, the drawer keeps a **breadcrumb trail** at the
-top so you can see where you've navigated and use **Back** to return to the previous
-entity without losing your place.
+When you open a linked entity from the drawer, a breadcrumb trail shows at the top. Use the back button to go to the previous entity.
 
-#### Model Cost Information
+### Model prices
 
-Click a model node to see cost details:
+Open a model to see its price per 1M input tokens and per 1M output tokens. The drawer shows if the price is a **Custom price**, a **Built-in price**, or a **Default price**. Trace costs use this price. Only admins can change prices. For more information, see [Cost Estimates](/settings/cost-estimates).
 
-- **Cost per 1K input tokens** and **output tokens** (from [Cost Estimates](/settings/cost-estimates))
-- **Total estimated cost** for the selected time period
-- **Token usage** — Total input and output tokens consumed
-
-## Filtering and Search
+## Filtering and search
 
 ### Search
 
-Use the search bar to find entities by name:
+Use the search box in the Filters panel to find entities. The search matches the entity name and path.
 
-```
-🔍 Search entities...
-```
+### Resource Type filters
 
-### Resource Type Filters
+Use the **Resource Type** checkboxes in the Filters panel to filter by type. The panel always shows these types, also when the count is zero:
 
-Filter entities by type using the checkboxes in the Filters panel:
+- **Agent.** AI agents discovered from traces.
+- **Model.** LLM models, for example gpt-4o-mini.
+- **Tool.** Tools and functions that agents call.
+- **MCP Server.** Model Context Protocol servers.
 
-- **Model** — LLM models (e.g., gpt-4o-mini, claude-3-opus)
-- **Tool** — Tools and functions called by agents
-- **Agent** — AI agents discovered from traces
-- **MCP Server** — Model Context Protocol servers
-- **Downstream System** — External systems agents interact with
-- **Identity** — Non-human identities associated with agents
+Other types show only when the catalog has entities of that type. Examples are **Downstream System**, **Identity**, **Catalog**, **Schema**, and **Table**.
 
-### Tag Filters
+### MCP server filter
 
-Filter by tags applied to entities. Tags can be managed from the [Tags settings](/settings/tags) page.
+Use the **MCP server** filter to show only the entities of one or more MCP servers.
 
-## MCP Servers
+### Tag filters
 
-LangGuard automatically discovers **MCP (Model Context Protocol) servers** from
-trace activity and treats them as first-class catalog entities:
+Filter by the tags on entities. To manage tags, go to [Tags settings](/settings/tags).
 
-- **Auto-discovery** — MCP servers are detected from traces; no manual registration
-- **Tool roll-up** — the individual MCP tools an agent calls are grouped under their
-  parent MCP server node, so the catalog stays readable instead of showing dozens of
-  loose tool nodes
-- **Official badge** — recognized official MCP servers are marked with a badge so you
-  can tell vetted servers from unknown ones at a glance
+## MCP servers
 
-MCP servers participate in approval and policy enforcement just like other entities.
-## Entity Properties
+LangGuard adds MCP (Model Context Protocol) servers to the catalog as entities. When you group by **MCP server**, each server group shows how LangGuard found the server:
 
-Each entity in the catalog has the following properties:
+| Chip | Meaning |
+|------|---------|
+| **Registered in AI Gateway** | A person added the server in AI Gateway. |
+| **Not declared, seen in traffic** | LangGuard saw the server in gateway traffic, and nobody registered it. |
+| **Seen in traces** | LangGuard saw the server in agent traces. |
+| **Source unknown** | LangGuard could not find the origin. |
+
+Each server group also shows a summary of the MCP Enforcement decisions for its tools, for example **All tools allowed**. **Not reviewed yet** means that nobody allowed or blocked the server in MCP Enforcement. Until someone does, its tools get the Default MCP policy decision. Each server group has a link that opens the server in MCP Enforcement. For more information, see [MCP Enforcement](/features/mcp-enforcement).
+
+By default, the graph view rolls up the tools of an MCP server into the server node. To show each tool as its own node, turn on **Show MCP tools**.
+
+## Entity properties
+
+Each entity in the catalog has these properties:
 
 | Property | Description |
 |----------|-------------|
-| **Name** | The entity's display name |
-| **Path** | The fully qualified path (e.g., `discovery/agents/CustomerSupport`) |
-| **Type** | Agent, Model, Tool, MCP Server, Downstream System, or Identity |
-| **Source** | How the entity was discovered (e.g., Auto Discovery) |
-| **Department** | Organizational department assignment |
-| **Stage** | Deployment stage (e.g., Unknown, Dev, Staging, Prod) |
-| **Approval Status** | Approved, Under Review, or Not Approved |
+| **Name** | The display name of the entity |
+| **Path** | The full path, for example `discovery/models/gpt-4o-mini` |
+| **Type** | The resource type, for example Agent, Model, Tool, MCP Server, Downstream System, or Identity |
+| **Source** | How LangGuard found the entity, for example Auto Discovery |
+| **Department** | The organizational department |
+| **Stage** | The deployment stage. The default options are Unknown, PoC, Dev, Staging, and Prod. |
+| **Approval** | Approved, Not approved, or Banned. See [Approval status](#approval-status). |
 | **Tags** | Labels for categorization |
 
-## Approval Status
+## Approval status
 
-Each entity has an approval status that indicates whether it has been reviewed and sanctioned for use:
+Each entity has an approval status. The status tells if your team allows the entity for use.
 
 | Status | Meaning |
 |--------|---------|
-| **Approved** | Reviewed and approved for use |
-| **Under Review** | Pending approval from governance team |
-| **Not Approved** | Not yet reviewed or explicitly blocked |
+| **Approved** | Your team allows the entity for use. |
+| **Not approved** | Nobody approved the entity. LangGuard gives this status to each new entity that it discovers. |
+| **Banned** | Your team forbids the entity. |
 
-Approval status is used by policies like [Unapproved Tool Use](/policies/built-in-policies#unapproved-tool-use) and [Approved Model Version](/policies/built-in-policies#approved-model-version) to enforce governance rules.
+If an entity has no stored approval value, the entity drawer shows **Not reviewed**.
 
-## Show Details
+### Set approval
 
-Use the **Show Details** toggle in the top-right corner to expand or collapse additional metadata on entity cards in the grid view, such as department, stage, and description fields.
+To set the approval of a model, open the model in the entity drawer. In the **Approval** row, choose **Approved**, **Not approved**, or **Banned**. A ban asks you to confirm. Users with the Viewer role cannot change approval.
 
-## Integration with Policies
+### Stage sets approval
 
-The Data Catalog works closely with governance policies:
+When a person sets the stage, or a categorization rule sets it, LangGuard also sets the approval status:
 
-- **Unapproved Tool Use** — Flags tools that are not marked as Approved in the catalog
-- **Approved Model Version** — Ensures only approved models are used in production
-- **Cross-Boundary Access** — Uses the Stage property to enforce environment isolation
+| Stage change | Approval result |
+|--------------|-----------------|
+| Set to any stage other than Unknown | Approved |
+| Set to Unknown, or cleared | Not approved |
+| Any change on a Banned entity | Stays Banned |
 
-## Best Practices
+A workflow policy promotion changes the stage but does not change the approval status.
 
-### 1. Review Discovered Entities
+### Approval in policies
 
-Regularly review newly discovered entities and set their approval status appropriately.
+Policies such as [Unapproved Tool Use](/policies/built-in-policies#unapproved-tool-use) and [Approved Model Version](/policies/built-in-policies#approved-model-version) flag entities that are not Approved.
 
-### 2. Use Consistent Tags
+## Show details
 
-Establish tagging conventions:
+Click **Show Details** in the page header to open the statistics panel. Click **Hide Details** to close it. The panel shows:
+
+- **By Resource Type.** The five resource types with the most entities.
+- **By Integration.** The three integrations with the most entities.
+- **Summary.** **Recently Updated** counts the entities that a sync or an edit wrote in the last 7 days. Each sync rewrites this date, so the count can include entities that did not change. For data assets, the summary also shows **Total Size** and **Total Rows**.
+
+Search and filters do not change these numbers.
+
+## Integration with policies
+
+The Data Catalog works with governance policies:
+
+- **Unapproved Tool Use.** Flags tools that are not Approved in the catalog.
+- **Approved Model Version.** Flags models that are not Approved, and approved models that are not in a production stage.
+- **Cross-Boundary Access.** Uses the stage to flag an agent that accesses resources in a higher stage, or uses a model from a lower stage.
+
+## Best practices
+
+### 1. Review discovered entities
+
+Review newly discovered entities often. Set their approval status.
+
+### 2. Use consistent tags
+
+Make tag conventions, for example:
 - Environment: `production`, `staging`, `development`
 - Team: `team:analytics`, `team:ml`
 - Compliance: `pii`, `confidential`
 
-### 3. Set Deployment Stages
+### 3. Set deployment stages
 
-Assign accurate deployment stages to entities so cross-boundary access policies can enforce environment isolation.
+Give each entity its correct deployment stage. Cross-boundary access policies use the stage to keep environments apart. Setting a stage also approves the entity. See [Stage sets approval](#stage-sets-approval).
 
-### 4. Approve Sanctioned Assets
+### 4. Approve sanctioned assets
 
-Mark reviewed entities as Approved so governance policies can distinguish sanctioned from unsanctioned usage.
+Mark reviewed entities as Approved. Governance policies then can tell sanctioned use from unsanctioned use.
 
 ---
 
-## Next Steps
+## Next steps
 
-- [Discovery](/features/discovery) - How entities are discovered
-- [Policies](/policies) - Set up data governance policies
-- [Integrations](/integrations) - Configure integrations
+- [Discovery](/features/discovery). How LangGuard discovers entities.
+- [Policies](/policies). Set up governance policies.
+- [Integrations](/integrations). Configure integrations.
