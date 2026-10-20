@@ -25,12 +25,12 @@ Automatically discover and catalog all AI assets across your organization:
 
 ### Real-time Monitoring
 
-Monitor your AI operations with comprehensive dashboards:
+Triage policy violations and approval requests in one queue:
 
-- **Health Metrics** - Success rates, error rates, latency
-- **Cost Tracking** - Token usage and cost analysis
-- **Volume Analytics** - Request patterns and trends
-- **Alerting** - Get notified of issues (coming soon)
+- **Severity Bands** - Open violations grouped by severity, policy, or agent
+- **Rolled-up Rows** - Repeats of one policy by one agent fold into one row
+- **Approvals** - Approve or deny escalated calls
+- **Status Actions** - Acknowledge, resolve, or mark a violation as a false positive
 
 [Learn more about Monitoring →](/features/monitoring)
 
@@ -40,10 +40,10 @@ Monitor your AI operations with comprehensive dashboards:
 
 Deep-dive into individual traces with powerful analysis tools:
 
-- **Advanced Search** - Full-text search across all trace data
-- **Rich Filtering** - Filter by status, agent, time, and custom attributes
-- **Detail View** - Complete trace information including spans and metadata
-- **Comparison** - Compare multiple traces side-by-side
+- **Search** - Find traces by text in their IDs, names, agent, model, user, and metadata
+- **Filtering** - Filter by time, status, agent, model, user, tool, latency, tokens, and cost
+- **Detail View** - Complete trace information including spans and policy evaluation
+- **Export** - Download traces as CSV or JSON
 
 [Learn more about Trace Explorer →](/features/trace-explorer)
 
@@ -66,10 +66,10 @@ Browse and manage discovered entities:
 
 Govern the lifecycle of your AI assets with policy-gated approvals:
 
-- **Lifecycle Kanban** - Move assets through stages on a drag-and-drop board
-- **Gated Promotion** - OPA-evaluated checks must pass before an asset advances
+- **Lifecycle Stages** - Move assets through ordered stages, one stage at a time
+- **Gated Promotion** - Checks must pass before an asset advances
 - **Custom Workflow Checks** - Define the rules that gate each stage
-- **Activity Timeline** - Track how assets progressed over time
+- **Save and Publish** - Rules apply only after you publish them
 
 [Learn more about Workflow Governance →](/features/workflow-governance)
 
@@ -78,9 +78,11 @@ Govern the lifecycle of your AI assets with policy-gated approvals:
 ## Quick Links
 
 - [Discovery](/features/discovery) - Discover and inventory your AI assets
-- [Monitoring](/features/monitoring) - Real-time dashboards and metrics
+- [Monitoring](/features/monitoring) - Triage violations and approval requests
+- [Agent Activity](/features/agent-activity) - Compare agents by traces, tools, and dependencies
 - [Trace Explorer](/features/trace-explorer) - Search and analyze traces
 - [Data Catalog](/features/data-catalog) - Browse discovered entities
 - [Workflow Governance](/features/workflow-governance) - Manage AI asset lifecycle
+- [MCP Enforcement](/features/mcp-enforcement) - Decide what agents can do with MCP servers and tools
 - [AI Registry](/features/ai-registry) - Governance dashboard for sanctioned AI
 - [Identity Governance](/features/identity) - Govern human and non-human identities

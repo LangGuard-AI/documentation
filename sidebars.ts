@@ -25,9 +25,11 @@ const sidebars: SidebarsConfig = {
       items: [
         'features/discovery',
         'features/monitoring',
+        'features/agent-activity',
         'features/trace-explorer',
         'features/data-catalog',
         'features/workflow-governance',
+        'features/mcp-enforcement',
         'features/ai-registry',
         'features/identity',
       ],
@@ -70,6 +72,7 @@ const sidebars: SidebarsConfig = {
         'policies/creating-policies',
         'policies/budgets',
         'policies/policy-violations',
+        'policies/approvals',
       ],
     },
     {
