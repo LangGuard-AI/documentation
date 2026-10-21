@@ -127,7 +127,7 @@ Each policy has one of three modes. To change the mode, use the **Mode** column 
 
 | Mode | Behavior |
 |------|----------|
-| **Enforce** | LangGuard records violations and blocks the call where the checkpoint allows it. The **Response** column sets the action. **Block** stops the call. **Escalate** stops the call and queues it for human approval. |
+| **Enforce** | LangGuard records violations and blocks the call where the checkpoint allows it. The **Response** column sets the action. **Block** stops the call. **Escalate** stops the call and queues it for human approval. For a policy that the composer wrote, **Promote to Enforce** sets the response. |
 | **Monitor** | LangGuard records violations and blocks nothing. |
 | **Disabled** | LangGuard does not evaluate the policy and records no violations. |
 
@@ -138,9 +138,48 @@ In the API, the `mode` field stores Monitor as the value `permissive`.
 - **Start in Monitor.** Run a new policy in Monitor first. Check the violations it
   records. A policy that the [policy composer](/policies/ai-authoring) saves always starts
   in Monitor.
-- **Switch to Enforce.** When the violations look right, set the mode to Enforce.
+- **Switch to Enforce.** When the violations look right, set the mode to Enforce. For a
+  policy that the composer wrote, this opens **Promote to Enforce**. See
+  [Promote a composer policy to Enforce](#promote-to-enforce).
 - **Use Disabled only for policies you do not need.** To keep a policy visible but stop
   it from blocking, use Monitor.
+
+### Promote a composer policy to Enforce {#promote-to-enforce}
+
+The [policy composer](/policies/ai-authoring) saves a policy in Monitor mode. It stores
+the **Enforcement plan** of the policy (**On violation**, the message to the calling
+agent, and the Slack channel) but does not apply it. The **Promote to Enforce** dialog
+applies the plan when you switch the policy to Enforce.
+
+Other policies do not use this dialog. When you set their **Mode** to Enforce, the mode
+changes directly.
+
+1. On the **Policies** page, set the **Mode** of the policy to **Enforce**. The
+   **Promote to Enforce** dialog opens.
+2. In **When enforced, violations will:**, select **Block** or **Escalate for approval**.
+   The dialog fills in the values from the enforcement plan of the policy. You can change
+   them.
+   - **Block** stops the call.
+   - **Escalate for approval** stops the call and queues it for human approval. An
+     approval applies to later calls. It does not release the blocked call. See
+     [Approvals and remembered rules](/policies/approvals).
+3. For **Escalate for approval**, check the **Message to the calling agent** and the
+   **Slack channel for approvals**.
+4. Read the warnings and the **Adversarial Review Summary**:
+   - If the Rego was edited by hand after the agent verified it, a warning tells you that
+     the test results describe the previous version. The warning does not stop the
+     promotion. To get new results, re-verify the policy in the policy editor.
+   - If the policy has unresolved adversarial review failures, the dialog shows
+     **Promotion is blocked by unresolved adversarial review failures**. You cannot
+     promote the policy until those flags are resolved.
+5. Type `I understand` and select **Promote to enforce**.
+6. For a policy with High or Critical severity, select **Continue** instead. A second
+   step shows the bypass attempts that the policy blocked during adversarial review, the
+   response that you selected, and the number of open review flags. Select
+   **Promote to enforce**.
+
+LangGuard records the promotion in the audit log. To stop blocking, set the **Mode** back
+to **Monitor**.
 
 ### When a Policy Cannot Be Evaluated
 

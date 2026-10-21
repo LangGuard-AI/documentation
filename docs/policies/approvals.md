@@ -12,7 +12,7 @@ The **Escalate** response blocks a call and asks a person to approve or deny it.
 
 LangGuard creates an approval request in these cases:
 
-- A policy in Enforce mode with the response **Escalate** finds a violation. Set the response in the **Response** column of the **Policies** page, or in **On violation** in the policy editor. In Monitor mode a policy has no response.
+- A policy in Enforce mode with the response **Escalate** finds a violation. Set the response in the **Response** column of the **Policies** page, or in **On violation** in the policy editor. For a policy that the composer wrote, the [Promote to Enforce](/policies#promote-to-enforce) dialog applies **On violation**. In Monitor mode a policy has no response.
 - A call goes to a tool or MCP server set to **Escalate** on the [MCP Enforcement](/features/mcp-enforcement) page.
 
 LangGuard never pauses a call to wait for a decision. An escalated call is blocked at once. The caller receives a message that says the action requires approval and was not executed. On the MCP gateway and the LLM gateway, the message includes a reference such as `LG-...`. To replace the first two sentences of the message, set **Message to the calling agent** in the policy editor (300 characters or fewer).

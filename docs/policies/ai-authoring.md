@@ -78,11 +78,28 @@ The **Adversarial review summary** shows one result:
    first. This section also shows the checkpoints and the rollout that the save uses.
 5. Select **Save policy**.
 
-A policy that the composer saves always starts in **Monitor** mode with the **Block**
-response, whatever **Rollout** and **On violation** show. It records violations and
-blocks nothing. When its violations look right, set its **Mode** to **Enforce** on the
-**Policies** page. To use **Escalate**, set the **Response** column after you set the
-mode to Enforce. See [Policy modes](/policies#policy-modes).
+A policy that the composer saves always starts in **Monitor** mode, whatever **Rollout**
+shows. It records violations and blocks nothing. LangGuard stores the
+**Enforcement plan** with the policy, but does not apply it yet.
+
+## Promote to Enforce {#promote-to-enforce}
+
+When the violations of the policy look right, switch it to Enforce:
+
+1. On the **Policies** page, set the **Mode** of the policy to **Enforce**. The
+   **Promote to Enforce** dialog opens.
+2. Check the response. The dialog fills in **Block** or **Escalate for approval**, the
+   message to the calling agent, and the Slack channel from the enforcement plan. You can
+   change them.
+3. Read the warnings. If the Rego was edited by hand after the agent verified it, a
+   warning tells you that the test results describe the previous version. Unresolved
+   adversarial review failures stop the promotion.
+4. Type `I understand` and select **Promote to enforce**. For High or Critical
+   severity, select **Continue**, review the blocked bypass attempts, and select
+   **Promote to enforce**.
+
+For all the steps, see
+[Promote a composer policy to Enforce](/policies#promote-to-enforce).
 
 ## Pause, resume, and remediate
 
@@ -124,6 +141,7 @@ these actions:
   agent wrote.
 - **Save as-is** keeps the old results and records a stale flag. The **Policies** page
   shows a re-review banner for each policy that was changed after its last verification.
+  The **Promote to Enforce** dialog also shows the flag as a warning.
 
 ## When to use hand-written Rego instead
 
