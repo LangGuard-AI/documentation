@@ -88,7 +88,7 @@ In the trace details, expand a violation to see its **Evidence**. The evidence s
 
 ## Trace details with violations
 
-To see the violations of one trace, open the trace in the [Trace Explorer](/features/trace-explorer). The **Overview** tab has the **Policy & Plugin Evaluation** card. The card shows **Compliant**, or the number of violations with counts by severity.
+To see the violations of one trace, open the trace in the [Trace Explorer](/features/trace-explorer). The **Overview** tab has the **Policy & Plugin Evaluation** card. The card shows **Not evaluated** when no policy evaluated the trace, **Compliant** when no violation is recorded, or the number of violations with counts by severity.
 
 Expand a violation in the card to see:
 

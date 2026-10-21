@@ -18,18 +18,19 @@ this preview is turned on for your workspace.
 
 ## Which traces the page uses
 
-The page does not use a fixed time window. Each part reads a different set of traces, so
-the totals on different tabs do not always agree.
+The page reads the traces from the last 24 hours. Each part reads a different set of
+those traces, so the totals on different tabs do not always agree.
 
 | Part of the page | Traces it reads |
 |------------------|-----------------|
-| Agent list, **Performance** tab | The newest 1000 traces, with no time limit. |
-| **Timeline** tab, **Tools** tab | Up to 100 traces for each selected agent, oldest first, from the same 1000 traces. |
+| Agent list, **Performance** tab | The newest 1000 traces from the last 24 hours. |
+| **Timeline** tab, **Tools** tab | The newest 100 traces for each selected agent, from the same 1000 traces. The timeline shows them oldest first. |
 | **Dependencies** tab | The 50 newest traces from the last 24 hours. |
 
 A trace with no agent name is grouped under **Unknown Agent**. The Dependencies tab
-labels it **No agent**. If LangGuard has no stored traces, or it cannot load them, the
-page shows sample agents.
+labels it **No agent**. If there are no traces in the last 24 hours, the agent list is
+empty. If LangGuard cannot load the traces, the page shows an error with a retry button, not
+sample agents.
 
 ## Agent list
 
@@ -73,7 +74,7 @@ The **health badge** on a card comes from the success rate only:
 | **Critical** | Less than 90% |
 
 The time range control on this tab does not change the data. The data is always the
-newest 1000 traces.
+newest 1000 traces from the last 24 hours.
 
 **Compare** shows the selected agents in one table. It needs two or more agents, and
 **Export CSV** saves the table. **Export** saves the data of the selected agents as JSON.

@@ -28,10 +28,12 @@ Four headline metrics sit at the top of the registry:
 
 | Metric | What it tells you |
 |--------|-------------------|
-| **Total Actions** | Volume of governed activity and how many agents it spans |
+| **Total Actions** | The number of traces in the [Activity Heatmap](#activity-heatmap) window (7 or 30 days), and how many agents they span |
 | **Exposure Rate** | Share of discovered assets that are **unsanctioned** (unapproved ÷ total) |
-| **Open Violations** | Count of currently active policy violations |
+| **Open Violations** | The number of open violations of enabled policies |
 | **Operational Coverage** | Share of monitored assets that are **approved** (approved ÷ monitored) |
+
+A metric whose data does not load shows **Unavailable**, not 0.
 
 Together they answer "how much of my AI estate is actually under governance, and
 how much risk is open right now?"

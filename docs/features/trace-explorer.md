@@ -129,7 +129,7 @@ The **Evaluation** column shows a shield. Move the pointer over the shield to se
 | Green | Compliant. No violations are recorded on the trace. |
 | Dashed | The trace is not evaluated yet. |
 | Red, with a count | At least one policy in **Enforce** mode found a violation. The label shows how many have Critical or High severity. |
-| Amber, with a count | Only policies in **Monitor** mode found violations. The label calls them warnings. |
+| Amber, with a count | Only policies in **Monitor** mode found violations. The label calls them warnings, for example **2 warnings (Monitor mode)**. |
 | Red, on a **Blocked** trace | A policy blocked the call at interception. The label reads **Blocked at interception**, with the number of violations when there are any. |
 
 For more about modes, see [Policy modes](/policies/#policy-modes).
@@ -182,7 +182,7 @@ The Overview tab shows these cards, from top to bottom:
 
 - **Summary.** One sentence with the agent, the number of operations, the tools and models it used, and how it ended. Select the agent name to open the agent details.
 - **Latency**, **Total Cost**, **Token Usage**, and **Status.** A `~` before the cost means LangGuard added it up from the steps of the trace.
-- **Policy & Plugin Evaluation.** **Compliant**, or the number of violations with counts by severity (Critical, High, Medium, Low). It also shows the violations from policies in Monitor mode, and **Blocked at interception** when a policy stopped the call before it ran. Compliant means no violation is recorded, not that every policy checked this trace. Select a violation to see its evidence and actions. See [Trace details with violations](/policies/policy-violations#trace-details-with-violations).
+- **Policy & Plugin Evaluation.** **Not evaluated** when no policy evaluated the trace. **Compliant** when a policy evaluated the trace and recorded no violation. Otherwise, the number of violations with counts by severity (Critical, High, Medium, Low). It also shows the violations from policies in Monitor mode, and **Blocked at interception** when a policy stopped the call before it ran. Compliant does not mean that every policy checked this trace. Select a violation to see its evidence and actions. See [Trace details with violations](/policies/policy-violations#trace-details-with-violations).
 - **Who.** The user behind the trace, with a classification badge: **Human**, **NHI** (non-human identity), or **OBO** (acting on behalf of a person). The card shows the profile from your identity provider when LangGuard has one. Otherwise it shows the recent activity of the user. It can also list the keys seen for the person. Select **View all traces by** the user to filter the Trace Explorer to that user. Select **Open details** to open the user. See [Identity classification](/features/identity#identity-classification).
 - **Tool Activity** and **Model Activity.** The tools and models the trace called.
 - **Trace Details** and **Observations Summary.** The trace ID, name, environment, session ID, timestamp, and token counts.

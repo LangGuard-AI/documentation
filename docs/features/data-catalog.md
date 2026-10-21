@@ -96,6 +96,8 @@ In graph view, the Filters panel shows **Graph Settings**. Click **Reset** to go
 | **Node Visibility** | Connected Only hides nodes with no relationships. All Nodes shows every node. Orphans Only shows only the nodes with no relationships. |
 | **Show MCP tools** | When off, tools roll up into their MCP server node |
 
+**Department** groups each entity by its department tag. Entities with no department tag go in the **Unknown** group.
+
 #### Legend
 
 The legend in the top-right corner of the graph shows the node types and the edge types that are in the graph. Edge types include Uses, Reads, Writes, Trains, Transforms, Connects To, and Delegates To.
