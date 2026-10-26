@@ -133,6 +133,18 @@ const sidebars: SidebarsConfig = {
             'private-install/google-cloud/sign-in-and-email',
           ],
         },
+        {
+          type: 'category',
+          label: 'Azure',
+          link: {
+            type: 'doc',
+            id: 'private-install/azure/index',
+          },
+          items: [
+            'private-install/azure/installation',
+            'private-install/azure/sign-in-and-email',
+          ],
+        },
       ],
     },
     {
