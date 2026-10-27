@@ -349,11 +349,8 @@ Configure outbound email with `--email-provider`. See
 
 Export `LANGGUARD_ENABLED_FLAGS` and `LANGGUARD_DISABLED_FLAGS` (comma-separated keys)
 before you run the installer, or set `langguard_enabled_flags` and
-`langguard_disabled_flags` in your `--tfvars` file. Then restart the dashboard:
-
-```bash
-kubectl rollout restart deployment/langguard-dashboard -n langguard
-```
+`langguard_disabled_flags` in your `--tfvars` file, and run the installer again. When the
+flags change, the dashboard pods restart.
 
 
 ## Sizing
@@ -391,7 +388,9 @@ at 64 GB and grows automatically.
 Run `install.sh` again to change settings, to complete an install that stopped, or to
 upgrade. Use the same flags and the same `--tfvars` file. Each run:
 
-- Writes `terraform/environments/<environment>.tfvars` again from the flags.
+- Writes `terraform/environments/<environment>.tfvars` again from the flags. When a
+  setting of the dashboard changes (for example `--domain`, `--admin-email`, the AI models
+  or the feature flags), the dashboard pods restart.
 - Generates a new admin password. Running dashboard pods keep the old password until they
   restart:
 
