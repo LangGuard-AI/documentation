@@ -59,7 +59,7 @@ The installer registers these resource providers in the subscription if they are
 registered: `Microsoft.Compute`, `Microsoft.ContainerService`, `Microsoft.ContainerRegistry`,
 `Microsoft.DBforPostgreSQL`, `Microsoft.CognitiveServices`, `Microsoft.Network`,
 `Microsoft.ManagedIdentity`, `Microsoft.OperationalInsights`,
-`Microsoft.OperationsManagement` and `Microsoft.Storage`.
+`Microsoft.OperationsManagement`, `Microsoft.Insights` and `Microsoft.Storage`.
 
 
 ## Install
@@ -473,6 +473,7 @@ These items stay after the destroy:
 | Symptom | Check |
 |---|---|
 | The installer stops with `the vCPU quota in <region> is too small` | Request quota for the family in the message (Azure portal: **Quotas** > **Compute**, or `az quota update`), or select another `--node-vm-size` or `--location`. Azure refuses an increase for some families in some regions (`QuotaNotAvailableForResource`); then select a size of another family. |
+| PostgreSQL create fails with `SkuNotAvailable` (`Specified SKU is not supported in this region`) | Azure can close a tier to a subscription in a region, also when `az postgres flexible-server list-skus` lists it. Select a SKU of another tier with `--postgres-sku` (for example `GP_Standard_D2ds_v5`), or another `--location`, and run the installer again. |
 | Terraform cannot reach the cluster (`dial tcp ... i/o timeout`) | The installer host must have an address in `--admin-cidr`, or with `--private-cluster` a route to the virtual network. |
 | `403 Forbidden` from the Kubernetes API during the first apply | The cluster role assignment did not apply yet. Run the installer again. |
 | Pods in `ImagePullBackOff` | `kubectl describe pod`. With `--registry`, the images must be in that registry with the expected names and tag, and the kubelet identity needs pull access. |
