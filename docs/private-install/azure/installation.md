@@ -279,7 +279,11 @@ cannot change this setting on an existing cluster, so set it on the first instal
 3. On that host, run the installer with the same flags and `--private-cluster`.
 
 The installer then pushes the images through the private endpoint of the registry, and
-`--admin-cidr` is not necessary. Do all later runs, and the uninstall, from such a host.
+`--admin-cidr` is not necessary. The host must resolve `privatelink.azurecr.io` through
+the virtual network: the installer links the private DNS zone of the registry to the
+virtual network before it pushes. If your DNS servers serve the virtual network, forward
+that zone to Azure DNS (`168.63.129.16`), or use `--private-dns-zone acr` with a zone
+that your servers resolve. Do all later runs, and the uninstall, from such a host.
 
 ### AI models
 
