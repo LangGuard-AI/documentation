@@ -51,11 +51,12 @@ work only together. To upgrade, use the complete new bundle.
 | 4 | Admin address range | The public address range of the installer host, for example `203.0.113.10/32`. Not necessary with `--private-cluster`. |
 | 5 | Tools | `terraform` 1.7 or later, `az` (Azure CLI) 2.86 or later, `kubectl`, `kubelogin`, `skopeo`, `gunzip`, `openssl`. `python3` with `--use-existing-cluster`. `az aks install-cli` installs `kubectl` and `kubelogin`. Terraform also runs `az` and `kubectl` (`terraform/scripts/wait-gateway-api.sh`). |
 | 6 | Signed-in Azure CLI | `az login`. A service principal sign-in also works. |
-| 7 | Azure OpenAI quota | Quota in `--openai-location` for the models in [AI models](#ai-models). |
-| 8 | Free disk space | Approximately 4 GB in addition to the unpacked bundle. Set `TMPDIR` if `/tmp` is small. |
+| 7 | vCPU quota | Free vCPUs in `--location`, in the family of `--node-vm-size` and in the regional total: `--node-count` minimum × vCPUs to create the cluster, and maximum plus a 33% upgrade surge to scale out and upgrade. A new subscription can have a quota of 0 for a family (Azure portal: **Quotas** > **Compute**). The installer checks the quota before it changes anything. |
+| 8 | Azure OpenAI quota | Quota in `--openai-location` for the models in [AI models](#ai-models). |
+| 9 | Free disk space | Approximately 4 GB in addition to the unpacked bundle. Set `TMPDIR` if `/tmp` is small. |
 
 The installer registers these resource providers in the subscription if they are not
-registered: `Microsoft.ContainerService`, `Microsoft.ContainerRegistry`,
+registered: `Microsoft.Compute`, `Microsoft.ContainerService`, `Microsoft.ContainerRegistry`,
 `Microsoft.DBforPostgreSQL`, `Microsoft.CognitiveServices`, `Microsoft.Network`,
 `Microsoft.ManagedIdentity`, `Microsoft.OperationalInsights`,
 `Microsoft.OperationsManagement` and `Microsoft.Storage`.
@@ -82,7 +83,8 @@ The installer shows a summary and asks for confirmation. The install takes appro
 What the installer does:
 
 1. It checks the flags, the tools, the bundle format and your Azure CLI sign-in. It
-   registers the resource providers.
+   registers the resource providers. Before it creates a cluster, it checks the vCPU
+   quota.
 2. It creates the Terraform state storage account, if it does not exist (see
    [Terraform state](#terraform-state)).
 3. It writes `terraform/environments/<environment>.tfvars` and generates an admin password.
@@ -471,6 +473,7 @@ These items stay after the destroy:
 
 | Symptom | Check |
 |---|---|
+| The installer stops with `the vCPU quota in <region> is too small` | Request quota for the family in the message (Azure portal: **Quotas** > **Compute**, or `az quota update`), or select another `--node-vm-size` or `--location`. Azure refuses an increase for some families in some regions (`QuotaNotAvailableForResource`); then select a size of another family. |
 | Terraform cannot reach the cluster (`dial tcp ... i/o timeout`) | The installer host must have an address in `--admin-cidr`, or with `--private-cluster` a route to the virtual network. |
 | `403 Forbidden` from the Kubernetes API during the first apply | The cluster role assignment did not apply yet. Run the installer again. |
 | Pods in `ImagePullBackOff` | `kubectl describe pod`. With `--registry`, the images must be in that registry with the expected names and tag, and the kubelet identity needs pull access. |
