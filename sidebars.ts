@@ -142,6 +142,7 @@ const sidebars: SidebarsConfig = {
           },
           items: [
             'private-install/azure/installation',
+            'private-install/azure/existing-infrastructure',
             'private-install/azure/sign-in-and-email',
           ],
         },

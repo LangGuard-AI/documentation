@@ -17,6 +17,8 @@ services:
   public or a private IP address.
 
 For an overview of the bundle and the architecture, see [Azure](/private-install/azure).
+To install into a virtual network or an AKS cluster that you already operate, see
+[Existing Infrastructure](/private-install/azure/existing-infrastructure).
 
 ## Requirements of the network
 
@@ -211,19 +213,26 @@ Contributor** role on the account. Terraform uses Microsoft Entra authentication
 The default account name is `lgtfstate` plus a hash of the subscription ID. Storage account
 names are unique in Azure. If the name is not available, give `--state-account`.
 
+### Existing network and cluster
+
+`--use-existing-network` (with `--node-subnet`, `--postgres-subnet`, `--endpoint-subnet`)
+and `--use-existing-cluster` install into a virtual network and an AKS cluster that you
+already operate. `--private-dns-zone` uses your private DNS zones. See [Existing Infrastructure](/private-install/azure/existing-infrastructure).
+
 ### Ingress and TLS
 
 | Flag | Default | Description |
 |---|---|---|
 | `--ingress` | `public` | `public`: a static public IP address. `internal`: a static private IP address in the node subnet; only your connected networks can reach it. `none`: no Gateway; see [Without an ingress](#without-an-ingress). |
 | `--ingress-source-cidr` | all addresses | Allow only this range to reach a public ingress. Repeat the flag for more ranges. With Let's Encrypt, its validation servers must also reach port 80. |
+| `--internal-ingress-ip` | last usable address of the node subnet | Private IP address of an internal ingress. |
 | `--tls` | `letsencrypt` | `letsencrypt` (public ingress only) or `provided`. |
 | `--tls-cert`, `--tls-key` | | PEM certificate chain and private key for `--domain`, with `--tls provided`. |
 | `--dns-zone`, `--dns-zone-rg` | | An existing Azure DNS zone (a parent zone of `--domain`) for the `A` record. |
 
 With `--ingress internal`, the IP address is the last usable address of the node subnet
-(`10.60.15.254` with the default network). To use another free address in that subnet, set
-`internal_ingress_ip` in your `--tfvars` file.
+(`10.60.15.254` with the default network). To use another free address in that subnet, give
+`--internal-ingress-ip`.
 
 The installer gives the certificate files to Terraform in environment variables. Terraform
 stores the certificate and its key in a Kubernetes Secret and in the Terraform state. To
@@ -317,7 +326,6 @@ Examples:
 | `postgres_storage_mb`, `postgres_backup_retention_days`, `postgres_version` | PostgreSQL. |
 | `replicas` | Minimum number of dashboard pods (default 2). |
 | `enable_container_insights`, `log_retention_days` | Container Insights. |
-| `internal_ingress_ip` | IP address of an internal ingress. |
 | `langguard_enabled_flags`, `langguard_disabled_flags` | Feature flags. |
 | `tags` | Tags on all Azure resources. |
 

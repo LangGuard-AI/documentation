@@ -29,6 +29,7 @@ langguard-install/
 └── azure/
     ├── install.sh      installer
     ├── INSTALL.md      installation guide
+    ├── INSTALL-BYO.md  installation guide for existing infrastructure
     ├── terraform/      infrastructure definition
     └── .opa-version    OPA version
 ```
@@ -116,6 +117,21 @@ LangGuard's own features, not your model traffic. For inline enforcement, use
 own instrumentation.
 :::
 
+## Two installation paths
+
+Both paths use the same bundle and the same `install.sh`. The workloads in the cluster
+are the same. Flags select which infrastructure the installer creates and which
+infrastructure you supply.
+
+| | New infrastructure | Existing infrastructure |
+|---|---|---|
+| Use it when | You want the installer to create all of the infrastructure | You already operate a virtual network, an AKS cluster, private DNS zones, a registry or an Azure OpenAI account |
+| Virtual network | Created by the installer, with NSGs and a NAT gateway | Yours. Select it and three subnets with `--use-existing-network`. The installer creates no NSGs, route tables or NAT gateway |
+| AKS cluster | Created by the installer | Created by the installer in your network, or yours with `--use-existing-cluster`. The installer does not change your cluster |
+| PostgreSQL | Created by the installer | Created by the installer, in your delegated subnet |
+| Private DNS zones | Created by the installer | Created by the installer, or yours with `--private-dns-zone` |
+| Guide | [Installation](/private-install/azure/installation) | [Existing Infrastructure](/private-install/azure/existing-infrastructure) |
+
 ## Why AKS and Terraform
 
 LangGuard evaluated these alternatives for Azure:
@@ -131,5 +147,7 @@ LangGuard evaluated these alternatives for Azure:
 
 - [Installation](/private-install/azure/installation): install LangGuard in your Azure
   subscription
+- [Existing Infrastructure](/private-install/azure/existing-infrastructure): install into a
+  virtual network or an AKS cluster that you already operate
 - [Sign-in and Email](/private-install/azure/sign-in-and-email): configure the admin
   password sign-in and outbound email

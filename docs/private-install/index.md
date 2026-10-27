@@ -22,5 +22,5 @@ already operate.
 
 ### [Azure](/private-install/azure)
 Install LangGuard on AKS, Azure Database for PostgreSQL and Azure OpenAI. The installer
-creates the network, the cluster, the database and the container registry in your
-subscription.
+creates new infrastructure, or uses the virtual network and the AKS cluster that you
+already operate.
