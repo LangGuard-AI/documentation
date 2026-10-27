@@ -68,7 +68,8 @@ Your NSGs must allow:
 
 | From | To | Port | For |
 |---|---|---|---|
-| Internet (or your `--ingress-source-cidr` ranges) | node subnet | TCP 80, 443 | Public ingress. Not with `--ingress internal` or `none`. |
+| Internet (or your `--ingress-source-cidr` ranges) | node subnet | TCP 443 | Public ingress. Not with `--ingress internal` or `none`. |
+| Internet | node subnet | TCP 80 | Public ingress: the redirect to HTTPS and the Let's Encrypt challenge. With `--tls provided`, your `--ingress-source-cidr` ranges are enough. |
 | Node subnet | PostgreSQL subnet | TCP 5432 | Database |
 | Node subnet | endpoint subnet | TCP 443 | Container registry, Azure OpenAI |
 

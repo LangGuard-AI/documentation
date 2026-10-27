@@ -45,11 +45,12 @@ domain and admin address range as flags. It writes a Terraform variables file an
 the Terraform in `azure/terraform/`. Terraform keeps its state in a storage account in your
 subscription. The installer creates the storage account if it does not exist.
 
-The installer runs three steps:
+The installer runs four steps:
 
 1. Creates the resource group and the container registry.
 2. Pushes the bundled images to the registry.
-3. Applies the Terraform: network, AKS, PostgreSQL, Azure OpenAI, ingress and workloads.
+3. Applies the network and the AKS cluster.
+4. Applies the rest of the Terraform: PostgreSQL, Azure OpenAI, ingress and workloads.
 
 You can run `install.sh` again to change settings or to upgrade. Give the same flags as in
 the first run. See [Run the installer again](/private-install/azure/installation#run-the-installer-again).

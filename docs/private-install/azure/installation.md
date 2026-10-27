@@ -49,7 +49,7 @@ work only together. To upgrade, use the complete new bundle.
 | 2 | Azure role | **Owner** on the subscription, or **Contributor** and **Role Based Access Control Administrator**. The installer creates role assignments. |
 | 3 | A domain that you control | For example `langguard.mycompany.com`. You create one DNS `A` record for it. |
 | 4 | Admin address range | The public address range of the installer host, for example `203.0.113.10/32`. Not necessary with `--private-cluster`. |
-| 5 | Tools | `terraform` 1.7 or later, `az` (Azure CLI) 2.86 or later, `kubectl`, `kubelogin`, `skopeo`, `gunzip`, `openssl`, `curl`, `python3`. `az aks install-cli` installs `kubectl` and `kubelogin`. Terraform also runs `az` and `kubectl` (`terraform/scripts/wait-gateway-api.sh`). |
+| 5 | Tools | `terraform` 1.7 or later, `az` (Azure CLI) 2.86 or later, `kubectl`, `kubelogin`, `skopeo`, `gunzip`, `openssl`. `python3` with `--use-existing-cluster`. `az aks install-cli` installs `kubectl` and `kubelogin`. Terraform also runs `az` and `kubectl` (`terraform/scripts/wait-gateway-api.sh`). |
 | 6 | Signed-in Azure CLI | `az login`. A service principal sign-in also works. |
 | 7 | Azure OpenAI quota | Quota in `--openai-location` for the models in [AI models](#ai-models). |
 | 8 | Free disk space | Approximately 4 GB in addition to the unpacked bundle. Set `TMPDIR` if `/tmp` is small. |
@@ -229,7 +229,7 @@ already operate. `--private-dns-zone` uses your private DNS zones. See [Existing
 | Flag | Default | Description |
 |---|---|---|
 | `--ingress` | `public` | `public`: a static public IP address. `internal`: a static private IP address in the node subnet; only your connected networks can reach it. `none`: no Gateway; see [Without an ingress](#without-an-ingress). |
-| `--ingress-source-cidr` | all addresses | Allow only this range to reach a public ingress. Repeat the flag for more ranges. With Let's Encrypt, its validation servers must also reach port 80. |
+| `--ingress-source-cidr` | all addresses | Allow only this range to reach port 443 of a public ingress. Repeat the flag for more ranges. With `--tls letsencrypt`, port 80 (the redirect to HTTPS and the certificate challenge) stays open to all addresses. |
 | `--internal-ingress-ip` | last usable address of the node subnet | Private IP address of an internal ingress. |
 | `--tls` | `letsencrypt` | `letsencrypt` (public ingress only) or `provided`. |
 | `--tls-cert`, `--tls-key` | | PEM certificate chain and private key for `--domain`, with `--tls provided`. |
@@ -273,7 +273,7 @@ cannot change this setting on an existing cluster, so set it on the first instal
 
 2. Connect your network to the virtual network `langguard-<environment>-vnet` (peering,
    VPN or ExpressRoute), or create a host in a new subnet of it. The default address
-   space is `10.60.0.0/16`; `10.60.19.0` and later are free. Your DNS must resolve the
+   space is `10.60.0.0/16`; `10.60.17.0` and later are free. Your DNS must resolve the
    private DNS zones of the install (`privatelink.<region>.azmk8s.io`,
    `privatelink.azurecr.io`).
 3. On that host, run the installer with the same flags and `--private-cluster`.
