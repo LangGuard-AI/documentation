@@ -49,7 +49,7 @@ work only together. To upgrade, use the complete new bundle.
 | 2 | Azure role | **Owner** on the subscription, or **Contributor** and **Role Based Access Control Administrator**. The installer creates role assignments. |
 | 3 | A domain that you control | For example `langguard.mycompany.com`. You create one DNS `A` record for it. |
 | 4 | Admin address range | The public address range of the installer host, for example `203.0.113.10/32`. Not necessary with `--private-cluster`. |
-| 5 | Tools | `terraform` 1.7 or later, `az` (Azure CLI) 2.86 or later, `kubectl`, `kubelogin`, `skopeo`, `gunzip`, `openssl`, `curl`, `python3`. `az aks install-cli` installs `kubectl` and `kubelogin`. |
+| 5 | Tools | `terraform` 1.7 or later, `az` (Azure CLI) 2.86 or later, `kubectl`, `kubelogin`, `skopeo`, `gunzip`, `openssl`, `curl`, `python3`. `az aks install-cli` installs `kubectl` and `kubelogin`. Terraform also runs `az` and `kubectl` (`terraform/scripts/wait-gateway-api.sh`). |
 | 6 | Signed-in Azure CLI | `az login`. A service principal sign-in also works. |
 | 7 | Azure OpenAI quota | Quota in `--openai-location` for the models in [AI models](#ai-models). |
 | 8 | Free disk space | Approximately 4 GB in addition to the unpacked bundle. Set `TMPDIR` if `/tmp` is small. |
@@ -87,16 +87,21 @@ What the installer does:
    [Terraform state](#terraform-state)).
 3. It writes `terraform/environments/<environment>.tfvars` and generates an admin password.
 4. It runs `terraform init`.
-5. **Step 1/3:** it creates the resource group and the container registry.
-6. **Step 2/3:** it pushes the bundled images to the registry.
+5. **Step 1/4:** it creates the resource group and the container registry.
+6. **Step 2/4:** it pushes the bundled images to the registry.
 7. It prints the admin email and password. Record them now.
-8. **Step 3/3:** it applies the Terraform: network, AKS, PostgreSQL, Azure OpenAI,
-   ingress, and the workloads. During this step, three Jobs prepare the database (see
-   [Database Jobs](#database-jobs)).
-9. It prints the Terraform outputs and the next steps.
+8. **Step 3/4:** it applies the network and the AKS cluster. Terraform connects to the
+   cluster for the next step, so the cluster must exist first. This step takes
+   approximately 10 to 15 minutes. It is skipped when the cluster exists.
+9. **Step 4/4:** it applies the full configuration: PostgreSQL, Azure OpenAI, ingress,
+   and the workloads. It waits for the Gateway API of the cluster to become ready. Three
+   Jobs prepare the database (see [Database Jobs](#database-jobs)).
+10. It prints the Terraform outputs and the next steps.
 
 `--plan-only` shows the Terraform plan and stops. It creates the state storage account if
-it does not exist, because Terraform cannot plan without its backend.
+it does not exist, because Terraform cannot plan without its backend. Before the cluster
+exists, the plan covers only the network, the cluster and the registry (Step 3/4); the
+workloads are planned once the cluster exists.
 
 
 ## After install
@@ -440,8 +445,9 @@ These items stay after the destroy:
 - The API server accepts connections only from `--admin-cidr` and from the NAT address of
   the cluster, or has only a private endpoint. Local Kubernetes accounts are off; access uses Microsoft Entra ID and Azure
   RBAC.
-- PostgreSQL has no public endpoint and accepts only TLS connections. The clients verify
-  the server certificate.
+- PostgreSQL has no public endpoint and accepts only TLS connections. The application
+  verifies the server certificate. The database Jobs (`psql`) connect with TLS and
+  without certificate verification, inside the virtual network.
 - Azure OpenAI has no public network access and no API keys. The container registry
   accepts pushes only from `--admin-cidr` and has no admin user.
 - Only `langguard-dashboard` has an Azure identity. It has only the **Cognitive Services
@@ -465,6 +471,7 @@ These items stay after the destroy:
 | `403 Forbidden` from the Kubernetes API during the first apply | The cluster role assignment did not apply yet. Run the installer again. |
 | Pods in `ImagePullBackOff` | `kubectl describe pod`. With `--registry`, the images must be in that registry with the expected names and tag, and the kubelet identity needs pull access. |
 | `langguard-dashboard` does not become ready | `kubectl logs job/<db-job-name> -n langguard` for the database Jobs, then the dashboard logs. |
+| Step 4/4 stops with `GatewayClass approuting-istio is not accepted` | The application routing Gateway API implementation did not start. `kubectl get gatewayclass` and `kubectl get pods -n aks-istio-system`. Run the installer again. |
 | No certificate | `kubectl describe certificate langguard -n langguard` and `kubectl get challenges -n langguard`. The DNS record must resolve to `ingress_ip_address`, and port 80 must be reachable from the internet. |
 | AI features fail | The deployments must exist with the names in `openai_models`, and the quota must be available. `kubectl logs deployment/langguard-dashboard -n langguard \| grep -i "AI upstream"`. |
 | Model deployment fails during apply (`InsufficientQuota`, `DeploymentModelNotSupported`) | Request quota, or select another `--openai-location`, `--openai-sku` or model version. |
