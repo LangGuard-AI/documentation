@@ -441,6 +441,11 @@ These items stay after the destroy:
 - The Terraform state storage account and its resource group.
 - A resource group that you supplied with `--use-existing-resource-group`.
 - The backups of the PostgreSQL server, for their retention period. Azure deletes them.
+- The Log Analytics workspace, soft-deleted for 14 days. A new install with the same
+  environment in that period recovers it.
+- The resource group `NetworkWatcherRG` with `NetworkWatcher_<region>`, if Azure created it
+  for the first virtual network of the region in your subscription. It is not part of the
+  install.
 
 
 ## Security
