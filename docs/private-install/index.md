@@ -1,14 +1,14 @@
 ---
 sidebar_position: 1
 title: Private Install
-description: Install LangGuard into a Databricks workspace, a Google Cloud project or an Azure subscription that you own and operate
+description: Install LangGuard into a Databricks workspace, a Google Cloud project, a Kubernetes cluster or an Azure subscription that you own and operate
 ---
 
 # Private Install
 
-You can install LangGuard into a Databricks workspace, a Google Cloud project or an Azure
-subscription that you own. All of the resources are in your account, and you operate them.
-Each deployment serves one organization.
+You can install LangGuard into a Databricks workspace, a Google Cloud project, a
+Kubernetes cluster or an Azure subscription that you own. All of the resources are
+yours, and you operate them. Each deployment serves one organization.
 
 ### [Databricks App](/private-install/databricks-app)
 Run LangGuard as a Databricks App in your workspace. LangGuard stores its data in your
@@ -20,7 +20,10 @@ Install LangGuard on GKE, Cloud SQL for PostgreSQL and Vertex AI. The installer 
 new infrastructure, or uses the cluster, network, database and service mesh that you
 already operate.
 
+### [Generic Cluster (Helm)](/private-install/helm)
+Install LangGuard with a Helm chart into a Kubernetes cluster that you operate, with a
+PostgreSQL server that you operate.
+
 ### [Azure](/private-install/azure)
-Install LangGuard on AKS, Azure Database for PostgreSQL and Azure OpenAI. The installer
-creates new infrastructure, or uses the virtual network and the AKS cluster that you
-already operate.
+Install LangGuard with the Helm chart into your AKS cluster, with your Azure Database for
+PostgreSQL server and, as an option, Azure OpenAI.

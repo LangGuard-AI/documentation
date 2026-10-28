@@ -135,6 +135,19 @@ const sidebars: SidebarsConfig = {
         },
         {
           type: 'category',
+          label: 'Generic Cluster (Helm)',
+          link: {
+            type: 'doc',
+            id: 'private-install/helm/index',
+          },
+          items: [
+            'private-install/helm/requirements',
+            'private-install/helm/installation',
+            'private-install/helm/sign-in-and-email',
+          ],
+        },
+        {
+          type: 'category',
           label: 'Azure',
           link: {
             type: 'doc',
@@ -143,7 +156,6 @@ const sidebars: SidebarsConfig = {
           items: [
             'private-install/azure/requirements',
             'private-install/azure/installation',
-            'private-install/azure/sign-in-and-email',
           ],
         },
       ],

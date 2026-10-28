@@ -1,7 +1,7 @@
 ---
 sidebar_position: 4
 title: Sign-in and Email
-description: Configure the admin password sign-in and the outbound email of a LangGuard Helm install on Azure
+description: Configure the admin password sign-in and the outbound email of a LangGuard Helm install
 ---
 
 # Sign-in and Email
