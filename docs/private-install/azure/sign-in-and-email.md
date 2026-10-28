@@ -21,7 +21,7 @@ helm upgrade --install langguard ./charts/langguard -n langguard \
 |---|---|---|
 | `auth.method` | `userpass` | `userpass`: the admin signs in with a password. `magiclink`: sign-in links by email only (needs [email](#email)). |
 | `auth.adminEmail` | | Email address of the admin account. Necessary with `userpass`. |
-| `auth.adminPassword` | generated | Empty: the chart generates a 24-character password on the first install and keeps it on each upgrade. |
+| `auth.adminPassword` | generated | Empty: the chart generates a 24-character password on the first install and keeps it on each upgrade. `helm uninstall` deletes it: a new install generates a new password. |
 | `auth.existingSecret` | | A Secret that you manage, with the password in the key `AUTH_PASSWORD`. Then `auth.adminPassword` is not used. |
 
 Get the generated password:

@@ -55,7 +55,8 @@ Container Registry. You do not need a registry credential from LangGuard.
 │ Your AKS cluster · namespace langguard (Helm release langguard)          │
 │                                                                          │
 │  Gateway (application routing, approuting-istio) — TLS termination       │
-│    /v1/*, OTLP gRPC services → otel-ingest      /* → langguard-dashboard │
+│    /v1/traces, /v1/logs, /v1/metrics, OTLP gRPC services → otel-ingest   │
+│    all other paths → langguard-dashboard                                 │
 │                                                                          │
 │  langguard-dashboard   otel-ingest       opencite (langguard-discovery)  │
 │  opa                   presidio-analyzer redis                           │
@@ -72,24 +73,39 @@ How the parts connect:
 
 - **Ingress.** The chart creates a Kubernetes Gateway for the AKS application routing
   add-on. The Gateway terminates TLS on port 443 and redirects HTTP to HTTPS. It sends
-  `/v1/*` and the OTLP/gRPC services to `otel-ingest`, and all other paths to
-  `langguard-dashboard`. The certificate comes from Let's Encrypt through cert-manager, or
-  you supply it. You can also use your own Ingress controller or Gateway.
-- **Telemetry.** `otel-ingest` receives OpenTelemetry data over OTLP/HTTP and OTLP/gRPC,
-  both on port 443. It stores traces in PostgreSQL, queues them in `redis`, and forwards a
-  copy to `opencite`. `opencite` runs the `langguard-discovery` catalog, which discovers
-  agents, tools, models and MCP servers.
+  `/v1/traces`, `/v1/logs`, `/v1/metrics` and the OTLP/gRPC services to `otel-ingest`,
+  and all other paths, other `/v1/` paths included, to `langguard-dashboard`. The
+  certificate comes from Let's Encrypt through cert-manager, or you supply it. You can
+  also use your own Ingress controller or Gateway. TLS ends at the Gateway: from the
+  Gateway to the pods, the traffic is plain HTTP inside the cluster.
+- **Telemetry.** `otel-ingest` receives OpenTelemetry traces and logs over OTLP/HTTP and
+  OTLP/gRPC, both on port 443. It does not ingest metrics. It stores the traces in
+  PostgreSQL, queues them in `redis`, and forwards a copy to `opencite`. `opencite` runs
+  the `langguard-discovery` catalog, which discovers agents, tools, models and MCP
+  servers.
+- **Queue.** `redis` keeps the work queues and the job schedules. It has no persistent
+  volume. When the `redis` pod is replaced (deleted, evicted, rescheduled or rolled out),
+  the queued work and the job schedules are lost. After a container restart in the same
+  pod, `redis` loads its last snapshot. `langguard-dashboard` and `otel-ingest` wait for `redis` when they start. The dashboard
+  connects again after a restart of `redis` and creates its job schedules again.
 - **Policy and PII.** `langguard-dashboard` evaluates policies with `opa` and detects PII
   with `presidio-analyzer`.
 - **Database.** Before each install and upgrade, three Helm hook Jobs prepare the database
-  as the server admin login. The workloads connect with TLS and verify the server
-  certificate. They use the database role `langguard_app`, which can read and write the
-  application tables but cannot change the schema.
+  as the server admin login. All database clients connect with TLS and verify the server
+  certificate. The workloads use the database role `langguard_app`, which can read and
+  write the application tables but cannot change the schema.
 - **AI.** `langguard-dashboard` calls Azure OpenAI with a Microsoft Entra token for a
   managed identity, through AKS workload identity. No API key is used. Azure OpenAI powers
   LangGuard's own AI features, for example policy authoring and custom checks.
 - **Images.** The nodes pull the LangGuard images from your container registry. OPA,
   Redis, the Presidio analyzer and PostgreSQL (for the Jobs) are public upstream images.
+  The cert-manager images come from `quay.io`, and AKS sets the Istio proxy image of the
+  Gateway (from `mcr.microsoft.com`).
+- **Availability.** `langguard-dashboard` (2 to 6 pods), `otel-ingest` (2 pods) and the
+  Gateway proxy (2 to 5 pods) run more than one pod. `opa`, `presidio-analyzer`, `redis`
+  and `opencite` run one pod each. When the node of one of these pods is drained, for
+  example for a node image upgrade, that workload stops until its pod starts on another
+  node.
 
 :::note AI gateway not included
 This deployment does not install the LangGuard AI gateway. Azure OpenAI here serves
