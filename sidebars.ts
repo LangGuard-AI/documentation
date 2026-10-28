@@ -141,8 +141,8 @@ const sidebars: SidebarsConfig = {
             id: 'private-install/azure/index',
           },
           items: [
+            'private-install/azure/requirements',
             'private-install/azure/installation',
-            'private-install/azure/existing-infrastructure',
             'private-install/azure/sign-in-and-email',
           ],
         },

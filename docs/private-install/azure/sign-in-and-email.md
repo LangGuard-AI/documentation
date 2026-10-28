@@ -1,43 +1,39 @@
 ---
 sidebar_position: 4
 title: Sign-in and Email
-description: Configure the admin password sign-in and the outbound email of a LangGuard install on Azure
+description: Configure the admin password sign-in and the outbound email of a LangGuard Helm install on Azure
 ---
 
 # Sign-in and Email
 
 This page tells you how to configure the password sign-in of the admin account and how
-LangGuard sends email in an Azure install.
+LangGuard sends email. You set both in the Helm values file, then run the install command
+again:
+
+```bash
+helm upgrade --install langguard ./charts/langguard -n langguard \
+  -f values.yaml --timeout 15m
+```
 
 ## Password sign-in
 
-The installer configures password sign-in. You do not set the password. The installer
-generates it on each run.
-
-| Flag | Default | Description |
+| Value | Default | Description |
 |---|---|---|
-| `--auth` | `userpass` | Sign-in method. `userpass` is the only supported value. |
-| `--admin-email` | `admin@<domain>` | Email address of the admin account. |
+| `auth.method` | `userpass` | `userpass`: the admin signs in with a password. `magiclink`: sign-in links by email only (needs [email](#email)). |
+| `auth.adminEmail` | | Email address of the admin account. Necessary with `userpass`. |
+| `auth.adminPassword` | generated | Empty: the chart generates a 24-character password on the first install and keeps it on each upgrade. |
+| `auth.existingSecret` | | A Secret that you manage, with the password in the key `AUTH_PASSWORD`. Then `auth.adminPassword` is not used. |
+
+Get the generated password:
 
 ```bash
-./install.sh \
-  --subscription 00000000-0000-0000-0000-000000000000 \
-  --location     eastus2 \
-  --domain       langguard.mycompany.com \
-  --admin-cidr   203.0.113.10/32 \
-  --acme-email   platform@mycompany.com \
-  --admin-email  platform-admin@mycompany.com
+kubectl get secret userpass-credentials -n langguard \
+  -o jsonpath='{.data.AUTH_PASSWORD}' | base64 -d; echo
 ```
-
-The installer prints the admin email and the password two times: before the last
-Terraform step and at the end. Record them. The installer does not write the password to a
-file. Terraform keeps it in the Kubernetes secret `userpass-credentials` and in the
-Terraform state.
 
 Password sign-in is for **one account only**: the admin account. On the first sign-in,
 LangGuard creates the account and makes it an administrator.
 
-- Use `--admin-email` to change the admin account.
 - Other users do not have a password. An administrator adds them in
   [User Management](/settings/user-management), and LangGuard sends them an invitation
   email. They sign in with a link that LangGuard sends by email. For this, configure
@@ -47,15 +43,16 @@ LangGuard creates the account and makes it an administrator.
 
 ### Change the admin password
 
-Each run of `install.sh` generates a new password and writes it to the
-`userpass-credentials` secret. To get a new password, run the installer again with the
-same flags, then restart the dashboard:
+Set the new password in the Secret of `auth.existingSecret`, or in `auth.adminPassword`
+and run the install command. Then restart the dashboard:
 
 ```bash
 kubectl rollout restart deployment/langguard-dashboard -n langguard
 ```
 
-Running pods keep the old password until they restart.
+To get a new generated password, delete the Secret `userpass-credentials`, run the install
+command, and restart the dashboard. Running pods keep the old password until they
+restart.
 
 ## Email
 
@@ -66,75 +63,63 @@ LangGuard sends email for:
 - Rate limit notifications
 
 :::warning Configure email before you add users
-By default, the installer configures no email (`--email-provider none`). Then LangGuard
-sends no invitations and no sign-in links. Only the admin password sign-in and single
-sign-on work.
+By default, the chart configures no email (`email.provider: none`). Then LangGuard sends
+no invitations and no sign-in links. Only the admin password sign-in and single sign-on
+work.
 :::
 
-| Flag | Description |
+| Value | Description |
 |---|---|
-| `--email-provider` | `none` (default), `smtp` or `ses`. |
-| `--email-from` | Sender address, for example `"LangGuard <langguard@mycompany.com>"`. Necessary with `smtp` and `ses`. Use an address in a domain that your mail service can send for. |
-| `--smtp-host` | SMTP relay. Necessary with `smtp`. |
-| `--smtp-port` | Port of the relay, `smtp` only. The default is 587. Port 465 is not supported. |
-| `--ses-region` | AWS region of SES. Necessary with `ses`. |
+| `email.provider` | `none` (default), `smtp` or `ses`. |
+| `email.from` | Sender address, for example `"LangGuard <langguard@mycompany.com>"`. Use an address in a domain that your mail service can send for. |
+| `email.smtp.host` | SMTP relay. Necessary with `smtp`. |
+| `email.smtp.port` | Port of the relay. The default is 587. Port 465 is not supported. |
+| `email.ses.region` | AWS region of SES. Necessary with `ses`. |
+| `email.ses.existingSecret` | A Secret with the keys `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`. |
 
-When the email settings change, the dashboard pods restart automatically on the next run
-of the installer.
+When the email values change, the dashboard pods restart on the next upgrade.
 
 ### Option A: SMTP relay
 
 LangGuard connects to the relay and upgrades the connection with STARTTLS when the relay
 offers it. It does not send a username or password. The relay must accept mail from the
-IP address of the cluster.
+outbound IP address of the cluster, or the relay is in a network that the cluster can
+reach.
 
-The nodes send traffic to the internet from one static IP address of the NAT gateway. Get
-it from the Terraform output:
-
-```bash
-cd langguard-install/azure/terraform
-terraform output -raw nat_outbound_ip_address
-```
-
-Add this address to the allowed IP addresses of the relay. A relay in a network that you
-connect to the virtual network also works.
-
-```bash
-./install.sh <your flags> \
-  --email-provider smtp \
-  --smtp-host      smtp-relay.mycompany.com \
-  --email-from     "LangGuard <langguard@mycompany.com>"
+```yaml
+email:
+  provider: smtp
+  from: "LangGuard <langguard@mycompany.com>"
+  smtp:
+    host: smtp-relay.mycompany.com
 ```
 
 :::note
-The SMTP relay option does not support a relay that requires a username and password,
-for example Microsoft 365 or SendGrid. Use Amazon SES, or a relay that accepts mail by IP
+The SMTP relay option does not support a relay that requires a username and password, for
+example Microsoft 365 or SendGrid. Use Amazon SES, or a relay that accepts mail by IP
 address.
 :::
 
 ### Option B: Amazon SES
 
-Create an IAM user in AWS with permission to send email through SES (`ses:SendEmail`),
-and create an access key for it. Verify the domain of the sender address in SES, in the
-region that you give with `--ses-region`.
-
-Do not put the access key in a file. Export it before you run the installer:
+Create an IAM user in AWS with permission to send email through SES (`ses:SendEmail`), and
+create an access key for it. Verify the domain of the sender address in SES, in the region
+of `email.ses.region`. Put the access key in a Secret:
 
 ```bash
-export TF_VAR_aws_ses_access_key_id="AKIA..."
-export TF_VAR_aws_ses_secret_access_key="..."
-
-./install.sh <your flags> \
-  --email-provider ses \
-  --ses-region     us-east-1 \
-  --email-from     "LangGuard <langguard@mycompany.com>"
+kubectl create secret generic langguard-ses -n langguard \
+  --from-literal=AWS_ACCESS_KEY_ID='AKIA...' \
+  --from-literal=AWS_SECRET_ACCESS_KEY='...'
 ```
 
-Export the key again before each run of the installer. The installer stops if
-`--email-provider ses` is given without the key.
-
-Terraform writes the key to the Kubernetes secret `ses-credentials` and to the Terraform
-state. Restrict access to the state storage account.
+```yaml
+email:
+  provider: ses
+  from: "LangGuard <langguard@mycompany.com>"
+  ses:
+    region: us-east-1
+    existingSecret: langguard-ses
+```
 
 ### Verify
 
