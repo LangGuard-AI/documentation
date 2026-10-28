@@ -371,8 +371,10 @@ To change a setting, edit `values.yaml` and run the same command.
 - The database Jobs run before each upgrade. They are idempotent.
 - The generated secrets and the admin password stay the same.
 - The pods restart only when a value that they use changes.
-- A change in a Secret that you manage does not restart the pods. Restart them with
-  `kubectl rollout restart deployment -n langguard`.
+- A change in a Secret that you manage does not restart the pods. Restart the
+  Deployments that read it, for example
+  `kubectl rollout restart deployment/langguard-dashboard deployment/otel-ingest deployment/opencite -n langguard`.
+  Do not restart `redis`: it loses its queued work and job schedules.
 - `helm rollback` does not revert the database schema. Roll back only to a release that
   works with the current schema.
 

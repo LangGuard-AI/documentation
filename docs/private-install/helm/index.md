@@ -36,8 +36,10 @@ langguard-install/
 │   └── langguard-postgresql/ single-pod PostgreSQL, for pilots only
 ├── push-images.sh       pushes the images to your registry
 ├── gcp/                 Google Cloud installer
+├── helm/
+│   └── INSTALL.md       installation guide for any Kubernetes cluster
 └── azure/
-    └── INSTALL.md       installation guide
+    └── INSTALL.md       Azure (AKS) specifics, used with helm/INSTALL.md
 ```
 
 `images/` holds the three LangGuard application images: `langguard-dashboard`,
@@ -108,8 +110,14 @@ registry. You do not need a registry credential from LangGuard.
 - **AI.** The chart supports two values for `ai.provider`: `none` (the default) and
   `azure`. With `none`, the AI features of LangGuard are off, and LangGuard works without
   them. With `azure`, `langguard-dashboard` calls Azure OpenAI with keyless Microsoft
-  Entra authentication through Azure workload identity. For another provider, the chart
-  README says to set its environment variables with `dashboard.extraEnv`. For Azure
+  Entra authentication through Azure workload identity. Azure workload identity needs an
+  OIDC issuer URL of the cluster that Microsoft Entra ID can reach from the internet, and
+  the Azure Workload Identity webhook. The chart sets only the ServiceAccount annotations
+  and the pod label that the webhook reads. AKS supplies both
+  (`--enable-oidc-issuer --enable-workload-identity`). On another cluster, install the
+  webhook, and use the OIDC issuer URL of your cluster for the federated credential. For
+  another provider, the chart README says to set its environment variables with
+  `dashboard.extraEnv`. For Azure
   OpenAI, see
   [Azure OpenAI](/private-install/azure/requirements#azure-openai). The AI provider powers
   LangGuard's own AI features, for example policy authoring and custom checks.

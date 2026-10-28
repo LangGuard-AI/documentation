@@ -20,7 +20,7 @@ adds the Azure-specific requirements and the Azure commands.
 | A network policy engine | The chart creates NetworkPolicies. Without an engine they have no effect. | A CNI that enforces NetworkPolicies, for example Cilium or Calico |
 | metrics-server | The dashboard autoscaler (`dashboard.autoscaling.enabled`) | After the install, `kubectl get hpa langguard-dashboard -n langguard`. `TARGETS` `<unknown>` means that there are no metrics. |
 | The Gateway API CRDs and a GatewayClass, or an Ingress controller | External access to the dashboard and to `otel-ingest` | Gateway API: `kubectl get gatewayclass` shows your GatewayClass with `ACCEPTED True`. Ingress: `kubectl get ingressclass` shows the class of your controller. |
-| Your access | Create objects in the namespace `langguard`, and one ClusterIssuer if the chart creates it | You need rights to create the chart objects in the namespace (the chart README lists them). The ClusterIssuer (`tls.acmeIssuer.create`) is the only cluster-scoped object of the chart. |
+| Your access | Create the namespace `langguard`, the objects in it, and one ClusterIssuer if the chart creates it | You need rights to create the namespace. If you do not have them, a cluster administrator must create the namespace before the install. Then do not run `kubectl create namespace` in [step 3](/private-install/helm/installation#namespace). In the namespace, you need rights to create your Secrets and the chart objects (the chart README lists them). With `tls.acmeIssuer.create`, you also need rights to create one ClusterIssuer. It is the only cluster-scoped object of the chart. |
 
 ### Capacity
 
@@ -95,8 +95,13 @@ The chart mounts the file read-only at `/etc/ssl/langguard-db` in `langguard-das
 `otel-ingest`, `opencite`, `db-migration`, `db-bootstrap` and `db-grants`. It adds
 `sslrootcert=/etc/ssl/langguard-db/<key>` to every connection URL. With the CA
 certificate, `verify-full` and `verify-ca` work in all clients. The pods read the file
-when they start. After you change the certificate, restart them:
-`kubectl rollout restart deployment -n langguard`.
+when they start. After you change the certificate, restart the three Deployments that
+read it. The database Jobs read the file each time that they run.
+
+```bash
+kubectl rollout restart deployment/langguard-dashboard deployment/otel-ingest \
+  deployment/opencite -n langguard
+```
 
 :::warning Do not use sslMode require for a certificate error
 Without a CA certificate, the clients do not do the same thing with `require`. With
