@@ -26,9 +26,14 @@ adds the Azure-specific requirements and the Azure commands.
 
 | | CPU requests | Memory requests | Memory limits |
 |---|---|---|---|
-| LangGuard workloads (2 dashboard pods) | 1.5 vCPU | 3.1 GiB | 7.8 GiB |
+| LangGuard workloads without the AI gateway (2 dashboard pods) | 1.5 vCPU | 3.1 GiB | 7.8 GiB |
 | Each dashboard pod above 2 (the autoscaler goes up to 6) | 0.2 vCPU | 0.5 GiB | 1 GiB |
+| AI gateway (2 `litellm` pods, `aiGateway.replicas`) | 1 vCPU | 2 GiB | 4 GiB |
+| Job `ai-gateway-migration`, only while an install or upgrade runs | 0.25 vCPU | 1 GiB | 2 GiB |
 | cert-manager (3 pods in `cert-manager`) | none by default | none by default | |
+
+Each `litellm` pod uses about 1 GiB of memory after it starts. During a rollout, the
+gateway runs one more pod for a short time.
 
 Your Gateway API implementation or Ingress controller, cert-manager and the system pods
 of the cluster need capacity in addition to the LangGuard workloads.
@@ -38,8 +43,10 @@ Use at least two nodes with 4 vCPU and 16 GB of memory. Do not use nodes with le
 
 ## Container registry
 
-- A container registry that the nodes can pull from. `push-images.sh` pushes the three
-  LangGuard images to it. Set the registry path in `global.imageRegistry`.
+- A container registry that the nodes can pull from. `push-images.sh` pushes the four
+  LangGuard images to it: `langguard-dashboard`, `otel-ingest`, `langguard-discovery` and
+  `langguard-ai-gateway`. Set the registry path in `global.imageRegistry`. The AI gateway
+  image is about 0.5 GB compressed for each architecture.
 - When the nodes need a credential to pull, create a pull Secret in the namespace
   `langguard` and set its name in `global.imagePullSecrets`. When the nodes have pull
   rights on the registry, you do not need a pull Secret.
@@ -62,7 +69,15 @@ CREATE ROLE lg_admin LOGIN CREATEDB CREATEROLE PASSWORD '<password>';
 ```
 
 The database Jobs create the database `langguard`, the role `langguard_app` and the
-schema `discovery`. You do not create them.
+schema `discovery`. With the AI gateway, they also create the role `litellm_app` and the
+schema `litellm`, which this role owns. You do not create them: the Jobs create them as
+the admin role. `db-bootstrap` stops when the role `litellm_app` already exists with more
+rights (role attributes, role memberships, or objects and privileges outside its schema),
+or when the schema `litellm` holds objects that LiteLLM did not create.
+
+Each `litellm` pod opens up to 10 database connections
+(`aiGateway.database.connectionPoolLimit`). The connection limit of the server must allow
+them, in addition to the connections of the other clients.
 
 :::warning Admin password characters
 Use only `A-Z a-z 0-9 - . _ ~` in an admin password that you give in a Secret
@@ -92,24 +107,29 @@ database:
 ```
 
 The chart mounts the file read-only at `/etc/ssl/langguard-db` in `langguard-dashboard`,
-`otel-ingest`, `opencite`, `db-migration`, `db-bootstrap` and `db-grants`. It adds
-`sslrootcert=/etc/ssl/langguard-db/<key>` to every connection URL. With the CA
-certificate, `verify-full` and `verify-ca` work in all clients. The pods read the file
-when they start. After you change the certificate, restart the three Deployments that
-read it. The database Jobs read the file each time that they run.
+`otel-ingest`, `opencite`, `db-migration`, `db-bootstrap`, `db-grants` and, with the AI
+gateway, `litellm` and `ai-gateway-migration`. It adds
+`sslrootcert=/etc/ssl/langguard-db/<key>` to every connection URL except the AI gateway
+URL. The AI gateway URL names the file in `sslcert` (with `require`, `verify-ca` and
+`verify-full`), because its database client (Prisma) reads the CA certificate from there.
+With the CA certificate, `verify-full` and `verify-ca` work
+in all clients. The pods read the file when they start. After you change the certificate,
+restart the Deployments that read it. The database Jobs read the file each time that they
+run.
 
 ```bash
 kubectl rollout restart deployment/langguard-dashboard deployment/otel-ingest \
   deployment/opencite -n langguard
+kubectl rollout restart deployment/litellm -n langguard   # with the AI gateway
 ```
 
 :::warning Do not use sslMode require for a certificate error
 Without a CA certificate, the clients do not do the same thing with `require`. With
-`database.sslMode: require`, `langguard-dashboard` and `db-migration` verify the server
-certificate as with `verify-full`, so the connection still fails, and `otel-ingest` and
-`opencite` encrypt the connection but do not verify the server. With
-`database.jobsSslMode: require`, the psql Jobs (`db-bootstrap` and `db-grants`) encrypt
-the connection but do not verify the server.
+`database.sslMode: require`, `langguard-dashboard`, `db-migration` and the AI gateway
+verify the server certificate and the host name as with `verify-full`, so the connection
+still fails, and `otel-ingest` and `opencite` encrypt the connection but do not verify
+the server. With `database.jobsSslMode: require`, the psql Jobs (`db-bootstrap` and
+`db-grants`) encrypt the connection but do not verify the server.
 :::
 
 ## Ingress, DNS and TLS
@@ -161,29 +181,81 @@ provider. The NetworkPolicies limit the outbound connections of `langguard-dashb
   168.63.129.16 (the Azure WireServer). Both addresses can give node credentials. The
   chart blocks them on all clusters.
 
+The AI gateway (`litellm`) connects to the model providers and the MCP servers that you
+add, on TCP 443 and on other ports. Its NetworkPolicy lets it connect to:
+
+- DNS, `langguard-dashboard`, `otel-ingest`, `redis` (with `aiGateway.redis.enabled`, the
+  default) and the database port
+- All ports at all other addresses, except 169.254.169.254, 168.63.129.16,
+  169.254.169.252 (the GKE metadata server), 169.254.170.23 (the EKS Pod Identity agent)
+  and the ranges in `networkPolicy.aiGatewayEgressExcept`
+
+A caller can set the upstream URL of a request, so the gateway must not connect to
+addresses in your cluster. On Calico and Azure Network Policy Manager, an IP block also
+selects the addresses of pods and nodes. Then, without
+`networkPolicy.aiGatewayEgressExcept`, the gateway can connect to pods in other
+namespaces, to ports on the nodes and to the Kubernetes API server. Set it to the pod
+CIDR, the node subnet and the address of the API server of your cluster, for example:
+
+```yaml
+networkPolicy:
+  aiGatewayEgressExcept:
+    - 10.244.0.0/16   # pods
+    - 10.224.0.0/16   # nodes
+```
+
+This command shows the address of the API server. Add it as a `/32` range:
+
+```bash
+kubectl get endpoints kubernetes -n default -o jsonpath='{.subsets[*].addresses[*].ip}'
+```
+
+The database port stays open to these ranges. Do not add a range that holds a model
+server, an MCP server or a private endpoint that the gateway must connect to.
+
+To let the gateway connect to an MCP server in the cluster, add a NetworkPolicy in the
+namespace `langguard` that allows egress from the pods with the label `app: litellm` to
+that server. Kubernetes allows a connection when one of the NetworkPolicies of the pod
+allows it, so this policy also works when `networkPolicy.aiGatewayEgressExcept` holds the
+pod CIDR.
+
+A model server in the cluster also needs a host name that the AI Gateway settings page
+accepts. The **API base** of a model must be an `https` URL with a host name that has a
+dot. The page refuses `http` URLs, IPv6 addresses, IPv4 addresses that are not public,
+single-label host names, and the names `localhost`, `*.svc`, `*.pod`, `*.cluster.local`,
+`*.local` and `*.internal`. Thus `http://vllm.models.svc:8000`, `https://vllm.models.svc.cluster.local`
+and `https://10.0.5.4` are refused. Give the model server an `https` endpoint with a host
+name that the page accepts, for example a name in your own DNS zone. Then add a
+NetworkPolicy for it, as for an MCP server.
+
+The Job `ai-gateway-migration` can connect only to DNS and the database port. The gateway
+does not download data from the internet when it starts: the chart turns off the
+downloads of the model cost map, the Anthropic beta headers and the Prisma updates.
+
 `opa`, `presidio-analyzer` and `redis` have no egress policy. The NetworkPolicies do not
-select the pods of the database Jobs (label `app: langguard-db`). If the namespace has a
-default-deny egress policy, let these pods connect to the database.
+select the pods of the database Jobs `db-bootstrap`, `db-migration` and `db-grants` (label
+`app: langguard-db`). If the namespace has a default-deny egress policy, let these pods
+connect to the database.
 
-The database and TCP 443 rules of `otel-ingest` and `opencite` use an IP block. Some
-CNIs, for example Cilium, do not apply an IP block to pods. If PostgreSQL runs in the
-cluster in another namespace, add a NetworkPolicy that lets `otel-ingest` and `opencite`
-connect to it, or run PostgreSQL in the namespace `langguard`.
+The database and TCP 443 rules of `otel-ingest` and `opencite`, and the outbound rules of
+`litellm`, use an IP block. Some CNIs, for example Cilium, do not apply an IP block to
+pods. If PostgreSQL runs in the cluster in another namespace, add a NetworkPolicy that
+lets `otel-ingest`, `opencite`, `litellm` and the Job `ai-gateway-migration` (label
+`app: litellm-migration`) connect to it, or run PostgreSQL in the namespace `langguard`.
 
-DNS: the three workloads can send DNS queries (UDP and TCP 53) to all pods in the
-namespace `kube-system` (CoreDNS) and to the addresses in
-`networkPolicy.nodeLocalDnsCidrs`. If the cluster DNS runs in another namespace, add a
-NetworkPolicy that allows DNS to it. The default of `networkPolicy.nodeLocalDnsCidrs` is
-the addresses of AKS LocalDNS (`169.254.10.10/32` and `169.254.10.11/32`). On another
-cluster with a node-local DNS cache, set the address of that cache as a CIDR, for example
-`169.254.20.10/32`. An empty list removes the rule.
+DNS: the three workloads and, with the AI gateway, `litellm` and `ai-gateway-migration`
+can send DNS queries (UDP and TCP 53) to all pods in the namespace `kube-system` (CoreDNS)
+and to the addresses in `networkPolicy.nodeLocalDnsCidrs`. If the cluster DNS runs in
+another namespace, add a NetworkPolicy that allows DNS to it. The default of
+`networkPolicy.nodeLocalDnsCidrs` is the addresses of AKS LocalDNS (`169.254.10.10/32`
+and `169.254.10.11/32`). On another cluster with a node-local DNS cache, set the address
+of that cache as a CIDR, for example `169.254.20.10/32`. An empty list removes the rule.
 
 When the cluster serves the `cilium.io/v2` CiliumNetworkPolicy and
 `networkPolicy.ciliumNodeDns` is `true` (the default), the chart also creates the
-CiliumNetworkPolicies `<app>-node-dns`. They let the same three workloads send DNS
-queries to the addresses in `networkPolicy.nodeLocalDnsCidrs` and to the Cilium `host`
-entity. On Cilium 1.17 and later, a NetworkPolicy `ipBlock` does not select node-local
-addresses.
+CiliumNetworkPolicies `<app>-node-dns`. They let the same workloads send DNS queries to
+the addresses in `networkPolicy.nodeLocalDnsCidrs` and to the Cilium `host` entity. On
+Cilium 1.17 and later, a NetworkPolicy `ipBlock` does not select node-local addresses.
 
 The browsers of your users load fonts from `fonts.googleapis.com` and
 `fonts.gstatic.com`. Without access to these hosts, the browser uses its own fonts.

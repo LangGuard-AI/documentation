@@ -53,7 +53,13 @@ On AKS, these pods also run:
 
 The AKS system pods request about 1.4 vCPU and 1.6 GiB more. On a test cluster with two
 `Standard_D4ds_v6` nodes (4 vCPU and 16 GB each, 3.86 vCPU and 11.5 GiB allocatable
-each), all pods together requested about 4.1 vCPU and 8.9 GiB.
+each), all pods together requested about 4.1 vCPU and 8.9 GiB, without the AI gateway.
+
+The AI gateway is off on Azure by default. When you turn it on, the nodes need the
+[AI gateway capacity](/private-install/helm/requirements#capacity) too: 1 vCPU and 2 GiB
+of memory requests for the 2 `litellm` pods, and 0.25 vCPU and 1 GiB while the Job
+`ai-gateway-migration` runs. Two nodes with 4 vCPU and 16 GB (about 7.7 vCPU and 23 GiB
+allocatable together) have space for these requests.
 
 For the nodes with 4 vCPU and 16 GB of memory, use for example `Standard_D4ds_v5` or
 `Standard_D4ds_v6`.
@@ -104,7 +110,7 @@ Without Azure OpenAI, LangGuard works without its own AI features.
 | Two model deployments | Named `gpt-5.4-mini` (fast and low tiers) and `gpt-5.4` (high tier), or set `ai.models` to your deployment names. For a model without reasoning, set `ai.reasoningEffort: ""`. |
 | A user-assigned managed identity | With the **Cognitive Services OpenAI User** role on the account. |
 | A federated credential on the identity | Issuer: the OIDC issuer URL of the cluster. Subject: `system:serviceaccount:langguard:langguard-dashboard`. Audience: `api://AzureADTokenExchange`. |
-| Key authentication off (recommended) | LangGuard uses only Microsoft Entra authentication. Set `disableLocalAuth` on the account, so that no API key can call it. |
+| Key authentication off (recommended) | LangGuard uses only Microsoft Entra authentication. Set `disableLocalAuth` on the account, so that no API key can call it. This applies to the account of LangGuard's own AI features. For the AI gateway, see [Turn on the AI gateway](/private-install/azure/installation#ai-gateway). |
 
 Example: the account, the two deployments, the identity, its role and its federated
 credential. The model versions and the capacity that you can use depend on the region
@@ -172,6 +178,10 @@ On Azure, it also needs:
 - Keep the default of `networkPolicy.nodeLocalDnsCidrs`. It is the AKS LocalDNS
   addresses (see
   [Outbound access from the cluster](/private-install/helm/requirements#outbound-access-from-the-cluster)).
+- With the AI gateway, `litellm` needs outbound access to your model providers, for
+  example an Azure OpenAI account with key authentication on, and to your MCP servers. Set
+  `networkPolicy.aiGatewayEgressExcept` to the pod CIDR, the node subnet and the API
+  server address of the cluster (see [Turn on the AI gateway](/private-install/azure/installation#ai-gateway)).
 
 ## Tools on the admin host
 

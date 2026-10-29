@@ -22,8 +22,9 @@ already operate.
 
 ### [Generic Cluster (Helm)](/private-install/helm)
 Install LangGuard with a Helm chart into a Kubernetes cluster that you operate, with a
-PostgreSQL server that you operate.
+PostgreSQL server that you operate. The chart includes the LangGuard AI gateway.
 
 ### [Azure](/private-install/azure)
 Install LangGuard with the Helm chart into your AKS cluster, with your Azure Database for
-PostgreSQL server and, as an option, Azure OpenAI.
+PostgreSQL server and, as an option, Azure OpenAI. The AI gateway is off on Azure by
+default, and you can turn it on.

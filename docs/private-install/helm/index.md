@@ -42,14 +42,16 @@ langguard-install/
     └── INSTALL.md       Azure (AKS) specifics, used with helm/INSTALL.md
 ```
 
-`images/` holds the three LangGuard application images: `langguard-dashboard`,
-`otel-ingest` and `langguard-discovery`. `push-images.sh` pushes them to your container
-registry. You do not need a registry credential from LangGuard.
+`images/` holds the four LangGuard application images: `langguard-dashboard`,
+`otel-ingest`, `langguard-discovery` and `langguard-ai-gateway` (the AI gateway).
+`push-images.sh` pushes them to your container registry. You do not need a registry
+credential from LangGuard. The AI gateway image is about 0.5 GB compressed for each
+architecture, so it adds about 1 GB to the bundle.
 
 ## Architecture
 
 ```
-          Your users                          Your agents (OTLP/HTTP, OTLP/gRPC)
+          Your users                          Your agents (OTLP, AI gateway)
               │ HTTPS 443                                   │ HTTPS 443
               ▼                                             ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
@@ -61,16 +63,21 @@ registry. You do not need a registry credential from LangGuard.
 │                                                                          │
 │  Gateway (Gateway API) or Ingress — TLS termination                      │
 │    /v1/traces, /v1/logs, /v1/metrics, OTLP gRPC services → otel-ingest   │
+│    /aigateway/ → langguard-dashboard (front proxy) → litellm             │
 │    all other paths → langguard-dashboard                                 │
 │                                                                          │
 │  langguard-dashboard   otel-ingest       opencite (langguard-discovery)  │
 │  opa                   presidio-analyzer redis                           │
+│  litellm (AI gateway, on by default)                                     │
 │  Helm hook Jobs: db-bootstrap → db-migration → db-grants                 │
+│                  → ai-gateway-migration (with the AI gateway)            │
 └──────┬─────────────────────┬────────────────────┬────────────────────────┘
-       │ TLS 5432            │ HTTPS 443          │ image pull
+       │ TLS 5432            │ HTTPS, other ports │ image pull
        ▼                     ▼                    ▼
  PostgreSQL 16          AI provider          Your container
- or later               (optional)           registry
+ or later               (optional);          registry
+                        model providers and
+                        MCP servers (AI gateway)
 ```
 
 ### How the parts connect
@@ -102,11 +109,23 @@ registry. You do not need a registry credential from LangGuard.
   creates its job schedules again.
 - **Policy and PII.** `langguard-dashboard` evaluates policies with `opa` and detects PII
   with `presidio-analyzer`.
-- **Database.** Before each install and upgrade, three Helm hook Jobs prepare the database
-  as an admin role that you supply. All database clients connect with TLS and verify the
-  server certificate. The workloads use the database role `langguard_app`. It can read
-  and write the application tables but cannot change their schema. It owns the schema
-  `discovery`, which the catalog migrates.
+- **Database.** Before each install and upgrade, Helm hook Jobs prepare the database as an
+  admin role that you supply. All database clients connect with TLS and verify the server
+  certificate. The workloads use the database role `langguard_app`. It can read and write
+  the application tables but cannot change their schema. It owns the schema `discovery`,
+  which the catalog migrates. With the AI gateway, the role `litellm_app` owns the schema
+  `litellm`, which the Job `ai-gateway-migration` migrates. Each of the two roles has no
+  rights in the schemas of the other.
+- **AI gateway.** `litellm` is the LangGuard AI gateway: LiteLLM with the LangGuard
+  guardrails and trace callback (image `langguard-ai-gateway`). The chart installs it by
+  default (`aiGateway.enabled`). Your agents and applications send their LLM and MCP
+  requests to `https://<domain>/aigateway`. The route sends `/aigateway/` to
+  `langguard-dashboard`, and its front proxy forwards the requests to `litellm`. There is
+  no route to `litellm` from outside the cluster. The dashboard evaluates the policies for
+  the gateway traffic, and `litellm` sends its spans to `otel-ingest`. `litellm` keeps the
+  models, the MCP servers and their credentials in the schema `litellm`. It connects to
+  the model providers and the MCP servers that you add. The dashboard continues to operate
+  when the gateway is not available. See [AI gateway](/private-install/helm/installation#ai-gateway).
 - **AI.** The chart supports two values for `ai.provider`: `none` (the default) and
   `azure`. With `none`, the AI features of LangGuard are off, and LangGuard works without
   them. With `azure`, `langguard-dashboard` calls Azure OpenAI with keyless Microsoft
@@ -120,15 +139,34 @@ registry. You do not need a registry credential from LangGuard.
   `dashboard.extraEnv`. For Azure
   OpenAI, see
   [Azure OpenAI](/private-install/azure/requirements#azure-openai). The AI provider powers
-  LangGuard's own AI features, for example policy authoring and custom checks.
+  LangGuard's own AI features, for example policy authoring and custom checks. It does
+  not carry the model traffic of your agents: that traffic goes through the AI gateway.
 - **Images.** The nodes pull the LangGuard images from your container registry. OPA,
   Redis, the Presidio analyzer and PostgreSQL (for the Jobs) are public upstream images.
   The cert-manager images come from `quay.io`. Your Gateway API implementation or Ingress
   controller uses its own images.
-- **Availability.** `langguard-dashboard` (2 to 6 pods) and `otel-ingest` (2 pods) run
-  more than one pod. `opa`, `presidio-analyzer`, `redis` and `opencite` run one pod each.
-  When the node of one of these pods is drained, for example for a node image upgrade,
-  that workload stops until its pod starts on another node.
+- **Availability.** `langguard-dashboard` (2 to 6 pods), `otel-ingest` (2 pods) and
+  `litellm` (2 pods) run more than one pod. `opa`, `presidio-analyzer`, `redis` and
+  `opencite` run one pod each. When the node of one of these pods is drained, for example
+  for a node image upgrade, that workload stops until its pod starts on another node.
+
+## What the chart installs {#installed}
+
+The chart installs these items in the namespace `langguard`:
+
+- The workloads `langguard-dashboard`, `otel-ingest`, `opencite` (the catalog), `opa`,
+  `redis` and `presidio-analyzer`
+- The AI gateway `litellm`, on by default. To install LangGuard without it, set
+  `aiGateway.enabled: false` (see [AI gateway](/private-install/helm/installation#ai-gateway)).
+- The Helm hook Jobs that prepare the database: `db-bootstrap`, `db-migration`,
+  `db-grants` and, with the AI gateway, `ai-gateway-migration`
+- The generated Secrets, for example the encryption key and, with the AI gateway, the
+  gateway keys in the Secret `ai-gateway-credentials`
+- The NetworkPolicies of the workloads
+- As options: the Gateway and its HTTPRoutes or the Ingress, and the cert-manager
+  Certificate and ClusterIssuer
+
+The chart README (`charts/langguard/README.md`) lists all objects.
 
 ## What the chart does not install {#not-installed}
 
@@ -143,13 +181,10 @@ The chart does not install these items. You supply them:
 - DNS records
 - Cloud resources, for example an identity, a load balancer IP address, an AI account or
   a container registry
-
-:::note AI gateway not included
-This deployment does not install the LangGuard AI gateway. The AI provider of the chart
-serves LangGuard's own features, not your model traffic. For inline enforcement, use
-[Arbiter](/settings/arbiter-deployment). For observation, send OTLP telemetry from your
-own instrumentation.
-:::
+- The accounts and API keys of your model providers for the AI gateway. You bring your own
+  provider keys (BYOK).
+- An MCP sandbox. The AI gateway supports remote (HTTP) MCP servers only. It does not
+  support stdio MCP servers.
 
 ## Next steps
 

@@ -60,8 +60,9 @@ The parts connect as described in
 - **Images.** The nodes pull the LangGuard images from your Azure Container Registry. AKS
   sets the Istio proxy image of the Gateway (from `mcr.microsoft.com`).
 - **Availability.** The Gateway proxy runs 2 to 5 pods.
-
-For the AI gateway, see [What the chart does not install](/private-install/helm#not-installed).
+- **AI gateway.** The AI gateway is off on Azure by default: the Azure values file sets
+  `aiGateway.enabled: false`, so the diagram above has no `litellm`. To turn it on, see
+  [Turn on the AI gateway](/private-install/azure/installation#ai-gateway).
 
 ## Next steps
 
