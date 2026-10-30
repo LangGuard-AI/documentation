@@ -18,7 +18,7 @@ gives the Azure-specific requirements and the Azure commands. Read it before you
 | A supported AKS version (Kubernetes 1.27 or later) | Chart minimum | `az aks show -g <rg> -n <cluster> --query kubernetesVersion` |
 | A network policy engine | The chart creates NetworkPolicies | Azure CNI with Cilium (`--network-plugin azure --network-plugin-mode overlay --network-dataplane cilium --network-policy cilium`), or Azure Network Policy Manager or Calico |
 | Gateway API CRDs and the application routing Istio implementation | The chart Gateway uses the GatewayClass `approuting-istio` | `az aks update -g <rg> -n <cluster> --enable-gateway-api --enable-app-routing-istio`. Then `kubectl get gatewayclass approuting-istio` shows `ACCEPTED True`. |
-| OIDC issuer and workload identity | Azure OpenAI without keys | `az aks update -g <rg> -n <cluster> --enable-oidc-issuer --enable-workload-identity` |
+| OIDC issuer and workload identity | Azure OpenAI and the discovery identity without keys | `az aks update -g <rg> -n <cluster> --enable-oidc-issuer --enable-workload-identity` |
 | metrics-server | The dashboard autoscaler | Included in AKS |
 | Your access | Create objects in the namespace `langguard`, and one ClusterIssuer if the chart creates it | A cluster without Microsoft Entra ID integration (`az aks show -g <rg> -n <cluster> --query aadProfile` is empty): the **Azure Kubernetes Service Cluster User Role**. `az aks get-credentials` then gives a client certificate with cluster admin rights. Microsoft Entra ID with Azure RBAC: the **Azure Kubernetes Service RBAC Cluster Admin** role. Microsoft Entra ID with Kubernetes RBAC: the Cluster User Role, and a cluster administrator binds your Entra user or group to the ClusterRole `cluster-admin`. If local accounts are enabled, `az aks get-credentials --admin` with the **Azure Kubernetes Service Cluster Admin Role** is an alternative. |
 
@@ -145,6 +145,86 @@ The client ID for the value `workloadIdentity.azure.clientId`:
 The dashboard gets its token only through workload identity. It cannot use the managed
 identity of the node, because the Instance Metadata Service is blocked.
 
+## Discovery identity (optional) {#discovery-identity}
+
+The [Azure AI Foundry](/integrations/azure-ai-foundry) integration discovers your Azure AI
+Foundry accounts, their model deployments, projects and agents, and reads their traces
+from Log Analytics. The catalog (`opencite`) does this work. It signs in to Azure in one of
+two ways:
+
+- With the client secret of a Microsoft Entra app registration, which you enter in the
+  integration form. The catalog stores this secret (see
+  [Security](/private-install/helm/installation#security)).
+- With the discovery identity: a user-assigned managed identity of the catalog, through
+  AKS workload identity. LangGuard stores no secret. The integration form then shows the
+  sign-in method **This deployment's managed identity**, and selects it for a new
+  integration.
+
+Without the discovery identity, the form shows only the client secret. The chart does not
+use the dashboard identity of [Azure OpenAI](#azure-openai) for the catalog.
+
+| Requirement | Notes |
+|---|---|
+| A user-assigned managed identity | Not the dashboard identity. Each workload has its own identity and its own roles. |
+| A federated credential on the identity | Issuer: the OIDC issuer URL of the cluster. Subject: `system:serviceaccount:langguard:opencite`. Audience: `api://AzureADTokenExchange`. |
+| The roles in the table below | On each Azure AI Foundry account that LangGuard discovers, not on the account of LangGuard's own AI features. |
+
+Roles of the discovery identity:
+
+| Role | Scope | Purpose |
+|---|---|---|
+| **Reader** | The resource group of the Foundry account | Reads the diagnostic settings of each account. They tell the catalog the Log Analytics workspace of the traces. With this role, the catalog also lists the accounts, the model deployments and the projects, reads the workspace and, when the workspace is in the same resource group, queries it. |
+| **Cognitive Services OpenAI User** | The Foundry account | Lists the agents (Assistants API). |
+| **Log Analytics Reader** | The Log Analytics workspace | Queries the traces. Necessary only when the workspace is not in the scope of the Reader role. |
+
+- A role at the subscription scope is not necessary. Test Connection lists the accounts of
+  the subscription, and this list also works with roles at the resource group scope.
+- A scope that is smaller than the resource group, for example Reader on the account and
+  on the workspace only, is not tested.
+- Test Connection checks the sign-in. It does not check the roles: it passes when a role
+  is missing.
+- Without **Reader**, Azure returns an empty list of diagnostic settings, not an error.
+  The catalog then finds no Log Analytics workspace, and the traces stop. Test Connection
+  continues to pass, and LangGuard shows no error or warning. The catalog continues to
+  discover the accounts, deployments and projects, because **Cognitive Services OpenAI
+  User** also gives read access to the account.
+- The catalog finds the workspace in the diagnostic settings of the account. For traces,
+  the account needs a diagnostic setting that sends its logs to a Log Analytics workspace.
+
+Example: the identity, its roles and its federated credential. For each other Foundry
+account, give the roles on its resource group and on the account.
+
+```bash
+az identity create -g <rg> -n <discovery identity>
+PRINCIPAL_ID=$(az identity show -g <rg> -n <discovery identity> --query principalId -o tsv)
+FOUNDRY_ID=$(az cognitiveservices account show -g <Foundry rg> -n <Foundry account> --query id -o tsv)
+az role assignment create --role Reader \
+  --scope "$(az group show -n <Foundry rg> --query id -o tsv)" \
+  --assignee-object-id "$PRINCIPAL_ID" --assignee-principal-type ServicePrincipal
+az role assignment create --role "Cognitive Services OpenAI User" --scope "$FOUNDRY_ID" \
+  --assignee-object-id "$PRINCIPAL_ID" --assignee-principal-type ServicePrincipal
+# Only when the Log Analytics workspace is not in <Foundry rg>:
+az role assignment create --role "Log Analytics Reader" \
+  --scope "$(az monitor log-analytics workspace show -g <workspace rg> -n <workspace> --query id -o tsv)" \
+  --assignee-object-id "$PRINCIPAL_ID" --assignee-principal-type ServicePrincipal
+
+az identity federated-credential create --name langguard-catalog \
+  --identity-name <discovery identity> --resource-group <rg> \
+  --issuer "$(az aks show -g <rg> -n <cluster> --query oidcIssuerProfile.issuerUrl -o tsv)" \
+  --subject system:serviceaccount:langguard:opencite \
+  --audiences api://AzureADTokenExchange
+```
+
+The client ID and the tenant ID for the values `workloadIdentity.azure.catalog.clientId`
+and `workloadIdentity.azure.catalog.tenantId` (see
+[Discovery identity](/private-install/azure/installation#discovery-identity) in the
+installation):
+`az identity show -g <rg> -n <discovery identity> --query clientId -o tsv` and
+`az identity show -g <rg> -n <discovery identity> --query tenantId -o tsv`.
+
+The catalog gets its token only through workload identity. It does not connect to the
+Instance Metadata Service.
+
 ## Ingress, DNS and TLS
 
 The domain, the certificate and cert-manager are as in the
@@ -175,6 +255,19 @@ On Azure, it also needs:
 
 - `langguard-dashboard` needs TCP 443 to `login.microsoftonline.com` for workload
   identity.
+- For the Azure AI Foundry integration, the catalog (`opencite`) needs TCP 443 to these
+  hosts, with the [discovery identity](#discovery-identity) or with a client secret:
+
+  | Host | Use |
+  |---|---|
+  | `login.microsoftonline.com` | The Microsoft Entra token exchange |
+  | `management.azure.com` | Azure Resource Manager: the accounts, model deployments, projects, diagnostic settings and workspaces |
+  | `<account>.services.ai.azure.com`, for each Foundry account | The Assistants API (agents) |
+  | `api.loganalytics.azure.com` | The Log Analytics queries (traces) |
+
+  The NetworkPolicy of the catalog allows TCP 443 to all addresses, so you do not add a
+  NetworkPolicy. A firewall between the cluster and the internet must allow these hosts.
+  The catalog does not connect to the Instance Metadata Service or to the WireServer.
 - Keep the default of `networkPolicy.nodeLocalDnsCidrs`. It is the AKS LocalDNS
   addresses (see
   [Outbound access from the cluster](/private-install/helm/requirements#outbound-access-from-the-cluster)).

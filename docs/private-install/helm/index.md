@@ -100,7 +100,10 @@ architecture, so it adds about 1 GB to the bundle.
   OTLP/gRPC, both on port 443. It does not ingest metrics: it answers `/v1/metrics` with
   HTTP 404. It stores the traces in PostgreSQL, queues them in `redis`, and forwards a
   copy to `opencite`. `opencite` runs the `langguard-discovery` catalog, which discovers
-  agents, tools, models and MCP servers.
+  agents, tools, models and MCP servers. The catalog also discovers the resources of the
+  [Azure AI Foundry](/integrations/azure-ai-foundry) integration. On AKS, it can sign in to
+  Azure with its own managed identity (see
+  [Discovery identity](/private-install/azure/requirements#discovery-identity)).
 - **Queue.** `redis` keeps the work queues and the job schedules. It has no persistent
   volume. When the `redis` pod is replaced (deleted, evicted, rescheduled or rolled out),
   the queued work and the job schedules are lost. After a container restart in the same
