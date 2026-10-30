@@ -100,11 +100,48 @@ Changes for Azure cases:
 |---|---|
 | Internal load balancer | In `gateway.infrastructure.annotations`, replace the two IP lines with `service.beta.kubernetes.io/azure-load-balancer-internal: "true"`, `service.beta.kubernetes.io/azure-load-balancer-internal-subnet: <node subnet>` and `service.beta.kubernetes.io/azure-load-balancer-ipv4: <free address>`. The HTTP-01 challenge of Let's Encrypt cannot reach an internal address: use DNS-01, your own certificate or your own issuer. |
 | Allow only some client ranges on a public ingress | `service.beta.kubernetes.io/azure-allowed-ip-ranges: <CIDR>[,<CIDR>]` in `gateway.infrastructure.annotations`. AKS creates one network security group rule that allows TCP 80, 443 and 15021 (the status port of the Gateway proxy) to the ingress address only from these ranges. Port 80 is then closed to Let's Encrypt, so HTTP-01 cannot issue or renew the certificate: use your own certificate (`tls.provided`) or DNS-01. For DNS-01, set a DNS-01 solver in `tls.acmeIssuer.solvers`, or set your own DNS-01 issuer in `tls.certificate.issuerRef` and remove `tls.acmeIssuer` (while `tls.acmeIssuer.create` is true, the chart ignores `tls.certificate.issuerRef`). The rule does not apply to pods in the cluster. |
-| No Azure OpenAI | Remove `workloadIdentity` and `ai`. |
+| No Azure OpenAI | Remove `ai`, and `workloadIdentity.azure.clientId` and `tenantId`. Keep `workloadIdentity.azure.catalog` if you use the discovery identity. |
+| Discovery identity | `workloadIdentity.azure.catalog.clientId` and `tenantId`. See [Discovery identity](#discovery-identity). |
 | AI gateway | `aiGateway.enabled: true`. See [Turn on the AI gateway](#ai-gateway). |
 
 For your own certificate, your own issuer, a private PostgreSQL CA, email and GitOps, see
 [Changes for other cases](/private-install/helm/installation#other-cases).
+
+### Discovery identity {#discovery-identity}
+
+With the [discovery identity](/private-install/azure/requirements#discovery-identity), add
+its client ID and tenant ID to the `workloadIdentity` block:
+
+```yaml
+workloadIdentity:
+  azure:
+    clientId: <client ID of the dashboard identity>
+    catalog:
+      clientId: <client ID of the discovery identity>
+      tenantId: <tenant ID of the discovery identity>
+```
+
+- `workloadIdentity.azure.catalog` is independent of `workloadIdentity.azure.clientId`.
+  The catalog does not use the dashboard identity, and the dashboard does not use the
+  catalog identity. Without Azure OpenAI, set only `workloadIdentity.azure.catalog`.
+- `tenantId` is optional. Without it, the workload identity webhook uses the tenant of
+  the cluster.
+- The chart adds the client ID (and the tenant ID) to the ServiceAccount `opencite` and
+  the label `azure.workload.identity/use: "true"` to the catalog pod. The AKS webhook then
+  injects `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_FEDERATED_TOKEN_FILE`,
+  `AZURE_AUTHORITY_HOST` and a projected token volume into the pod. The catalog keeps
+  `automountServiceAccountToken: false`.
+- The chart sets `OPENCITE_AZURE_WORKLOAD_IDENTITY=true` in the catalog and
+  `AZURE_FOUNDRY_WORKLOAD_IDENTITY=true` in the dashboard ConfigMap. The
+  [Azure AI Foundry](/integrations/azure-ai-foundry#managed-identity) integration then
+  shows the sign-in method **This deployment's managed identity**. With it, the form asks
+  for the subscription ID and no tenant ID, client ID or client secret.
+- The catalog restarts when the client ID or the tenant ID changes.
+- If you remove `workloadIdentity.azure.catalog.clientId` later, an integration that uses
+  the managed identity stops. Test Connection and a sync then fail with
+  `Managed identity sign-in is not available on this deployment`, and a new integration
+  cannot use the managed identity. Change the integration to a client secret before you
+  remove the value.
 
 ### Turn on the AI gateway {#ai-gateway}
 
@@ -141,7 +178,7 @@ networkPolicy:
 - The database Jobs create the role `litellm_app` and the schema `litellm` with the server
   admin login. You do not create them.
 - The gateway has no Azure identity: workload identity applies only to
-  `langguard-dashboard`. The gateway calls Azure OpenAI with an API key (BYOK). The
+  `langguard-dashboard` and, with the discovery identity, to the catalog. The gateway calls Azure OpenAI with an API key (BYOK). The
   account of LangGuard's own AI features has key authentication off (`disableLocalAuth`),
   so it does not accept that key. For Azure OpenAI models in the gateway, use a different
   account with key authentication on, and add its key on the AI Gateway settings page.
@@ -178,7 +215,14 @@ Follow [After install](/private-install/helm/installation#after-install),
 The [generic security points](/private-install/helm/installation#security) apply. On
 Azure:
 
-- Only `langguard-dashboard` has an Azure identity, through workload identity.
+- Only `langguard-dashboard` and, with the
+  [discovery identity](/private-install/azure/requirements#discovery-identity), the
+  catalog have an Azure identity, through workload identity. Each has its own managed
+  identity and federated credential. The other workloads and the database Jobs have no
+  Azure identity.
+- With the discovery identity, LangGuard stores no secret for the Azure AI Foundry
+  integration. With a client secret, the catalog stores the secret encrypted with
+  `OPENCITE_CONFIG_KEY` (see [Security](/private-install/helm/installation#security)).
 - `langguard-dashboard`, `otel-ingest`, the catalog and, when it is on, the AI gateway
   cannot connect to the Azure Instance Metadata Service (169.254.169.254) or to the Azure
   WireServer (168.63.129.16), so they cannot get a token of the node identity or the node
@@ -198,3 +242,6 @@ of the generic installation. On Azure, also check these items:
 | No certificate | With `azure-allowed-ip-ranges`, port 80 is closed to Let's Encrypt. Use DNS-01 or your own certificate. |
 | The settings have no AI Gateway page | The Azure values file sets `aiGateway.enabled: false`. See [Turn on the AI gateway](#ai-gateway). |
 | AI features fail | The deployments must exist with the names in `ai.models`. The federated credential subject must be `system:serviceaccount:langguard:langguard-dashboard`. Check `kubectl logs deployment/langguard-dashboard -n langguard \| grep -i "AI upstream"`. |
+| The Azure AI Foundry form shows no managed identity, or Test Connection fails with `Managed identity sign-in is not available on this deployment` | The release has no discovery identity. Set `workloadIdentity.azure.catalog.clientId` and run the upgrade (see [Discovery identity](#discovery-identity)). |
+| Test Connection of Azure AI Foundry fails with an `AADSTS` error | The federated credential of the discovery identity: the issuer must be the OIDC issuer URL of the cluster, the subject `system:serviceaccount:langguard:opencite` and the audience `api://AzureADTokenExchange`. `AADSTS70021` means that no federated credential matches. |
+| Azure AI Foundry sends no traces, and Test Connection passes | The discovery identity needs **Reader** on the resource group of the account, and the account needs a diagnostic setting that sends its logs to a Log Analytics workspace. Test Connection does not check the roles. `kubectl logs deployment/opencite -n langguard \| grep "Log Analytics workspaces"` shows how many workspaces the catalog found. After a start of the catalog, the first line can show `count=0`. A line with `count=0` after the next discovery run means that the catalog found no workspace. |
