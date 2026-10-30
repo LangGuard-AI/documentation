@@ -63,6 +63,11 @@ const config: Config = {
               return `/${section}${existingPath.slice(prefix.length)}`;
             }
           }
+          // Sign-in and Email moved from Azure to Generic Cluster (Helm).
+          const helmSignIn = '/private-install/helm/sign-in-and-email';
+          if (existingPath.startsWith(helmSignIn)) {
+            return `/private-install/azure/sign-in-and-email${existingPath.slice(helmSignIn.length)}`;
+          }
           return undefined;
         },
       },
