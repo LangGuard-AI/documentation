@@ -101,7 +101,7 @@ The identity that LangGuard signs in with (the managed identity or the app regis
 - Without **Cognitive Services Data Reader**, LangGuard shows no agent of a Foundry project and no tool of these agents, and the traces of an agent have no agent name. The built-in role **Foundry User** also gives this access, but it also lets the identity change agents and read the account keys.
 - **Test Connection** checks the sign-in. It does not check the roles: it passes when a role is missing.
 - Without **Reader**, Azure returns an empty list of diagnostic settings, not an error. LangGuard then finds no Log Analytics workspace, and the traces stop with no error or warning.
-- For traces, the Azure AI Foundry account needs a diagnostic setting that sends its logs to a Log Analytics workspace. LangGuard finds the workspace in this setting.
+- For traces, the Azure AI Foundry account needs a diagnostic setting that sends the **Request and Response Logs** category to a Log Analytics workspace. LangGuard finds the workspace in this setting. A setting that sends only other categories gives a workspace with no traces.
 
 ## What Gets Captured
 
@@ -119,7 +119,7 @@ LangGuard discovers and catalogs your Azure AI Foundry resources:
 
 ### Traces
 
-When traces are enabled in your Azure AI applications:
+LangGuard reads the traces from the request logs of the Azure AI Foundry account. A diagnostic setting of the account must send the **Request and Response Logs** category to a Log Analytics workspace (see [Roles](#roles)). LangGuard does not read Application Insights, and you do not have to enable tracing in your applications. A trace of a model call has these fields:
 
 | Field | Description |
 |-------|-------------|
@@ -128,6 +128,8 @@ When traces are enabled in your Azure AI applications:
 | **Input/Output Tokens** | Token counts |
 | **Latency** | Response time |
 | **Status** | Success or error |
+
+A trace of an agent run or of a message to an agent has the operation, the latency and the status, and the agent when LangGuard can find it. It has no model and no token counts.
 
 LangGuard shows only the model calls, the agent runs and the messages to agents. It does not show read requests, for example the requests that list the agents. When other accounts send their logs to the same workspace, LangGuard shows only the traces of the accounts that the integration discovers. A trace of a classic agent (an agent of the Assistants API) names its agent when the identity has **Cognitive Services Data Reader** (see [Roles](#roles)). A trace of a new agent (a versioned agent that runs through the Responses API) does not name its agent: LangGuard shows only the model calls of that agent.
 
@@ -162,15 +164,15 @@ When LangGuard cannot find the agent of a trace, the trace list shows `azure-ai-
 
 - When the identity does not have the **Cognitive Services Data Reader** role: LangGuard cannot read the agent runs
 - For a new agent: its traces do not name the agent
+- For a model call of a classic agent when LangGuard cannot be sure which agent made it, for example when agents of the same account run at the same time
 - For a model call that an application makes directly, not through an agent
 
 ### No Traces Appearing
 
-1. Ensure tracing is enabled in your Azure AI Foundry applications
-2. Verify the Application Insights instance is connected
-3. Check the time range in LangGuard
-4. Verify that the identity has the **Reader** role on the resource group of the account (see [Roles](#roles)). Without it, the traces stop and Test Connection still passes.
-5. Verify that the account has a diagnostic setting that sends its logs to a Log Analytics workspace
+1. Verify that the account has a diagnostic setting that sends the **Request and Response Logs** category to a Log Analytics workspace (see [Traces](#traces)). The tracing of your applications and Application Insights have no effect on LangGuard.
+2. Verify that the identity has the **Reader** role on the resource group of the account (see [Roles](#roles)). Without it, the traces stop and Test Connection still passes.
+3. When the workspace is not in the resource group of the account, verify that the identity has the **Log Analytics Reader** role on the workspace
+4. Check the time range in LangGuard
 
 ---
 

@@ -197,7 +197,9 @@ Roles of the discovery identity:
   discover the accounts, deployments and projects, because **Cognitive Services OpenAI
   User** also gives read access to the account.
 - The catalog finds the workspace in the diagnostic settings of the account. For traces,
-  the account needs a diagnostic setting that sends its logs to a Log Analytics workspace.
+  the account needs a diagnostic setting that sends the **Request and Response Logs**
+  category to a Log Analytics workspace. A setting that sends only other categories gives
+  a workspace with no traces.
 
 Example: the identity, its roles and its federated credential. For each other Foundry
 account, give the roles on its resource group and on the account.
