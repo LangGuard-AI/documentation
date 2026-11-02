@@ -13,6 +13,7 @@ description: Connect LangGuard to Azure AI Foundry for AI resource discovery and
 The Azure AI Foundry integration enables LangGuard to:
 
 - **Discover AI resources** — Projects, deployments, and endpoints in your Azure subscription
+- **Discover agents** — The agents of each Foundry project (classic agents and new agents) and of each account, with their tools
 - **Ingest traces** from Azure AI Foundry applications
 - **Track model deployments** and their usage
 - **Monitor performance** — Latency, token usage, and error rates
@@ -91,10 +92,13 @@ The identity that LangGuard signs in with (the managed identity or the app regis
 | Role | Scope | Purpose |
 |------|-------|---------|
 | **Reader** | The resource group of the Azure AI Foundry account | Reads the diagnostic settings of the account, which name the Log Analytics workspace of the traces. Also lists the accounts, model deployments and projects, and reads the workspace. |
-| **Cognitive Services OpenAI User** | The Azure AI Foundry account | Lists the agents (Assistants API) |
+| **Cognitive Services OpenAI User** | The Azure AI Foundry account | Lists the agents of the account that are not in a Foundry project (Assistants API), and reads their agent runs |
+| **Cognitive Services Data Reader** | The Azure AI Foundry account, or each Foundry project | Lists the agents of each Foundry project (classic agents and new agents) and their tools. Reads the agent runs that name the agent of each trace. Gives read access only. |
 | **Log Analytics Reader** | The Log Analytics workspace | Queries the traces. Necessary only when the workspace is not in the resource group of the Reader role. |
 
 - No role at the subscription scope is necessary.
+- **Cognitive Services Data Reader** on the account gives access to all the projects of the account. On a project, it gives access to the agents of that project only.
+- Without **Cognitive Services Data Reader**, LangGuard shows no agent of a Foundry project and no tool of these agents, and the traces of an agent have no agent name. The built-in role **Foundry User** also gives this access, but it also lets the identity change agents and read the account keys.
 - **Test Connection** checks the sign-in. It does not check the roles: it passes when a role is missing.
 - Without **Reader**, Azure returns an empty list of diagnostic settings, not an error. LangGuard then finds no Log Analytics workspace, and the traces stop with no error or warning.
 - For traces, the Azure AI Foundry account needs a diagnostic setting that sends its logs to a Log Analytics workspace. LangGuard finds the workspace in this setting.
@@ -110,6 +114,8 @@ LangGuard discovers and catalogs your Azure AI Foundry resources:
 | **Projects** | Name, region, status |
 | **Deployments** | Model name, version, SKU, endpoint |
 | **Endpoints** | URL, authentication method, traffic split |
+| **Agents** | Name, model, project, tools. The classic agents (Assistants API) and the new agents (versioned agents) of each Foundry project, and the agents of the account that are not in a project |
+| **Tools** | Name and type of each tool that an agent declares: function, MCP server, OpenAPI tool, or a built-in tool such as code interpreter or file search |
 
 ### Traces
 
@@ -122,6 +128,8 @@ When traces are enabled in your Azure AI applications:
 | **Input/Output Tokens** | Token counts |
 | **Latency** | Response time |
 | **Status** | Success or error |
+
+LangGuard shows only the model calls, the agent runs and the messages to agents. It does not show read requests, for example the requests that list the agents. When other accounts send their logs to the same workspace, LangGuard shows only the traces of the accounts that the integration discovers. A trace of a classic agent (an agent of the Assistants API) names its agent when the identity has **Cognitive Services Data Reader** (see [Roles](#roles)). A trace of a new agent (a versioned agent that runs through the Responses API) does not name its agent: LangGuard shows only the model calls of that agent.
 
 ## Troubleshooting
 
@@ -141,6 +149,20 @@ The message `Managed identity sign-in is not available on this deployment` means
 1. Confirm AI Foundry resources exist in the specified subscription
 2. Verify the service principal has read access to the correct resource group
 3. Check that the Subscription ID is correct
+
+### No Agents Discovered
+
+1. Verify that the identity has the **Cognitive Services Data Reader** role on the account or on the Foundry project (see [Roles](#roles)). Without it, LangGuard shows no agent of a project, and Test Connection still passes.
+2. For the agents of an account that are not in a project, verify that the identity has the **Cognitive Services OpenAI User** role on the account
+3. On a private install, ask your operator to check the log of the discovery service (see [Troubleshooting](/private-install/azure/installation#troubleshooting))
+
+### Traces Show the Agent azure-ai-foundry
+
+When LangGuard cannot find the agent of a trace, the trace list shows `azure-ai-foundry`, the name of the service that logged the request. LangGuard does not create an agent with this name. This occurs:
+
+- When the identity does not have the **Cognitive Services Data Reader** role: LangGuard cannot read the agent runs
+- For a new agent: its traces do not name the agent
+- For a model call that an application makes directly, not through an agent
 
 ### No Traces Appearing
 

@@ -174,11 +174,19 @@ Roles of the discovery identity:
 | Role | Scope | Purpose |
 |---|---|---|
 | **Reader** | The resource group of the Foundry account | Reads the diagnostic settings of each account. They tell the catalog the Log Analytics workspace of the traces. With this role, the catalog also lists the accounts, the model deployments and the projects, reads the workspace and, when the workspace is in the same resource group, queries it. |
-| **Cognitive Services OpenAI User** | The Foundry account | Lists the agents (Assistants API). |
+| **Cognitive Services OpenAI User** | The Foundry account | Lists the agents of the account that are not in a Foundry project (Assistants API), and reads their agent runs. |
+| **Cognitive Services Data Reader** | The Foundry account, or each Foundry project | Lists the agents of each Foundry project (classic agents and new agents) and their tools. Reads the agent runs that name the agent of each trace. Gives read access only. |
 | **Log Analytics Reader** | The Log Analytics workspace | Queries the traces. Necessary only when the workspace is not in the scope of the Reader role. |
 
 - A role at the subscription scope is not necessary. Test Connection lists the accounts of
   the subscription, and this list also works with roles at the resource group scope.
+- **Cognitive Services Data Reader** on the account gives access to all the projects of
+  the account. On a project (scope `<account ID>/projects/<project>`), it gives access to
+  the agents of that project only.
+- Without **Cognitive Services Data Reader**, the catalog lists no agent of a Foundry
+  project and no tool of these agents, and the traces of an agent have no agent name. The
+  catalog log shows a warning for each project. The built-in role **Foundry User** also gives this access, but it also
+  lets the identity change agents and read the account keys.
 - A scope that is smaller than the resource group, for example Reader on the account and
   on the workspace only, is not tested.
 - Test Connection checks the sign-in. It does not check the roles: it passes when a role
@@ -202,6 +210,8 @@ az role assignment create --role Reader \
   --scope "$(az group show -n <Foundry rg> --query id -o tsv)" \
   --assignee-object-id "$PRINCIPAL_ID" --assignee-principal-type ServicePrincipal
 az role assignment create --role "Cognitive Services OpenAI User" --scope "$FOUNDRY_ID" \
+  --assignee-object-id "$PRINCIPAL_ID" --assignee-principal-type ServicePrincipal
+az role assignment create --role "Cognitive Services Data Reader" --scope "$FOUNDRY_ID" \
   --assignee-object-id "$PRINCIPAL_ID" --assignee-principal-type ServicePrincipal
 # Only when the Log Analytics workspace is not in <Foundry rg>:
 az role assignment create --role "Log Analytics Reader" \
@@ -262,7 +272,7 @@ On Azure, it also needs:
   |---|---|
   | `login.microsoftonline.com` | The Microsoft Entra token exchange |
   | `management.azure.com` | Azure Resource Manager: the accounts, model deployments, projects, diagnostic settings and workspaces |
-  | `<account>.services.ai.azure.com`, for each Foundry account | The Assistants API (agents) |
+  | `<custom subdomain>.services.ai.azure.com`, for each Foundry account | Foundry Agent Service: the agents of the account and of its projects, and the agent runs that name the agent of each trace |
   | `api.loganalytics.azure.com` | The Log Analytics queries (traces) |
 
   The NetworkPolicy of the catalog allows TCP 443 to all addresses, so you do not add a
