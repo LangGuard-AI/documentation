@@ -43,9 +43,17 @@ the tag of this release by default. Set the same path (`<registry>/langguard`) i
 
 ```bash
 kubectl create namespace langguard
+read -rs -p 'PostgreSQL admin password: ' DB_ADMIN_PASSWORD; echo
 kubectl create secret generic langguard-db-admin -n langguard \
-  --from-literal=password='<PostgreSQL admin password>'
+  --from-file=password=<(printf '%s' "$DB_ADMIN_PASSWORD")
+unset DB_ADMIN_PASSWORD
 ```
+
+`read -s` does not show the password and does not write it to the shell history.
+`--from-file` reads it from a file descriptor, so it is not in the arguments of a process,
+and the Secret gets no final newline. The commands need `bash`. Do not use
+`--from-literal=password=...`: the password is then in the shell history and in the
+process list.
 
 ### Pilot database {#pilot-database}
 
@@ -334,6 +342,8 @@ Limits of the AI gateway:
 | PostgreSQL server with a private CA | `database.caCert.existingSecret` or `database.caCert.existingConfigMap`, and `database.caCert.key`. See [PostgreSQL server with a private CA](/private-install/helm/requirements#postgresql-server-with-a-private-ca). |
 | Email | See [Sign-in and Email](/private-install/helm/sign-in-and-email). |
 | No AI gateway | `aiGateway.enabled: false`. See [AI gateway](#ai-gateway). |
+| No ingress (access with `kubectl port-forward` only) | Do not set `gateway.create`, `httpRoute.enabled`, `ingress.enabled` and the `tls` values. `domain` is still necessary. See [Access without an ingress](#no-ingress). |
+| Azure AI Foundry discovery with a managed identity (AKS) | `workloadIdentity.azure.catalog.clientId` and `workloadIdentity.azure.catalog.tenantId`. See [Discovery identity](/private-install/azure/requirements#discovery-identity). |
 | GitOps (Argo CD) | Manage the generated secrets outside the chart, the AI gateway keys included (`aiGateway.existingSecret`). See "GitOps" in the chart README. |
 
 ## 5. Install the chart {#install}
@@ -422,6 +432,47 @@ With Let's Encrypt, the certificate is ready a few minutes after the DNS record 
 Open `https://<domain>` and sign in with `auth.adminEmail` and the admin password. See
 [Sign-in and Email](/private-install/helm/sign-in-and-email#password-sign-in).
 
+### Access without an ingress {#no-ingress}
+
+Without `gateway.create`, `httpRoute.enabled` and `ingress.enabled`, the chart creates no
+external access. The notes of the chart then list the routes that you can create
+yourself. `domain` is still necessary: the chart uses it for the application URL and for
+the name of the session cookie.
+
+To connect from the admin host, forward a local port to the dashboard:
+
+```bash
+kubectl port-forward svc/langguard-dashboard 8080:80 -n langguard
+curl -fsS http://localhost:8080/api/health
+```
+
+`kubectl port-forward` connects to one pod. When that pod stops, for example during a
+rollout, run the command again.
+
+The sign-in does not work over `http://localhost:8080`. The session cookie has the
+`Secure` attribute, and the dashboard sets the cookie only on a request that it sees as
+HTTPS: an HTTPS connection, or a request with `X-Forwarded-Proto: https` (the dashboard
+trusts this header from one proxy). Over plain HTTP, the sign-in request gets HTTP 200
+but no session cookie, and the browser shows no error. To sign in without an ingress,
+use one of these methods:
+
+- Put a reverse proxy with TLS on the admin host in front of the port-forward. The proxy
+  must send `X-Forwarded-Proto: https`. Open the HTTPS URL of the proxy.
+- Set `COOKIE_SECURE=false` for the dashboard and run the [upgrade](#upgrade):
+
+  ```yaml
+  dashboard:
+    extraEnv:
+      - name: COOKIE_SECURE
+        value: "false"
+  ```
+
+  The session cookie then has no `Secure` attribute, and the browser also sends it over
+  plain HTTP. Use this only for access through the port-forward. Remove it before you add
+  an ingress.
+
+An API client, for example `curl`, can send the header `X-Forwarded-Proto: https` itself.
+
 ### Send telemetry
 
 Send OTLP from your agents to `https://<domain>` on port 443:
@@ -472,13 +523,23 @@ The dashboard installs the LLM guardrails in the gateway when it starts. It trie
 every 5 seconds for 5 minutes, then at most every 60 seconds, until the gateway answers.
 Until then, LLM traffic through the gateway is not governed.
 
-### Back up the encryption key
+### Back up the encryption keys {#back-up-the-encryption-keys}
 
-The Secret `encryption-key` encrypts the integration credentials in the database. If it is
-lost, LangGuard cannot decrypt them. Keep a copy in your key vault:
+The chart generates two encryption keys on the first install. `helm uninstall` does not
+delete their Secrets.
+
+| Secret / key | Use |
+|---|---|
+| `encryption-key` / `ENCRYPTION_KEY` | Encrypts the integration credentials in the database. |
+| `opencite-config-key` / `OPENCITE_CONFIG_KEY` | Encrypts the plugin credentials that the catalog stores in the table `discovery.plugin_configs`, for example the client secret of an Azure AI Foundry integration. |
+
+If a key is lost or changes, LangGuard cannot decrypt the credentials. The catalog does
+not fail: it starts, and the credentials do not decrypt. Keep a copy of the two keys
+together in your key vault:
 
 ```bash
 kubectl get secret encryption-key -n langguard -o jsonpath='{.data.ENCRYPTION_KEY}' | base64 -d
+kubectl get secret opencite-config-key -n langguard -o jsonpath='{.data.OPENCITE_CONFIG_KEY}' | base64 -d
 ```
 
 ### Back up the AI gateway keys {#back-up-the-ai-gateway-keys}
@@ -563,6 +624,13 @@ To change a setting, edit `values.yaml` and run the same command.
 - With `secrets.existingSecret` (GitOps), also set `aiGateway.existingSecret`, or set
   `aiGateway.enabled: false`. Without one of them, a render without a cluster (for example
   Argo CD) fails while the gateway is on.
+- With `secrets.existingSecret`, add the key `OPENCITE_CONFIG_KEY` to that Secret before
+  an upgrade from a chart version without it. Without the key, the `opencite` pod does
+  not start (`CreateContainerConfigError`). The value is a Fernet key: 32 random bytes in
+  URL-safe base64, 44 characters, for example
+  `openssl rand -base64 32 | tr '+/' '-_'`. See "Secrets" in the chart README.
+- An upgrade from a chart version without `OPENCITE_CONFIG_KEY` generates the key. When
+  the catalog starts, it encrypts the plugin credentials that it stored in plaintext.
 - The pods restart only when a value that they use changes.
 - A change in a Secret that you manage does not restart the pods. Restart the
   Deployments that read it, for example
@@ -579,8 +647,8 @@ helm uninstall langguard -n langguard
 ```
 
 These objects stay in the namespace, so that a new install keeps the same database
-credentials and encryption key: the Secrets `encryption-key`, `database-credentials`,
-`discovery-database-credentials` and `database-jobs`, the TLS Secret `langguard-tls` from
+credentials and encryption keys: the Secrets `encryption-key`, `opencite-config-key`,
+`database-credentials`, `discovery-database-credentials` and `database-jobs`, the TLS Secret `langguard-tls` from
 cert-manager, and the ConfigMap `database-sql`. The Secret `database-admin-credentials`
 stays only when you gave the admin password inline (`database.admin.password`). The
 Secrets that you created (for example `langguard-db-admin`) also stay. The chart deletes
@@ -594,8 +662,9 @@ CiliumNetworkPolicy `litellm-migration-node-dns`. The Job `ai-gateway-migration`
 until its TTL ends. A new install with the same release name and namespace uses the kept
 gateway keys, so it can decrypt the stored provider keys and MCP credentials.
 
-To remove all of them, delete the namespace. With the AI gateway, back up
-`ai-gateway-credentials` first (see [Back up the AI gateway keys](#back-up-the-ai-gateway-keys)):
+To remove all of them, delete the namespace. Back up the encryption keys first (see
+[Back up the encryption keys](#back-up-the-encryption-keys)), and with the AI gateway also
+`ai-gateway-credentials` (see [Back up the AI gateway keys](#back-up-the-ai-gateway-keys)):
 
 ```bash
 kubectl delete namespace langguard
@@ -607,8 +676,8 @@ delete the database, its roles, the discovery schema or the AI gateway schema `l
 
 ## Security {#security}
 
-- The workloads run as non-root users with no privilege escalation. All of them except
-  the catalog have a read-only root file system.
+- The workloads run as non-root users with no privilege escalation and a read-only root
+  file system.
 - Only `langguard-dashboard` has a Kubernetes API token. It uses the token for the
   support bundle: it reads pods, logs and events in the namespace. The other workloads
   have no token.
@@ -631,6 +700,18 @@ delete the database, its roles, the discovery schema or the AI gateway schema `l
 - The generated secrets are Kubernetes Secrets in the namespace. Restrict access to the
   namespace. Turn on encryption of Secrets at rest with your own key if your policy
   requires it.
+- The catalog encrypts the credentials of its plugins in the table
+  `discovery.plugin_configs` (for example the client secret of an Azure AI Foundry
+  integration) with `OPENCITE_CONFIG_KEY`. The dashboard encrypts its own copy of the
+  integration credentials with `ENCRYPTION_KEY`. With the
+  [discovery identity](/private-install/azure/requirements#discovery-identity) on AKS, the
+  catalog stores no secret for Azure AI Foundry.
+- An empty or invalid `OPENCITE_CONFIG_KEY` does not stop the catalog: it logs a line with
+  `OPENCITE_CONFIG_KEY` and stores the plugin credentials in plaintext. With
+  `secrets.existingSecret`, `helm install` and `helm upgrade` fail on such a key, but a
+  render without a cluster (for example Argo CD) cannot check it. After the install or
+  upgrade, make sure that
+  `kubectl logs deployment/opencite -n langguard | grep OPENCITE_CONFIG_KEY` shows no line.
 - The Helm release contains the values that you give inline. Give passwords and keys as
   Secrets (the `existingSecret` values), not inline.
 

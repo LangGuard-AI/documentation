@@ -57,6 +57,11 @@ The parts connect as described in
   namespace `langguard`, so the default NetworkPolicies allow its traffic.
 - **AI.** `langguard-dashboard` calls Azure OpenAI with a Microsoft Entra token for a
   managed identity, through AKS workload identity. No API key is used.
+- **Discovery.** With the
+  [discovery identity](/private-install/azure/requirements#discovery-identity), the catalog
+  (`opencite`) signs in to Azure with a second managed identity, through AKS workload
+  identity. It discovers your Azure AI Foundry resources and reads their traces with it.
+  LangGuard then stores no client secret for the Azure AI Foundry integration.
 - **Images.** The nodes pull the LangGuard images from your Azure Container Registry. AKS
   sets the Istio proxy image of the Gateway (from `mcr.microsoft.com`).
 - **Availability.** The Gateway proxy runs 2 to 5 pods.
