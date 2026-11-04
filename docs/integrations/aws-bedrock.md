@@ -12,7 +12,7 @@ description: Connect LangGuard to AWS Bedrock for model discovery and invocation
 
 The AWS Bedrock integration enables LangGuard to:
 
-- **Discover Bedrock models** — Foundation models and custom models in your account
+- **Discover Bedrock models** — The foundation models and custom models your account calls
 - **Monitor model invocations** — Track usage, latency, and costs
 - **Track provisioned throughput** — Monitor reserved capacity
 - **Apply governance policies** to Bedrock interactions
@@ -20,7 +20,7 @@ The AWS Bedrock integration enables LangGuard to:
 ## Prerequisites
 
 - An AWS account with Bedrock enabled
-- IAM user or role with Bedrock read permissions
+- IAM user or role with Bedrock read permissions and the `cloudtrail:LookupEvents` permission
 - AWS Access Key ID and Secret Access Key
 - LangGuard admin role
 
@@ -45,6 +45,7 @@ The AWS Bedrock integration enables LangGuard to:
         "bedrock:ListProvisionedModelThroughputs",
         "bedrock:GetFoundationModel",
         "bedrock:ListModelInvocationLoggingConfigurations",
+        "cloudtrail:LookupEvents",
         "logs:GetLogEvents",
         "logs:FilterLogEvents"
       ],
@@ -73,7 +74,37 @@ The AWS Bedrock integration enables LangGuard to:
 
 ### Models
 
-LangGuard discovers all available Bedrock models:
+LangGuard lists the Bedrock models that your account calls, not every model
+that Bedrock offers in the region. LangGuard reads the calls from AWS CloudTrail
+(`InvokeModel`, `InvokeModelWithResponseStream`, `Converse` and
+`ConverseStream`). This includes calls through a cross-region inference profile
+(for example `us.anthropic.claude-...`), calls to a custom model through its
+model ARN, and calls through provisioned throughput. A model that your account
+stops calling stays in LangGuard.
+
+When you add the integration, LangGuard reads the calls of the last 7 days.
+Then LangGuard reads the new calls when it updates its data, not more
+frequently than every 10 minutes.
+
+Each time, LangGuard reads only the newest 1,000 calls of each type (for
+example `InvokeModel`). If your account makes more calls of one type between
+two reads, LangGuard does not read the older calls. A model that your account
+calls only rarely can then stay unlisted until LangGuard reads a call to it.
+
+LangGuard cannot find the model for these calls:
+
+- Calls through an application inference profile
+- Calls to an on-demand custom model through its custom model deployment
+- Calls to an imported model
+
+LangGuard needs the `cloudtrail:LookupEvents` permission for this. Without it,
+LangGuard lists no Bedrock models.
+
+In the LangGuard Databricks App, a Bedrock integration lists all foundation
+models in the region. The model list in the Databricks App does not need
+`cloudtrail:LookupEvents`.
+
+LangGuard shows these fields for each model:
 
 | Field | Description |
 |-------|-------------|
@@ -116,8 +147,10 @@ To monitor Bedrock across multiple AWS regions, create a separate integration fo
 ### No Models Discovered
 
 1. Confirm Bedrock is enabled in the specified region
-2. Verify the IAM policy includes `bedrock:ListFoundationModels`
+2. Verify the IAM policy includes `bedrock:ListFoundationModels` and `cloudtrail:LookupEvents`
 3. Check the region is correct
+4. Make sure an application in the account called a model in that region in the last 7 days. LangGuard lists only the models in use. A new model usually appears within 2 hours after its first call. It can take longer when no user is signed in to LangGuard.
+5. Look at how your applications call the model. LangGuard cannot find the model for calls through an application inference profile, a custom model deployment or an imported model.
 
 ### No Invocation Data
 
