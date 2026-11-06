@@ -13,14 +13,13 @@ description: Connect LangGuard to AWS Bedrock for model discovery and invocation
 The AWS Bedrock integration enables LangGuard to:
 
 - **Discover Bedrock models** — The foundation models and custom models your account calls
-- **Monitor model invocations** — Track usage, latency, and costs
 - **Track provisioned throughput** — Monitor reserved capacity
 - **Apply governance policies** to Bedrock interactions
 
 ## Prerequisites
 
 - An AWS account with Bedrock enabled
-- IAM user or role with Bedrock read permissions and the `cloudwatch:ListMetrics` and `cloudwatch:GetMetricData` permissions
+- An IAM user, or an IAM role that an IAM user can assume, with the permissions in [Step 1](#step-1-create-an-iam-user)
 - AWS Access Key ID and Secret Access Key
 - LangGuard admin role
 
@@ -31,7 +30,7 @@ The AWS Bedrock integration enables LangGuard to:
 1. Navigate to the [AWS IAM Console](https://console.aws.amazon.com/iam/)
 2. Click **Users** > **Create user**
 3. Name it "langguard-integration"
-4. Attach the following policy (or create a custom one):
+4. Attach this policy. LangGuard uses only these actions:
 
 ```json
 {
@@ -43,12 +42,8 @@ The AWS Bedrock integration enables LangGuard to:
         "bedrock:ListFoundationModels",
         "bedrock:ListCustomModels",
         "bedrock:ListProvisionedModelThroughputs",
-        "bedrock:GetFoundationModel",
-        "bedrock:ListModelInvocationLoggingConfigurations",
         "cloudwatch:ListMetrics",
-        "cloudwatch:GetMetricData",
-        "logs:GetLogEvents",
-        "logs:FilterLogEvents"
+        "cloudwatch:GetMetricData"
       ],
       "Resource": "*"
     }
@@ -56,7 +51,11 @@ The AWS Bedrock integration enables LangGuard to:
 }
 ```
 
+These actions do not support resource-level permissions, so `Resource` must be `"*"`. Without the two CloudWatch actions, LangGuard lists no Bedrock models. See [Models](#models).
+
 5. Create an **Access Key** and copy the Access Key ID and Secret Access Key
+
+To use an IAM role instead, attach the policy to the role, not to the user. Let the user assume the role: give the user `sts:AssumeRole` on the role, and add the user to the trust policy of the role. Then enter the role ARN in Step 2.
 
 ### Step 2: Add Integration in LangGuard
 
@@ -67,7 +66,9 @@ The AWS Bedrock integration enables LangGuard to:
    - **Name**: A friendly name (e.g., "Production Bedrock US-East-1")
    - **Access Key ID**: Your AWS access key
    - **Secret Access Key**: Your AWS secret key
-   - **Region**: The AWS region where Bedrock is enabled (e.g., `us-east-1`)
+   - **Region**: The AWS region where your applications call Bedrock (e.g., `us-east-1`)
+   - **Session Token** (optional): The session token, if the access key is a temporary key from AWS STS
+   - **Role ARN** (optional): The ARN of the IAM role that LangGuard assumes with the access key, if you use a role
 5. Click **Test Connection**
 6. Click **Save**
 
@@ -152,18 +153,6 @@ LangGuard shows these fields for each model:
 | **Status** | Available, deprecated, etc. |
 | **Capabilities** | Text generation, embedding, image, etc. |
 
-### Invocations
-
-When model invocation logging is enabled in AWS:
-
-| Field | Description |
-|-------|-------------|
-| **Model** | The model invoked |
-| **Input/Output Tokens** | Token counts |
-| **Latency** | Response time |
-| **Status** | Success or error |
-| **Region** | AWS region of the invocation |
-
 ### Provisioned Throughput
 
 - Reserved capacity allocations
@@ -189,12 +178,6 @@ To monitor Bedrock across multiple AWS regions, create a separate integration fo
 3. Check the region is correct
 4. Make sure an application in the account called a model in that region in the last 7 days. LangGuard lists only the models in use. A call through a cross-region inference profile counts in the region where your application made the call. A new model usually appears within 2 hours after its first call. It can take longer when no user is signed in to LangGuard.
 5. Look at how your applications call the model. LangGuard cannot find the model for some types of calls, for example calls through an application inference profile. See the list in [Models](#models).
-
-### No Invocation Data
-
-1. Enable model invocation logging in the [AWS Bedrock console](https://console.aws.amazon.com/bedrock/)
-2. Verify CloudWatch Logs permissions are granted to the IAM user
-3. Check that applications are actively calling Bedrock models
 
 ---
 
