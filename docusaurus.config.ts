@@ -24,6 +24,11 @@ const config: Config = {
   onBrokenAnchors: 'warn',
 
   markdown: {
+    // future.v4 disables MDX 1 compat in Docusaurus 3.10+; the docs rely on
+    // explicit `## Heading {#id}` anchors.
+    mdx1Compat: {
+      headingIds: true,
+    },
     hooks: {
       onBrokenMarkdownLinks: 'warn',
     },

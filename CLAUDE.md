@@ -16,7 +16,7 @@ npm run typecheck  # Run TypeScript type checking
 npm run clear      # Clear Docusaurus cache
 ```
 
-Requires Node.js 20+.
+Requires Node.js 24 (pinned in `.nvmrc`).
 
 ## Architecture
 

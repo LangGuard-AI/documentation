@@ -6,7 +6,7 @@ Public documentation site for [LangGuard](https://langguard.ai), an AI Control P
 
 ## Requirements
 
-- Node.js 20+
+- Node.js 24 (pinned in `.nvmrc`; run `nvm use`)
 
 ## Installation
 
