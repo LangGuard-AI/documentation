@@ -1,6 +1,6 @@
-import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
+import prismTheme from './src/components/prismTheme';
 
 const config: Config = {
   title: 'LangGuard',
@@ -25,9 +25,10 @@ const config: Config = {
 
   markdown: {
     // future.v4 disables MDX 1 compat in Docusaurus 3.10+; the docs rely on
-    // explicit `## Heading {#id}` anchors.
+    // explicit `## Heading {#id}` anchors and `:::tip Title` admonitions.
     mdx1Compat: {
       headingIds: true,
+      admonitions: true,
     },
     hooks: {
       onBrokenMarkdownLinks: 'warn',
@@ -49,10 +50,19 @@ const config: Config = {
         },
         blog: false,
         theme: {
-          customCss: './src/css/custom.css',
+          customCss: ['./src/css/tokens.css', './src/css/custom.css'],
         },
       } satisfies Preset.Options,
     ],
+  ],
+
+  headTags: [
+    {tagName: 'link', attributes: {rel: 'preconnect', href: 'https://fonts.googleapis.com'}},
+    {tagName: 'link', attributes: {rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: 'anonymous'}},
+  ],
+
+  stylesheets: [
+    'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400..700&family=Plus+Jakarta+Sans:ital,wght@0,400..700;1,400..700&display=swap',
   ],
 
   themes: [
@@ -65,6 +75,7 @@ const config: Config = {
         docsRouteBasePath: '/',
         indexBlog: false,
         highlightSearchTermsOnTargetPage: true,
+        searchBarPosition: 'left',
       },
     ],
   ],
@@ -101,27 +112,24 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'LangGuard',
+      title: 'Docs',
       logo: {
-        alt: 'LangGuard Logo',
-        src: 'img/lg_favicon_32.png',
+        alt: 'LangGuard',
+        src: 'img/brand/langguard-wordmark.png',
+        width: 117,
+        height: 24,
       },
       items: [
-        {
-          type: 'docSidebar',
-          sidebarId: 'docsSidebar',
-          position: 'left',
-          label: 'Documentation',
-        },
+        {type: 'search', position: 'right'},
         {
           href: 'https://langguard.ai',
-          label: 'Home',
+          label: 'langguard.ai',
           position: 'right',
         },
       ],
     },
     footer: {
-      style: 'dark',
+      style: 'light',
       links: [
         {
           title: 'Documentation',
@@ -174,9 +182,8 @@ const config: Config = {
       copyright: `Copyright © ${new Date().getFullYear()} LangGuard Inc. Built with Docusaurus.`,
     },
     prism: {
-      theme: prismThemes.github,
-      darkTheme: prismThemes.dracula,
-      additionalLanguages: ['bash', 'typescript', 'json', 'yaml', 'powershell'],
+      theme: prismTheme,
+      additionalLanguages: ['bash', 'typescript', 'json', 'yaml', 'powershell', 'rego'],
     },
     algolia: undefined, // Add Algolia search config when ready
   } satisfies Preset.ThemeConfig,
