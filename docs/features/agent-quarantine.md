@@ -96,6 +96,11 @@ LangGuard records refused attempts in the [Audit Log](/settings/audit-log#agent-
    name decides.
 6. Click **Quarantine**.
 
+If the agent list of Discovery cannot load, the drawer does not show the
+**Quarantine agent** button, because the quarantine state of the agent is not
+known. Use the [REST API](/api-reference/agent-quarantine) or the
+[LangGuard MCP server](/settings/mcp-server#agent-quarantine-tools) then.
+
 The message "*name* is quarantined." shows. If the agent was already quarantined, the
 message is "*name* was already quarantined." LangGuard does not change the active
 quarantine in that case.
