@@ -12,7 +12,7 @@ export default function MDXImg(props: Props): ReactNode {
     return <OriginalImg {...props} />;
   }
   return (
-    <ScreenshotFrame>
+    <ScreenshotFrame alt={props.alt}>
       <OriginalImg
         {...props}
         className={cn(props.className, 'h-auto max-w-full')}
