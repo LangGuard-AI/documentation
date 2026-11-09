@@ -45,7 +45,6 @@
   outline-offset: 2px;
 }
 
-/* Beside the bubble, not above it, so an open panel never covers it. */
 :global(.theme-back-to-top-button) {
   right: 88px;
 }
@@ -61,7 +60,6 @@
   width: 380px;
   max-width: calc(100vw - 24px);
   height: 560px;
-  /* Stays below the navbar: its z-index is higher and would hide the header. */
   max-height: calc(100dvh - var(--ifm-navbar-height) - 96px);
   border: 1px solid var(--chat-hairline);
   border-radius: 18px;

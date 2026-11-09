@@ -64,7 +64,6 @@ function writeStoredTurns(turns: Turn[]): void {
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(turns));
   } catch {
-    // Blocked or full storage only costs persistence across reloads.
   }
 }
 
@@ -163,7 +162,6 @@ export default function ChatWidget({apiUrl}: {apiUrl: string}) {
   const logRef = useRef<HTMLDivElement>(null);
   const inFlightRef = useRef<AbortController | null>(null);
 
-  // Read after mount so the first client render matches the static HTML.
   useEffect(() => {
     setTurns(readStoredTurns());
   }, []);
@@ -218,7 +216,6 @@ export default function ChatWidget({apiUrl}: {apiUrl: string}) {
     const withQuestion = commitTurns([...turns, {role: 'user', text: message}]);
     setDraft('');
     setStatus({kind: 'sending'});
-    // A clicked chip unmounts here and would otherwise drop focus to the body.
     inputRef.current?.focus();
 
     const result = await requestReply(

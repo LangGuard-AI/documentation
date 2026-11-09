@@ -3,11 +3,8 @@ import Link from '@docusaurus/Link';
 
 const DOCS_HOST = 'docs.langguard.ai';
 
-// An unterminated fence runs to the end of the reply, so a truncated answer
-// still renders as code.
 const FENCE = /^[ \t]*```[^\n]*\n([\s\S]*?)(?:^[ \t]*```[ \t]*$|(?![\s\S]))/gm;
 
-// Groups: inline code, bold, link label, link target, bare URL.
 const INLINE =
   /`([^`\n]+)`|\*\*(.+?)\*\*|\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<>)\]"'`*]*[^\s<>)\]"'`*.,:;!?])/g;
 
@@ -68,8 +65,6 @@ function renderInlineToken([
   if (url === null) {
     return raw;
   }
-  // Labels stay plain text: a URL used as its own label would otherwise nest
-  // one anchor inside another.
   return <ChatLink url={url}>{label ?? bare}</ChatLink>;
 }
 
