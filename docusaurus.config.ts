@@ -82,6 +82,7 @@ const config: Config = {
 
   plugins: [
     './src/plugins/tailwind.ts',
+    './src/plugins/image-dimensions.ts',
     [
       '@docusaurus/plugin-client-redirects',
       {
