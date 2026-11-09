@@ -129,8 +129,12 @@ Evaluates one MCP tool call. The same method serves two callers, selected by
 This is the default when `config.langguard.surface` is absent. It is the path governed by
 the [Enforcement Mode](/settings/enforcement-mode) setting.
 
-In Shadow mode (the default), the gateway surface never returns a blocking result.
-`validation.severity` is never `error`, `langguard.status` is `notify` or `success`, every
+In Shadow mode (the default), the gateway surface does not return a blocking result
+for a policy verdict. The one exception is a call from a
+[quarantined agent](/features/agent-quarantine): LangGuard checks the quarantine before
+it reads the mode, and blocks that call in every mode (policy ID `agent_quarantine`, see
+the [Agent Quarantine API](/api-reference/agent-quarantine#what-the-blocked-caller-receives)).
+For other calls, `validation.severity` is never `error`, `langguard.status` is `notify` or `success`, every
 entry in `violations` has `status` `notify`, and no `policy_escalation` is returned.
 `validation.valid` is `false` when there is any violation, also when nothing blocks: a
 caller must block only on severity `error`. `langguard.verdict`, `applied_rule` and
@@ -316,6 +320,7 @@ Missing fields return `-32602` with the messages `session_id is required`,
 | `violations` | As on the gateway surface |
 | `bundle_revision` | Bundle revision used |
 | `evaluated` | `local` or `remote`, indicating where the verdict was computed |
+| `quarantine` | `{ "id": "...", "expiresAt": "..." }` when the device matches an active [agent quarantine](/features/agent-quarantine), else `null`. Present on every hooks answer. |
 
 Every hooks-door call also updates the device's traffic counters and last-seen time in
 Arbiter Management.
@@ -332,6 +337,7 @@ projects its three-way verdict conservatively. A result with `valid: false` and 
 | Gateway: notify-only violations, `ALLOW` | `false` | `warn` |
 | Gateway, Enforce mode: `BLOCK` or `ASK` | `false` | `error` |
 | Gateway, Shadow mode: `BLOCK` or `ASK` (not blocked) | `false` | `warn` |
+| Gateway, any mode: quarantined agent (`agent_quarantine`) | `false` | `error` |
 | Hooks: `ALLOW` and no `block` | `true` | `info` |
 | Hooks: `BLOCK`, `ASK`, or `block: true` | `false` | `error` |
 

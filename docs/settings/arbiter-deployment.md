@@ -36,6 +36,13 @@ deny-list of catastrophic shell commands. Verdicts depend on each tool's approva
 and risk tier as well as your policies. See
 [how verdicts are decided](/settings/arbiter-management#how-verdicts-are-decided).
 
+The plugins also hook every native tool call, so that an
+[agent quarantine](/features/agent-quarantine) can block it. For a native tool, the
+plugin reads only the local quarantine marker. It does not contact the daemon, and your
+policies for native tools do not change. Where the harness can block a prompt, the
+plugins also block the new prompts of a quarantined device. See
+[Agent Quarantine on devices](#agent-quarantine-on-devices).
+
 ## Choosing a deployment model
 
 The page has four tabs:
@@ -390,6 +397,49 @@ extract the module, register the `Microsoft.App`, `Microsoft.ApiManagement`, and
 `Microsoft.OperationalInsights` providers once, run `az login`, then
 `terraform init && terraform apply`. A new APIM v2 instance provisions in roughly 5 to
 10 minutes.
+
+## Agent Quarantine on devices {#agent-quarantine-on-devices}
+
+An [agent quarantine](/features/agent-quarantine#arbiter-devices) blocks a device in
+cooperative mode and in strict mode in the same way. The device keeps the quarantine in
+a local marker file until LangGuard releases it or the expiry passes.
+
+### Update the daemon and the plugins
+
+Only the current daemon and plugins keep the marker and block native tools and new
+prompts. An earlier daemon has no marker. LangGuard then blocks only the calls of that
+device that reach the LangGuard server. The plugin carries the local daemon, so a
+plugin update also updates the local daemon. In remote daemon mode, the plugin keeps
+the marker itself. Update every device:
+
+| Harness | Update |
+|---------|--------|
+| Claude Code | Update `langguard-arbiter@langguard-plugins` from the marketplace. Restart the session. The plugin now hooks every tool call, not only `mcp__*` tools. |
+| Codex | Update the plugin and run `/reload-plugins`. The plugin now hooks every tool call. Run `/hooks` and trust the LangGuard Arbiter hooks again, because the trust is hash-pinned. |
+| Cursor | Update **LangGuard Arbiter** from the Cursor Marketplace. The plugin adds hooks for every tool call and for prompt submit. |
+| Google Antigravity | Run the install command again. There is no auto-update. |
+
+For managed rollouts, deploy the new plugin version through your managed settings or
+your team marketplace.
+
+### Files and settings
+
+| Item | Purpose |
+|------|---------|
+| `~/.config/arbiter/quarantine.json` | The marker: `{ id, expiresAt, learnedAt }`, mode `0600`. Do not delete it. |
+| `~/.config/arbiter/quarantine-check.json` | The last answer of the direct check. A "not quarantined" answer is kept for 10 seconds. |
+| `ARBITER_AI_APP_ID` | A registered AI app ID. LangGuard then matches the device to that app ID, not to the harness. |
+| `ARBITER_USER_ID` | The user ID that the device reports. Without it, the daemon reports the `git config user.email`, else the user name of the operating system. |
+
+When the daemon does not answer, the plugin asks LangGuard directly with the `lgr_` key
+of the device (time limit 1.5 seconds). In remote daemon mode, only this direct check
+writes or removes the marker.
+
+### Claude Apps Gateway
+
+The hooks that the Claude Apps Gateway pushes gate only MCP tools (`mcp__*`). LangGuard
+blocks the MCP tool calls of a quarantined agent there. Native tools are not hooked,
+and there is no marker on the device.
 
 ## Daemon configuration reference
 

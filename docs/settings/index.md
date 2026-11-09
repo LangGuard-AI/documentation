@@ -44,6 +44,11 @@ Set up outbound webhooks to receive notifications when events occur in LangGuard
 
 ---
 
+### [Slack](/settings/slack)
+Get approval requests in Slack, and quarantine or release agents with the `/langguard` command.
+
+---
+
 ### [Custom Checks](/settings/custom-checks)
 Reusable Rego checks that gate workflow lifecycle stages.
 
@@ -80,7 +85,7 @@ Configure cost-per-token rates for different models to power cost metrics in Tra
 ---
 
 ### [Enforcement Mode](/settings/enforcement-mode)
-Switch the MCP gateway between Shadow mode, which never blocks and records what Enforce mode would do, and Enforce mode, which blocks your MCP tool calls.
+Switch the MCP gateway between Shadow mode, which does not block for a policy verdict and records what Enforce mode would do, and Enforce mode, which blocks your MCP tool calls.
 
 ---
 

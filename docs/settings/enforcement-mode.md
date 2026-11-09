@@ -1,16 +1,16 @@
 ---
 sidebar_position: 13
 title: Enforcement Mode
-description: Switch the LangGuard MCP gateway between Shadow mode, which never blocks and records what Enforce mode would do, and Enforce mode, which blocks
+description: Switch the LangGuard MCP gateway between Shadow mode, which does not block for a policy verdict and records what Enforce mode would do, and Enforce mode, which blocks
 ---
 
 # Enforcement Mode
 
 **Enforcement Mode** controls whether the LangGuard MCP gateway, acting as the policy
 decision point (PDP), blocks your **MCP tool calls**. In **Shadow** mode the gateway
-never blocks a call. It records what Enforce mode would do. In **Enforce** mode it
-blocks. See [What Shadow mode does not change](#what-shadow-mode-does-not-change) for
-the one thing that can still stop a call in Shadow mode.
+does not block a call for a policy verdict. It records what Enforce mode would do. In
+**Enforce** mode it blocks. See [What Shadow mode does not change](#what-shadow-mode-does-not-change)
+for the two things that can still stop a call in Shadow mode.
 
 **Navigation:** Settings → Enforcement Mode (`/settings/enforcement-mode`)
 
@@ -43,7 +43,7 @@ difference is what reaches the wire.
 
 | Mode | Wire outcome | Purpose |
 |------|--------------|---------|
-| **Shadow** (default) | Never `block`. `notify` when Enforce mode would block the call or when there is a violation, else `success`. | Observe. LangGuard records what Enforce mode would do. Nothing is blocked. |
+| **Shadow** (default) | No `block` for a policy verdict. `notify` when Enforce mode would block the call or when there is a violation, else `success`. A call from a [quarantined agent](/features/agent-quarantine) is blocked. | Observe. LangGuard records what Enforce mode would do. Policy verdicts block nothing. |
 | **Enforce** | A direct projection of the verdict table | Block. |
 
 :::warning Shadow is the default
@@ -54,8 +54,8 @@ switch to Enforce.
 
 ### Shadow mode
 
-The gateway never blocks a call. This applies to every reason that blocks a call in
-Enforce mode:
+The gateway does not block a call for a policy verdict. This applies to every reason
+that blocks a call in Enforce mode:
 
 - A violation of a policy in enforce mode, including sequence policies
 - A verdict of BLOCK or ASK from the verdict table, for example a tool that is not
@@ -128,8 +128,12 @@ stays on the list.
 
 ### What Shadow mode does not change
 
-Shadow mode controls the result that LangGuard returns for a call. One thing can still
+Shadow mode controls the result that LangGuard returns for a call. Two things can still
 stop a call in Shadow mode:
+
+- **A quarantined agent.** LangGuard checks [Agent Quarantine](/features/agent-quarantine)
+  before it reads the Enforcement Mode. A call from a quarantined agent is blocked in
+  every mode, with the policy ID `agent_quarantine`.
 
 - **No result from LangGuard.** If LangGuard does not return a result, for example
   because of a timeout, a request that is too large, or an internal error, the failure

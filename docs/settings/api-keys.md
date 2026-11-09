@@ -38,11 +38,21 @@ that works for the job:
 | **Read** | Read-only access to data via the API |
 | **Write** | Read and modify data via the API |
 | **Admin** | Full administrative access via the API |
+| **Quarantine** | Place, change, release and read [agent quarantines](/features/agent-quarantine) only, through the REST API and the MCP server. The key needs an expiry, as Ingest, Read, Write and Admin keys do. |
 
 :::note Ingestion requires an ingest-scoped key
 Trace and log ingestion endpoints accept **only** keys with the **Ingest** scope —
 a read/write/admin key cannot push trace data. Use a dedicated ingest key for your
 OTLP exporters and keep API-operation keys separate.
+:::
+
+:::note Only Quarantine keys can quarantine an agent
+A key with the **Admin** or the **Write** scope cannot place, change or release a
+quarantine, because an agent can hold such a key. Use a **Quarantine** key for this. A
+Quarantine key can use only the [Agent Quarantine API](/api-reference/agent-quarantine)
+and the four [quarantine tools](/settings/mcp-server#agent-quarantine-tools) of the MCP
+server. Every other API route refuses it with HTTP 403. A Quarantine key cannot release
+a quarantine that binds that same key.
 :::
 
 ## Generating a Key

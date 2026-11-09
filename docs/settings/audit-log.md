@@ -54,6 +54,38 @@ Narrow the audit log using filters:
 | **Settings Changes** | Workspace settings updated, SSO configured |
 | **User Management** | User invited, role changed, user removed |
 | **API Key Events** | Key created, revoked |
+| **Quarantine** | Agent quarantined, quarantine changed, released, expired, change refused. See [Agent quarantine actions](#agent-quarantine-actions). |
+
+### Agent quarantine actions {#agent-quarantine-actions}
+
+The category **Quarantine** holds the [Agent Quarantine](/features/agent-quarantine)
+actions. The filter lists them also before the first one occurs.
+
+| Action | Severity | When |
+|--------|----------|------|
+| `agent.quarantine_placed` | warning | An agent was quarantined |
+| `agent.quarantine_updated` | info | The reason or the expiry changed, or a ban made an active quarantine ban-based |
+| `agent.quarantine_released` | info | A quarantine was released |
+| `agent.quarantine_expired` | info | A quarantine reached its expiry |
+| `agent.quarantine_refused` | warning | LangGuard refused a place, change or release. The status is failure. |
+
+The metadata of each entry has the surface (`ui`, `api`, `mcp`, `slack`, `approval` or
+`expiry`). When the entry is about one quarantine, the metadata also has the quarantine
+ID, the agent ID and name, the IDs of the bound identities, the reason and the expiry.
+A refusal also has the `cause`:
+
+| Cause | Meaning |
+|-------|---------|
+| `forbidden` | The caller is not an admin and does not use a Quarantine key |
+| `self_release` | The calling key is one of the bound identities |
+| `banned_agent` | The approval status Banned holds the quarantine |
+
+The actor type of these entries is `user`, `api_key`, `slack_user` or `system`. The
+filter also lists `agent.quarantine_bypass_detected`. LangGuard does not write this
+action in this release.
+
+[SIEM forwarding](#siem-forwarding) sends these entries as all other audit entries. Its
+category filter also lists **Quarantine**.
 
 ## Exporting Audit Data
 
