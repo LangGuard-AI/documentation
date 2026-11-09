@@ -1,0 +1,52 @@
+name: Sync docs to the docs chatbot index
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+# Queued, not cancelled: an in-flight rebuild keeps running in Lambda after the
+# job is cancelled, and the queued run picks up the newest docs.
+concurrency:
+  group: chatbot-index
+  cancel-in-progress: false
+
+env:
+  BUCKET: langguard-docs-chatbot-source
+  FUNCTION: langguard-docs-chatbot-ingestion
+  AWS_REGION: us-west-2
+
+jobs:
+  sync:
+    if: vars.DOCS_CHATBOT_SYNC_ROLE_ARN != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.DOCS_CHATBOT_SYNC_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Sync markdown to S3
+        run: |
+          aws s3 sync docs "s3://$BUCKET/" \
+            --exclude "*" --include "*.md" --delete
+
+      - name: Rebuild the index
+        run: |
+          aws lambda invoke --function-name "$FUNCTION" \
+            --cli-read-timeout 0 --cli-binary-format raw-in-base64-out \
+            --payload "{\"Records\":[{\"s3\":{\"bucket\":{\"name\":\"$BUCKET\"}}}]}" \
+            /tmp/reindex.json
+          echo "Ingestion result:"; cat /tmp/reindex.json; echo
+          if grep -q '"errorMessage"' /tmp/reindex.json; then
+            echo "::error::Reindex failed"; exit 1
+          fi
