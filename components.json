@@ -20,6 +20,7 @@
   "iconLibrary": "lucide",
   "registries": {
     "@cult-ui": "https://www.cult-ui.com/r/{name}.json",
-    "@uiarc": "https://uiarc.dev/r/{name}.json"
+    "@uiarc": "https://uiarc.dev/r/{name}.json",
+    "@motion-primitives": "https://motion-primitives.com/c/{name}.json"
   }
 }

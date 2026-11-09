@@ -1,18 +1,22 @@
-import {lazy, Suspense, useRef, useState} from 'react';
 import type {ComponentProps, ReactNode} from 'react';
 import {usePluginData} from '@docusaurus/useGlobalData';
 import {ThemedComponent} from '@docusaurus/theme-common';
 import type {Props as ThemedImageProps} from '@theme/ThemedImage';
 
-import type {ZoomImage} from '@/components/ScreenshotZoom';
 import {BrowserWindow} from '@/components/ui/browser-window';
+import {
+  MorphingDialog,
+  MorphingDialogClose,
+  MorphingDialogContainer,
+  MorphingDialogContent,
+  MorphingDialogTrigger,
+  MorphingDialogTriggerImage,
+} from '@/components/ui/morphing-dialog';
 import {cn} from '@/lib/utils';
 import type {ImageDimensions} from '@/plugins/image-dimensions';
 
 const IMAGE_CLASS = 'h-auto max-w-full';
-
-const loadZoom = () => import('@/components/ScreenshotZoom');
-const ScreenshotZoom = lazy(loadZoom);
+const MORPH = {type: 'spring', visualDuration: 0.4, bounce: 0} as const;
 
 export function ScreenshotFrame({
   alt,
@@ -21,37 +25,25 @@ export function ScreenshotFrame({
   alt?: string;
   children: ReactNode;
 }) {
-  const trigger = useRef<HTMLButtonElement>(null);
-  const [image, setImage] = useState<ZoomImage | null>(null);
-  const [open, setOpen] = useState(false);
   return (
     <BrowserWindow className="my-6">
-      <button
-        ref={trigger}
-        type="button"
-        aria-label={alt ? `View larger: ${alt}` : 'View larger image'}
-        className="hover-elevate flex w-full cursor-zoom-in border-0 bg-transparent p-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
-        onPointerEnter={() => void loadZoom()}
-        onFocus={() => void loadZoom()}
-        onClick={(event) => {
-          const shown = event.currentTarget.querySelector('img');
-          if (!shown) return;
-          setImage({src: shown.currentSrc || shown.src, alt: shown.alt});
-          setOpen(true);
-        }}
-      >
-        {children}
-      </button>
-      {image && (
-        <Suspense fallback={null}>
-          <ScreenshotZoom
-            image={image}
-            open={open}
-            onOpenChange={setOpen}
-            trigger={trigger}
-          />
-        </Suspense>
-      )}
+      <MorphingDialog transition={MORPH}>
+        <MorphingDialogTrigger
+          label={alt ? `View larger: ${alt}` : 'View larger image'}
+          className="hover-elevate flex w-full cursor-zoom-in border-0 bg-transparent p-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+        >
+          {children}
+        </MorphingDialogTrigger>
+        <MorphingDialogContainer>
+          <MorphingDialogContent
+            label={alt || 'Screenshot'}
+            className="relative w-fit border border-border bg-card shadow-lg"
+          >
+            <MorphingDialogTriggerImage className="block h-auto max-h-[calc(100dvh-2rem)] w-auto max-w-[min(calc(100vw-2rem),90rem)]" />
+            <MorphingDialogClose className="absolute top-3 right-3 grid size-8 cursor-pointer place-items-center rounded-md border border-border bg-card text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" />
+          </MorphingDialogContent>
+        </MorphingDialogContainer>
+      </MorphingDialog>
     </BrowserWindow>
   );
 }
