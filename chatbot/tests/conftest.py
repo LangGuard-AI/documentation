@@ -25,3 +25,4 @@ def _load(alias, path):
 
 
 _load("ingestion_app", SRC / "ingestion" / "app.py")
+_load("orchestrator_app", SRC / "orchestrator" / "app.py")

@@ -1,0 +1,2 @@
+# boto3/botocore are provided by the Lambda Python runtime.
+numpy==2.1.3
