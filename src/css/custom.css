@@ -847,13 +847,11 @@ html [class*='hitWrapper'] mark {
   border-radius: var(--lg-radius-xl);
 }
 
-/* The browser window frame owns the card. This crops the few pixels of desktop
-   the capture tool caught at the edges. No display here: it would beat the rule
-   that hides the inactive theme's image before hydration. */
+/* The browser window frame owns the card. No display here: it would beat the
+   rule that hides the inactive theme's image before hydration. */
 .markdown img {
   max-width: 100%;
   height: auto;
-  object-view-box: inset(6px);
 }
 
 .button--primary {
