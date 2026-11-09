@@ -4,6 +4,12 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 import ThemedImage from '@theme/ThemedImage';
 import Heading from '@theme/Heading';
 
+import {
+  MinimalCard,
+  MinimalCardDescription,
+  MinimalCardTitle,
+} from '@/components/ui/minimal-card';
+
 const ROLES = [
   {who: 'Platform teams', does: 'Centralize AI observability and governance', go: 'Integrations', to: '/integrations'},
   {who: 'Security teams', does: 'Monitor for policy violations and security issues', go: 'Policies', to: '/policies'},
@@ -26,15 +32,6 @@ const FEATURES = [
 export default function DocsHome(): ReactNode {
   return (
     <div className="lg-home">
-      <div className="lg-home-actions">
-        <Link className="button button--primary" to="/getting-started/quick-start">
-          Open the Quick Start
-        </Link>
-        <Link className="button button--outline button--secondary" to="/getting-started/connecting-integrations">
-          Connect an integration
-        </Link>
-      </div>
-
       <ThemedImage
         className="lg-home-shot"
         alt="The LangGuard Discovery page, listing agents grouped by team with their risk level and downstream systems"
@@ -59,8 +56,10 @@ export default function DocsHome(): ReactNode {
       <div className="lg-home-grid">
         {FEATURES.map(({title, body, to}) => (
           <Link key={title} to={to} className="lg-home-feature">
-            <strong>{title}</strong>
-            <span>{body}</span>
+            <MinimalCard className="hover-elevate h-full">
+              <MinimalCardTitle>{title}</MinimalCardTitle>
+              <MinimalCardDescription>{body}</MinimalCardDescription>
+            </MinimalCard>
           </Link>
         ))}
       </div>

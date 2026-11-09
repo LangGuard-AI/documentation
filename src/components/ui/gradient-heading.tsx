@@ -14,7 +14,7 @@ export function GradientHeading({
 }) {
   return (
     <Tag className={className}>
-      <span className="bg-linear-to-t from-foreground/80 to-foreground bg-clip-text pb-1 font-bold tracking-tight text-transparent forced-colors:bg-none forced-colors:text-[CanvasText]">
+      <span className="bg-linear-to-t from-foreground/80 to-foreground bg-clip-text pb-1 font-semibold tracking-tight text-transparent forced-colors:bg-none forced-colors:text-[CanvasText]">
         {children}
       </span>
     </Tag>

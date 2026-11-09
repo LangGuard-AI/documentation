@@ -230,7 +230,6 @@ html:not(.docs-wrapper) .main-wrapper {
 .tabs__item:hover,
 .lg-table tbody tr:hover,
 .lg-home-row:hover,
-.lg-home-feature:hover,
 .button--outline:hover,
 .button--primary:hover,
 .breadcrumbs__link:hover,
@@ -244,7 +243,6 @@ html:not(.docs-wrapper) .main-wrapper {
 .pagination-nav__link:active,
 .tabs__item:active,
 .lg-home-row:active,
-.lg-home-feature:active,
 .button--outline:active,
 .button--primary:active {
   background-image: linear-gradient(var(--lg-elevate-2) 0 0);
@@ -328,6 +326,10 @@ kbd,
 
 [class*='dropdownMenu'] [class*='suggestion'] {
   border-radius: var(--lg-radius-md);
+}
+
+[class*='dropdownMenu'] [class*='suggestions_'] [class*='suggestion_'][class*='cursor_'] {
+  box-shadow: inset 4px 0 0 var(--lg-primary);
 }
 
 .navbar__search [class*='searchBar_'] {
@@ -845,17 +847,12 @@ html [class*='hitWrapper'] mark {
   border-radius: var(--lg-radius-xl);
 }
 
-/* App captures are real evidence, so they get the app's card, cropped past the
-   few pixels of desktop the capture tool caught at the edges. */
+/* The browser window frame owns the card. This crops the few pixels of desktop
+   the capture tool caught at the edges. No display here: it would beat the rule
+   that hides the inactive theme's image before hydration. */
 .markdown img {
-  display: block;
   max-width: 100%;
   height: auto;
-  margin-block: 1.5rem;
-  background-color: var(--lg-card);
-  border: 1px solid var(--lg-border);
-  border-radius: var(--lg-radius-xl);
-  box-shadow: var(--lg-shadow);
   object-view-box: inset(6px);
 }
 
@@ -943,8 +940,7 @@ html [class*='hitWrapper'] mark {
   box-shadow: var(--lg-shadow);
 }
 
-.lg-home-list,
-.lg-home-grid {
+.lg-home-list {
   overflow: hidden;
   background-color: var(--lg-card);
   border: 1px solid var(--lg-border);
@@ -968,8 +964,7 @@ html [class*='hitWrapper'] mark {
   border-bottom: 0;
 }
 
-.lg-home-row:hover,
-.lg-home-feature:hover {
+.lg-home-row:hover {
   color: var(--lg-foreground);
   text-decoration: none;
 }
@@ -990,24 +985,16 @@ html [class*='hitWrapper'] mark {
 .lg-home-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1px;
-  background-color: var(--lg-border);
+  gap: 0.75rem;
 }
 
 .lg-home-feature {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 1rem;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  color: var(--lg-muted-foreground);
-  background-color: var(--lg-card);
+  display: block;
+  border-radius: var(--lg-radius-xl);
 }
 
-.lg-home-feature strong {
-  font-weight: 600;
-  color: var(--lg-foreground);
+.lg-home-feature:hover {
+  text-decoration: none;
 }
 
 @media (max-width: 640px) {
