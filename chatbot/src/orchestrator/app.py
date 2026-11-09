@@ -4,10 +4,6 @@ POST /chat  body: { message, history: [{role, text}] }
 returns:    200 { reply, sources: [url] }
             429 / 502 { error, reply }
             400 { error }
-
-Flow: validate -> rate limit (before any Bedrock spend) -> rebuild Converse
-messages from the widget-held history -> run the tool-use loop -> reply.
-CORS (incl. preflight) is handled by the HTTP API's CorsConfiguration.
 """
 from __future__ import annotations
 
@@ -55,8 +51,6 @@ def handler(event, _context):
     ip = ((event.get("requestContext") or {}).get("http") or {}).get("sourceIp", "0.0.0.0")
     if not rate_limit.allow_request(_ratelimit_table, ip):
         return _resp(429, {"error": "rate_limited", "reply": BUSY_REPLY})
-    # Hard spend cap: once the month or day hits its dollar ceiling, Bedrock is
-    # not called at all. A normal reply, so the widget shows it in the thread.
     if not rate_limit.budget_ok(_ratelimit_table):
         return _resp(200, {"reply": CAP_REPLY, "sources": []})
 
@@ -86,7 +80,6 @@ def handler(event, _context):
 
 
 def _make_dispatch():
-    """Tool dispatcher for one request; collects citations."""
     citations: list = []
 
     def dispatch(name: str, tool_input: dict):
@@ -110,7 +103,6 @@ def _make_dispatch():
 
 
 def _log_tool(name: str, tool_input: dict, result: dict, is_error: bool):
-    """Compact tool-call trace for CloudWatch."""
     out = {"tool": name, "is_error": is_error}
     if name == system_prompt.SEARCH_DOCS:
         out["query"] = str((tool_input or {}).get("query") or "")[:120]

@@ -55,8 +55,6 @@ Resources:
         DestinationBucketName: !Sub "aws-cloudtrail-access-logs-${AWS::AccountId}-${AWS::Region}"
         LogFilePrefix: s3-access-logs/langguard-docs-chatbot-index/
 
-  # Principal is a bare "*" rather than {"AWS":"*"} on purpose: the latter does
-  # not match anonymous requests, which this exists to catch.
   DocsSourceBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -109,8 +107,6 @@ Resources:
         Enabled: true
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
-      # Blocks replacement as well as deletion: a future TableName or KeySchema
-      # change fails the update until this is turned off first.
       DeletionProtectionEnabled: true
 
   IngestionFunction:
@@ -131,8 +127,6 @@ Resources:
                 aws:SourceArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:langguard-docs-chatbot-ingestion*
       Handler: app.handler
       CodeUri: src/ingestion/
-      # One embedding call per chunk, so wall time scales with the corpus. The
-      # ceiling is headroom for retries, not the expected duration.
       Timeout: 900
       Environment:
         Variables:
@@ -208,8 +202,6 @@ Resources:
           RATE_SALT: langguard-docs-chatbot
           COST_CAP_MONTH_USD: "20"
           COST_CAP_DAY_USD: "4"
-          # Nova Pro on-demand, $ per million tokens. Change these with the
-          # model or the spend cap stops being accurate.
           BEDROCK_PRICE_IN_PER_M: "0.80"
           BEDROCK_PRICE_OUT_PER_M: "3.20"
       Policies:

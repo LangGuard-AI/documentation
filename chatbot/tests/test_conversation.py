@@ -57,7 +57,6 @@ def test_tool_use_then_reply():
     reply, stop = _run(client, dispatch, messages)
     assert reply == "Policies work like this."
     assert calls == [("search_docs", {"query": "policies"})]
-    # messages: user, assistant(toolUse), user(toolResult), assistant(final)
     assert len(messages) == 4
     tr = messages[2]["content"][0]["toolResult"]
     assert tr["toolUseId"] == "t1"
@@ -101,11 +100,11 @@ def test_sanitize_history_basic():
 
 def test_sanitize_history_merges_and_trims():
     raw = [
-        {"role": "assistant", "text": "orphan"},      # leading assistant dropped
+        {"role": "assistant", "text": "orphan"},
         {"role": "user", "text": "one"},
-        {"role": "user", "text": "two"},               # merged into previous
+        {"role": "user", "text": "two"},
         {"role": "assistant", "text": "reply"},
-        {"role": "user", "text": "dangling"},          # trailing user dropped
+        {"role": "user", "text": "dangling"},
     ]
     out = conversation.sanitize_history(raw)
     assert [m["role"] for m in out] == ["user", "assistant"]

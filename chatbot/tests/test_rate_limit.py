@@ -18,7 +18,7 @@ class FakeTable:
         return {"Attributes": {"count": item.get("count", 0)}}
 
 
-_T0 = 1_750_000_000  # mid-June 2025, so a few days stay inside one month
+_T0 = 1_750_000_000
 _DAY = 86_400
 
 
@@ -35,18 +35,18 @@ def test_record_cost_ignored_when_zero():
 
 def test_budget_blocks_at_the_four_dollar_daily_cap():
     table = FakeTable()
-    rate_limit.record_cost(table, 4_875_000, 0, _T0)  # $3.90
+    rate_limit.record_cost(table, 4_875_000, 0, _T0)
     assert rate_limit.budget_ok(table, _T0)
-    rate_limit.record_cost(table, 125_000, 0, _T0)  # $4.00 in total
+    rate_limit.record_cost(table, 125_000, 0, _T0)
     assert not rate_limit.budget_ok(table, _T0)
 
 
 def test_budget_blocks_at_the_twenty_dollar_monthly_cap():
     table = FakeTable()
     for day in range(5):
-        rate_limit.record_cost(table, 4_750_000, 0, _T0 + day * _DAY)  # $3.80/day, under daily cap
-    assert rate_limit.budget_ok(table, _T0 + 4 * _DAY)  # $19.00
-    rate_limit.record_cost(table, 1_250_000, 0, _T0 + 5 * _DAY)  # $20.00 in total
+        rate_limit.record_cost(table, 4_750_000, 0, _T0 + day * _DAY)
+    assert rate_limit.budget_ok(table, _T0 + 4 * _DAY)
+    rate_limit.record_cost(table, 1_250_000, 0, _T0 + 5 * _DAY)
     assert not rate_limit.budget_ok(table, _T0 + 5 * _DAY)
 
 

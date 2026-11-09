@@ -1,4 +1,3 @@
-"""A rebuild is all-or-nothing, so one transient Bedrock error must not discard it."""
 import io
 import json
 import unittest
@@ -17,11 +16,6 @@ def _ok_response(vector):
 
 
 class FakeBedrock:
-    """Fails the first `fail_times` calls with `code`, then succeeds.
-
-    Records the inputText of every call so ordering can be asserted.
-    """
-
     def __init__(self, fail_times=0, code="ModelErrorException"):
         self.fail_times = fail_times
         self.code = code
@@ -65,7 +59,6 @@ class EmbedRetryTests(unittest.TestCase):
         self.assertEqual(fake.calls, 2)
 
     def test_non_retryable_error_raises_immediately(self):
-        # A malformed request will never succeed on retry; failing fast is right.
         fake = FakeBedrock(fail_times=99, code="ValidationException")
         with mock.patch.object(app, "bedrock", fake):
             with self.assertRaises(ClientError):
@@ -86,9 +79,6 @@ class EmbedAllTests(unittest.TestCase):
         self.addCleanup(self._sleep.stop)
 
     def test_order_is_preserved_under_concurrency(self):
-        # Embeddings are matched to chunks positionally when the index is
-        # written, so a concurrent map that reorders would silently mislabel
-        # every citation.
         texts = ["a" * n for n in range(1, 41)]
         fake = FakeBedrock()
         with mock.patch.object(app, "bedrock", fake):
@@ -107,8 +97,6 @@ class EmbedAllTests(unittest.TestCase):
             self.assertAlmostEqual(float((row ** 2).sum()) ** 0.5, 1.0, places=5)
 
     def test_one_flaky_chunk_does_not_fail_the_rebuild(self):
-        # The actual outage: a single transient error mid-corpus previously
-        # aborted the whole run.
         fake = FakeBedrock(fail_times=1)
         with mock.patch.object(app, "bedrock", fake):
             arr = app._embed_all(["a", "b", "c", "d"])

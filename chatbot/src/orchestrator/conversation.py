@@ -1,15 +1,3 @@
-"""The Bedrock Converse tool-use loop.
-
-`run_turn` is dependency-injected (client + dispatch callable) so the loop is
-unit-testable with a fake Bedrock client. The loop:
-
-    converse -> stopReason "tool_use"? -> run tools -> append results -> repeat
-             -> "end_turn" (or anything else) -> return the text
-
-Cache points are stripped and the call retried once if the model/region
-rejects them (ValidationException), so prompt caching is an optimization,
-never an outage.
-"""
 from __future__ import annotations
 
 import re
@@ -32,14 +20,6 @@ def run_turn(
     max_tokens: int = 1024,
     deadline: float = None,
 ):
-    """Run one user turn to completion. Returns (reply_text, stop_reason, usage).
-
-    `usage` is {"in": int, "out": int} — Bedrock input/output token counts summed
-    across every Converse call this turn made (a tool-use turn makes several), used
-    by the caller to enforce the spend cap. `dispatch(name, input_dict)` ->
-    (result_dict, is_error). `messages` is mutated in place (assistant turns + tool
-    results are appended).
-    """
     usage = {"in": 0, "out": 0}
     for _ in range(MAX_ITERATIONS):
         resp = _converse(client, model_id, system_blocks, tool_config, messages, max_tokens)
@@ -75,12 +55,6 @@ def run_turn(
 
 
 def sanitize_history(raw, max_turns: int = 12, max_chars: int = 4000) -> list:
-    """Widget-held history -> alternating Converse messages (text only, capped).
-
-    Merges consecutive same-role entries, drops anything malformed, ensures the
-    list starts with a user turn and ends with an assistant turn (the caller
-    appends the new user message after this).
-    """
     if not isinstance(raw, list):
         return []
     cleaned = []

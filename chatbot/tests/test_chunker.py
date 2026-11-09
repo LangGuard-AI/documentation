@@ -123,14 +123,11 @@ def test_empty_and_whitespace_input():
 
 
 def test_giant_unbroken_block_is_hard_split():
-    # A 200k-char blob with no blank lines (e.g. a base64 image) must NOT become
-    # one chunk — it's force-split so every chunk stays within the hard ceiling
-    # (and therefore safely under the embedding model's input cap).
     blob = "x" * 200_000
     md = f"## Big\n\n{blob}\n"
     chunks = chunk_markdown(md, max_chars=1500)
     assert len(chunks) > 10
-    assert all(len(c.text) <= HARD_MAX_CHARS + 200 for c in chunks)  # + breadcrumb slack
+    assert all(len(c.text) <= HARD_MAX_CHARS + 200 for c in chunks)
 
 
 def test_strip_frontmatter_basic():

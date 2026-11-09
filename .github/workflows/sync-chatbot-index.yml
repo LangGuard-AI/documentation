@@ -11,8 +11,6 @@ permissions:
   id-token: write
   contents: read
 
-# Queued, not cancelled: an in-flight rebuild keeps running in Lambda after the
-# job is cancelled, and the queued run picks up the newest docs.
 concurrency:
   group: chatbot-index
   cancel-in-progress: false

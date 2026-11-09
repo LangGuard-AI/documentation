@@ -1,15 +1,3 @@
-"""Markdown chunker for the LangGuard docs RAG index.
-
-Splits a markdown document into retrieval chunks along heading boundaries,
-preserving the heading breadcrumb as context and never splitting inside a
-fenced code block. Pure-Python, no third-party dependencies, so it is
-unit-testable in isolation (see ../../tests/test_chunker.py).
-
-Each chunk carries:
-  - text:         heading breadcrumb + section body (this is what gets embedded)
-  - heading_path: list of headings from outermost to innermost
-  - anchor:       deepest heading's Docusaurus element id, empty when it has none
-"""
 from __future__ import annotations
 
 import re
@@ -22,8 +10,6 @@ _MARKDOWN_LINK_RE = re.compile(r"!?\[([^\]]*)\]\([^)]*\)")
 _FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})")
 
 DEFAULT_MAX_CHARS = 1500
-# Blocks (paragraphs, code fences) are kept intact up to this hard ceiling — only
-# truly giant unbroken blobs are force-split. Well under the embedding input cap.
 HARD_MAX_CHARS = 8000
 
 _MDX_LINE_RE = re.compile(r"^(import|export)\s")
@@ -37,12 +23,6 @@ class Chunk:
 
 
 def strip_frontmatter(text: str):
-    """Remove a leading YAML frontmatter block; return (text, meta_dict).
-
-    Only flat `key: value` pairs are captured (enough for Docusaurus slug /
-    title / description). Also drops MDX import/export lines, which are code,
-    not content.
-    """
     meta = {}
     if text.startswith("---"):
         lines = text.splitlines()
@@ -55,8 +35,6 @@ def strip_frontmatter(text: str):
                             meta[k.strip()] = v.strip().strip("\"'")
                     text = "\n".join(lines[end + 1 :])
                     break
-    # Drop MDX import/export lines — but never inside fenced code blocks,
-    # where `import x` is example code the docs are deliberately showing.
     out_lines = []
     in_fence = False
     fence_marker = ""
@@ -113,12 +91,6 @@ def _parse_heading(level: int, raw: str, slugger: _Slugger) -> _Heading:
 
 
 def _parse_sections(text: str):
-    """Yield (heading_path, anchor, body_lines) tuples, fence-aware.
-
-    The body that follows a heading is attributed to that heading. Content
-    before the first heading becomes a preamble section with an empty path.
-    '#' characters inside a fenced code block are never treated as headings.
-    """
     sections = []
     stack = []
     slugger = _Slugger()
@@ -164,11 +136,6 @@ def _parse_sections(text: str):
 
 
 def _split_into_blocks(body: str):
-    """Split a section body into indivisible blocks.
-
-    A fenced code block is one block (never split). Outside fences, runs of
-    non-blank lines separated by blank lines are paragraph blocks.
-    """
     blocks: list[str] = []
     cur: list[str] = []
     in_fence = False
@@ -210,12 +177,6 @@ def _split_into_blocks(body: str):
 
 
 def _hardwrap(text: str, limit: int):
-    """Split an over-long block into <=limit pieces, preferring whitespace breaks.
-
-    Guarantees no piece exceeds `limit`, so a giant unbroken block (e.g. a stray
-    base64 blob or minified HTML) can never produce a chunk that blows past the
-    embedding model's input cap.
-    """
     pieces, i, n = [], 0, len(text)
     while i < n:
         end = min(i + limit, n)
@@ -231,11 +192,6 @@ def _hardwrap(text: str, limit: int):
 
 
 def _pack_blocks(blocks, max_chars: int, reserve: int = 0):
-    """Greedily concatenate blocks into pieces under the char budget.
-
-    Blocks larger than the budget are hard-wrapped first, so every emitted piece
-    is bounded by the budget.
-    """
     budget = max(1, max_chars - reserve)
     expanded: list[str] = []
     for b in blocks:
@@ -257,7 +213,6 @@ def _pack_blocks(blocks, max_chars: int, reserve: int = 0):
 
 
 def chunk_markdown(text: str, max_chars: int = DEFAULT_MAX_CHARS):
-    """Split markdown into a list of Chunk objects."""
     chunks: list[Chunk] = []
     for heading_path, anchor, body_lines in _parse_sections(text):
         body = "\n".join(body_lines).strip()

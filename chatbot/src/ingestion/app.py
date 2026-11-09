@@ -1,16 +1,3 @@
-"""Ingestion Lambda — rebuild the docs RAG index.
-
-The sync-chatbot-index workflow syncs docs/ to the source bucket, then invokes
-this once. Each invoke rebuilds the *whole* index from the source bucket —
-correct and simple at one-doc-site scale.
-
-Output (written to the RAG index bucket):
-  - chunks.json     list of {text, heading_path, source_url, source_file}
-  - embeddings.npy  float32 [n_chunks, dim], L2-normalized (cosine == dot product)
-
-Retrieval (in the orchestrator Lambda) is an exact numpy cosine search over
-embeddings.npy — no FAISS/OpenSearch needed at this scale.
-"""
 from __future__ import annotations
 
 import io
@@ -39,15 +26,9 @@ RAG_INDEX_BUCKET = os.environ["RAG_INDEX_BUCKET"]
 TITAN_MODEL_ID = os.environ.get("TITAN_MODEL_ID", "amazon.titan-embed-text-v2:0")
 DOCS_BASE_URL = os.environ.get("DOCS_BASE_URL", "https://docs.langguard.ai").rstrip("/")
 
-# One invoke_model call per chunk, so wall time and failure odds both scale with
-# the corpus. Concurrency keeps the rebuild well inside the Lambda timeout; 8 is
-# conservative enough not to provoke the throttling it would then have to retry.
 EMBED_WORKERS = int(os.environ.get("EMBED_WORKERS", "8"))
 EMBED_ATTEMPTS = int(os.environ.get("EMBED_ATTEMPTS", "5"))
 
-# Bedrock errors worth trying again. ModelErrorException is the one that has
-# actually bitten: a transient server-side failure that arrives mid-rebuild and,
-# without a retry, discards every embedding computed before it.
 RETRYABLE_CODES = frozenset({
     "ModelErrorException",
     "ModelTimeoutException",
@@ -100,7 +81,6 @@ def _get_text(bucket: str, key: str) -> str:
 
 
 def _key_to_url(key: str, slug: str = None) -> str:
-    """Map an S3 markdown key (or a frontmatter slug override) to its page URL."""
     if slug:
         return f"{DOCS_BASE_URL}/{slug.strip('/')}/" if slug.strip("/") else f"{DOCS_BASE_URL}/"
     p = key[:-3] if key.endswith(".md") else key
@@ -111,19 +91,9 @@ def _key_to_url(key: str, slug: str = None) -> str:
 
 
 def _embed_one(text: str) -> list:
-    """Embed one chunk, retrying the transient Bedrock failures with backoff.
-
-    A rebuild is all-or-nothing: the index is only written once every chunk has
-    an embedding, so an un-retried failure on chunk 800 of 1350 throws away the
-    other 1349. Retrying here is what makes the rebuild survivable at corpus
-    sizes where hitting at least one transient error per run is the norm.
-    """
     delay = 0.5
     for attempt in range(1, EMBED_ATTEMPTS + 1):
         try:
-            # Titan caps inputText at 50k chars; truncate defensively so one
-            # oversized chunk can never fail the whole rebuild (the chunker
-            # should prevent this).
             resp = bedrock.invoke_model(
                 modelId=TITAN_MODEL_ID,
                 body=json.dumps({"inputText": text[:45000]}),
@@ -133,16 +103,12 @@ def _embed_one(text: str) -> list:
             code = e.response.get("Error", {}).get("Code", "")
             if code not in RETRYABLE_CODES or attempt == EMBED_ATTEMPTS:
                 raise
-            # Jitter so concurrent workers that hit the same blip do not all
-            # come back at the same instant and cause the next one.
             time.sleep(delay + random.uniform(0, 0.25))
             delay = min(delay * 2, 8.0)
     raise AssertionError("unreachable")  # pragma: no cover
 
 
 def _embed_all(texts) -> np.ndarray:
-    # ThreadPoolExecutor.map preserves input order, which matters: embeddings
-    # are matched to chunks positionally when the index is written.
     with ThreadPoolExecutor(max_workers=EMBED_WORKERS) as pool:
         vecs = list(pool.map(_embed_one, texts))
     arr = np.array(vecs, dtype=np.float32)

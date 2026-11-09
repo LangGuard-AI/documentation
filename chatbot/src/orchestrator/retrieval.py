@@ -1,11 +1,3 @@
-"""search_docs retrieval over the S3 RAG index.
-
-The ingestion Lambda writes `embeddings.npy` (float32, L2-normalized rows) and
-`chunks.json` to the RAG bucket. At this corpus size (hundreds to a few
-thousand chunks) an exact numpy dot-product search is sub-millisecond — no
-FAISS/vector DB needed. The index is cached in the warm Lambda container and
-refreshed after INDEX_TTL_SECONDS so doc updates show up without a redeploy.
-"""
 from __future__ import annotations
 
 import io
@@ -33,7 +25,6 @@ _clients = {}
 
 
 def top_k_indices(matrix, qvec, k: int):
-    """Indices of the top-k cosine matches, best first (rows pre-normalized)."""
     if matrix is None or len(matrix) == 0 or k <= 0:
         return []
     scores = matrix @ qvec
@@ -43,7 +34,6 @@ def top_k_indices(matrix, qvec, k: int):
 
 
 def search_docs(query: str, k: int = None):
-    """Tool entry point. Returns the toolResult payload for the model."""
     k = k or TOP_K
     _ensure_loaded()
     index = _cache["index"]
@@ -66,7 +56,7 @@ def search_docs(query: str, k: int = None):
 
 def _client(name: str):
     if name not in _clients:
-        import boto3  # lazy: keeps module importable without AWS for tests
+        import boto3
 
         _clients[name] = boto3.client(name)
     return _clients[name]
@@ -82,9 +72,9 @@ def _ensure_loaded():
         raw_chunks = s3.get_object(Bucket=RAG_INDEX_BUCKET, Key="chunks.json")["Body"].read()
         _cache["index"] = _Index(np.load(io.BytesIO(emb)), json.loads(raw_chunks))
         _cache["at"] = now
-    except Exception as exc:  # missing index must not take the chatbot down
+    except Exception as exc:
         print(f"retrieval: failed to load index: {exc}")
-        _cache["at"] = now  # keep serving the previous index until the next TTL
+        _cache["at"] = now
 
 
 def _embed_query(query: str):

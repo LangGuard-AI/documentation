@@ -1,11 +1,3 @@
-"""The frozen system prompt and tool spec for the Converse loop.
-
-CACHING INVARIANT: everything in this module must be byte-identical across
-requests — no timestamps, request IDs, or per-user data. The cachePoint blocks
-appended after the tools and system text make Bedrock cache this whole prefix;
-anything volatile (the visitor's message, tool results) belongs in `messages`,
-after the cached prefix.
-"""
 from __future__ import annotations
 
 import os

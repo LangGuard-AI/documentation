@@ -16,7 +16,6 @@ os.environ.setdefault("AWS_DEFAULT_REGION", "us-west-2")
 sys.path[:0] = [str(SRC / "ingestion"), str(SRC / "orchestrator")]
 
 
-# Both Lambdas name their entry module app.py, so each gets a distinct alias.
 def _load(alias, path):
     spec = importlib.util.spec_from_file_location(alias, path)
     module = importlib.util.module_from_spec(spec)
