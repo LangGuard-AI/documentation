@@ -23,6 +23,10 @@ const config: Config = {
   onBrokenLinks: 'throw',
   onBrokenAnchors: 'warn',
 
+  customFields: {
+    chatApiUrl: 'https://3eg9mmv0qe.execute-api.us-west-2.amazonaws.com/chat',
+  },
+
   markdown: {
     // future.v4 disables MDX 1 compat in Docusaurus 3.10+; the docs rely on
     // explicit `## Heading {#id}` anchors.
