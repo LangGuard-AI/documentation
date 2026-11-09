@@ -89,20 +89,22 @@ LangGuard records refused attempts in the [Audit Log](/settings/audit-log#agent-
 
 1. On [Discovery](/features/discovery), click the card of the agent. The entity drawer
    opens.
-2. Find the **Quarantine** panel. It shows "This agent is not quarantined."
-3. Click **Quarantine agent**.
-4. In the dialog, enter the **Reason (required)**.
-5. Select the **Expiry**: **Until released**, **1 hour**, **24 hours** or **7 days**.
-6. Examine the list **Identities that will be bound**. "None" means that the agent
+2. At the top right of the drawer header, click **Quarantine agent**.
+3. In the dialog, enter the **Reason (required)**.
+4. Select the **Expiry**: **Until released**, **1 hour**, **24 hours** or **7 days**.
+5. Examine the list **Identities that will be bound**. "None" means that the agent
    name decides.
-7. Click **Quarantine**.
+6. Click **Quarantine**.
 
 The message "*name* is quarantined." shows. If the agent was already quarantined, the
 message is "*name* was already quarantined." LangGuard does not change the active
 quarantine in that case.
 
-Users who are not admins see the state and the text "Only admins can change this."
-The panel shows only for catalog entities of the type agent.
+Only admins see the **Quarantine agent** button. The button shows only for catalog
+entities of the type agent, and only while the agent is not quarantined.
+
+While the agent is quarantined, the drawer shows the **Quarantined** panel at the top.
+Users who are not admins see the panel and the text "Only admins can change this."
 
 ### With the REST API
 
@@ -185,7 +187,7 @@ A quarantine that you place does not change the approval status of the agent.
 | Banner at the top of every page | "1 agent is quarantined." or "2 agents are quarantined." The link **View** opens Discovery with the Quarantined filter. All roles see it. |
 | [Discovery](/features/discovery) | A **Quarantined** badge with the time, for example "Quarantined since 12 minutes ago". The **Quarantined** filter chip. Quarantined agents show first. |
 | [Data Catalog](/features/data-catalog) | A **Quarantined** badge on the agent card |
-| Agent drawer | The **Quarantined** pill. The **Quarantine** panel: **Reason**, **Placed by**, **Placed from**, **Since**, **Expiry**, **Bound identities**, **Blocked attempts**, **Last blocked**, **Devices that confirmed** and **Not confirmed (active in last 24 h)** |
+| Agent drawer | The **Quarantined** pill. The **Quarantined** panel, only while the agent is quarantined: **Reason**, **Placed by**, **Placed from**, **Since**, **Expiry**, **Bound identities**, **Blocked attempts**, **Last blocked**, **Devices that confirmed** and **Not confirmed (active in last 24 h)**. While the agent is not quarantined, admins see the **Quarantine agent** button at the top right of the drawer header. |
 | [Trace Explorer](/features/trace-explorer) | A blocked call shows the status **Blocked**. Its policy ID is `agent_quarantine`. |
 | [Audit Log](/settings/audit-log#agent-quarantine-actions) | The category **Quarantine** |
 | [Webhooks](/settings/webhooks#agent-quarantine-events) | The event type `agent.quarantine` |
