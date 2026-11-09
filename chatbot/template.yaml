@@ -196,7 +196,6 @@ Resources:
           TITAN_MODEL_ID: amazon.titan-embed-text-v2:0
           RAG_INDEX_BUCKET: !Ref RagIndexBucket
           RATE_LIMIT_TABLE: !Ref RateLimitTable
-          ENABLE_PROMPT_CACHE: "true"
           RATE_LIMIT_PER_IP_HOUR: "30"
           RATE_LIMIT_GLOBAL_DAY: "500"
           RATE_SALT: langguard-docs-chatbot

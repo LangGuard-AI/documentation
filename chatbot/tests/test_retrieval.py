@@ -41,7 +41,7 @@ def install_index(test, rows):
     s3 = FakeS3(rows)
     for patcher in (
         mock.patch.dict(retrieval._clients, {"s3": s3, "bedrock-runtime": FakeTitan()}),
-        mock.patch.dict(retrieval._cache, {"at": 0.0, "index": None}),
+        mock.patch.dict(retrieval._cache, {"last_attempt_at": 0.0, "index": None}),
     ):
         patcher.start()
         test.addCleanup(patcher.stop)

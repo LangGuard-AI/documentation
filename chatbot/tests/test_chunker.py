@@ -1,4 +1,4 @@
-from chunker import HARD_MAX_CHARS, chunk_markdown, slugify, strip_frontmatter
+from chunker import HARD_MAX_CHARS, chunk_markdown, slugify, strip_frontmatter_and_mdx_lines
 
 
 def _anchors(md):
@@ -132,13 +132,13 @@ def test_giant_unbroken_block_is_hard_split():
 
 def test_strip_frontmatter_basic():
     md = '---\nslug: /\ntitle: "Intro"\nsidebar_position: 1\n---\n\n# Welcome\n\nbody\n'
-    text, meta = strip_frontmatter(md)
+    text, meta = strip_frontmatter_and_mdx_lines(md)
     assert meta == {"slug": "/", "title": "Intro", "sidebar_position": "1"}
     assert text.lstrip().startswith("# Welcome")
 
 
 def test_strip_frontmatter_absent():
-    text, meta = strip_frontmatter("# No frontmatter\n\nbody\n")
+    text, meta = strip_frontmatter_and_mdx_lines("# No frontmatter\n\nbody\n")
     assert meta == {}
     assert text.startswith("# No frontmatter")
 
@@ -150,7 +150,7 @@ def test_strip_mdx_imports_outside_fences_only():
         "# Code\n\n"
         "```python\nimport langguard\n```\n"
     )
-    text, _ = strip_frontmatter(md)
+    text, _ = strip_frontmatter_and_mdx_lines(md)
     assert "ThemedImage" not in text
     assert "import langguard" in text
 

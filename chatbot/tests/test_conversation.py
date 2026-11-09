@@ -29,7 +29,7 @@ def _run(client, dispatch, messages=None):
     reply, stop, _usage = conversation.run_turn(
         client, "test-model", messages if messages is not None else
         [{"role": "user", "content": [{"text": "hi"}]}],
-        dispatch, system_prompt.build_system(False), system_prompt.build_tool_config(False),
+        dispatch, system_prompt.build_system(), system_prompt.build_tool_config(),
     )
     return reply, stop
 
@@ -133,7 +133,7 @@ def test_usage_summed_across_calls():
     reply, stop, usage = conversation.run_turn(
         client, "m", [{"role": "user", "content": [{"text": "hi"}]}],
         lambda n, i: ({"chunks": []}, False),
-        system_prompt.build_system(False), system_prompt.build_tool_config(False))
+        system_prompt.build_system(), system_prompt.build_tool_config())
     assert reply == "done"
     assert usage == {"in": 250, "out": 50}
 
@@ -142,38 +142,10 @@ def test_usage_zero_when_absent():
     reply, stop, usage = conversation.run_turn(
         FakeBedrock([_end_turn("hi")]), "m", [{"role": "user", "content": [{"text": "x"}]}],
         lambda n, i: ({}, False),
-        system_prompt.build_system(False), system_prompt.build_tool_config(False))
+        system_prompt.build_system(), system_prompt.build_tool_config())
     assert usage == {"in": 0, "out": 0}
 
 
-def test_cache_blocks_shape():
-    sys_blocks = system_prompt.build_system(True)
-    assert sys_blocks[0]["text"] and "cachePoint" in sys_blocks[-1]
-    tools = system_prompt.build_tool_config(True)["tools"]
-    assert "cachePoint" in tools[-1]
-    names = [t["toolSpec"]["name"] for t in tools if "toolSpec" in t]
+def test_tool_config_offers_only_search_docs():
+    names = [t["toolSpec"]["name"] for t in system_prompt.build_tool_config()["tools"]]
     assert names == ["search_docs"]
-
-
-
-def _validation_error():
-    from botocore.exceptions import ClientError
-
-    return ClientError({"Error": {"Code": "ValidationException", "Message": "cachePoint"}}, "Converse")
-
-
-def test_rejected_cache_points_are_stripped_and_retried():
-    class RejectsCachePoints(FakeBedrock):
-        def converse(self, **kwargs):
-            self.calls.append(kwargs)
-            if any("cachePoint" in b for b in kwargs["system"]):
-                raise _validation_error()
-            return self.responses.pop(0)
-
-    client = RejectsCachePoints([_end_turn("ok")])
-    reply, _, _ = conversation.run_turn(
-        client, "m", [{"role": "user", "content": [{"text": "x"}]}], lambda n, i: ({}, False),
-        system_prompt.build_system(True), system_prompt.build_tool_config(True))
-    assert reply == "ok"
-    assert len(client.calls) == 2
-    assert not any("cachePoint" in t for t in client.calls[1]["toolConfig"]["tools"])

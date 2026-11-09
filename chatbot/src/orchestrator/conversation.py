@@ -3,9 +3,6 @@ from __future__ import annotations
 import re
 import time
 
-from botocore.exceptions import ClientError
-
-
 MAX_ITERATIONS = 5
 FALLBACK_REPLY = "I could not produce an answer. Rephrase the question and try again."
 
@@ -88,28 +85,10 @@ def _text_of(msg) -> str:
 
 
 def _converse(client, model_id, system_blocks, tool_config, messages, max_tokens):
-    kwargs = dict(
+    return client.converse(
         modelId=model_id,
         system=system_blocks,
         messages=messages,
         toolConfig=tool_config,
         inferenceConfig={"maxTokens": max_tokens},
-    )
-    try:
-        return client.converse(**kwargs)
-    except ClientError as exc:
-        code = getattr(exc, "response", {}).get("Error", {}).get("Code", "")
-        if code == "ValidationException" and _has_cache_points(system_blocks, tool_config):
-            print("conversation: cachePoint rejected; retrying without prompt cache")
-            kwargs["system"] = [b for b in system_blocks if "cachePoint" not in b]
-            kwargs["toolConfig"] = {
-                "tools": [t for t in tool_config["tools"] if "cachePoint" not in t]
-            }
-            return client.converse(**kwargs)
-        raise
-
-
-def _has_cache_points(system_blocks, tool_config) -> bool:
-    return any("cachePoint" in b for b in system_blocks) or any(
-        "cachePoint" in t for t in tool_config.get("tools", [])
     )

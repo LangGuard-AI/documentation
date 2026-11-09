@@ -22,7 +22,7 @@ class Chunk:
     anchor: str
 
 
-def strip_frontmatter(text: str):
+def strip_frontmatter_and_mdx_lines(text: str):
     meta = {}
     if text.startswith("---"):
         lines = text.splitlines()

@@ -12,7 +12,7 @@ import numpy as np
 from botocore.config import Config
 from botocore.exceptions import ClientError
 
-from chunker import chunk_markdown, strip_frontmatter
+from chunker import chunk_markdown, strip_frontmatter_and_mdx_lines
 
 s3 = boto3.client("s3")
 # Adaptive retries cover throttling at the SDK layer. ModelErrorException is not
@@ -45,7 +45,7 @@ def handler(event, _context):
 
     chunks = []
     for key in _list_markdown(source_bucket):
-        text, meta = strip_frontmatter(_get_text(source_bucket, key))
+        text, meta = strip_frontmatter_and_mdx_lines(_get_text(source_bucket, key))
         source_url = _key_to_url(key, slug=meta.get("slug"))
         for ch in chunk_markdown(text):
             url = f"{source_url}#{ch.anchor}" if ch.anchor else source_url
@@ -96,7 +96,7 @@ def _embed_one(text: str) -> list:
         try:
             resp = bedrock.invoke_model(
                 modelId=TITAN_MODEL_ID,
-                body=json.dumps({"inputText": text[:45000]}),
+                body=json.dumps({"inputText": text}),
             )
             return json.loads(resp["body"].read())["embedding"]
         except ClientError as e:

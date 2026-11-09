@@ -6,6 +6,7 @@ import os
 import time
 from typing import NamedTuple
 
+import boto3
 import numpy as np
 
 RAG_INDEX_BUCKET = os.environ.get("RAG_INDEX_BUCKET", "")
@@ -14,13 +15,12 @@ INDEX_TTL_SECONDS = int(os.environ.get("INDEX_TTL_SECONDS", "900"))
 TOP_K = int(os.environ.get("SEARCH_TOP_K", "5"))
 
 
-
 class _Index(NamedTuple):
     matrix: np.ndarray
     chunks: list
 
 
-_cache = {"at": 0.0, "index": None}
+_cache = {"last_attempt_at": 0.0, "index": None}
 _clients = {}
 
 
@@ -56,25 +56,23 @@ def search_docs(query: str, k: int = None):
 
 def _client(name: str):
     if name not in _clients:
-        import boto3
-
         _clients[name] = boto3.client(name)
     return _clients[name]
 
 
 def _ensure_loaded():
     now = time.time()
-    if _cache["index"] is not None and now - _cache["at"] < INDEX_TTL_SECONDS:
+    if _cache["index"] is not None and now - _cache["last_attempt_at"] < INDEX_TTL_SECONDS:
         return
     try:
         s3 = _client("s3")
         emb = s3.get_object(Bucket=RAG_INDEX_BUCKET, Key="embeddings.npy")["Body"].read()
         raw_chunks = s3.get_object(Bucket=RAG_INDEX_BUCKET, Key="chunks.json")["Body"].read()
         _cache["index"] = _Index(np.load(io.BytesIO(emb)), json.loads(raw_chunks))
-        _cache["at"] = now
+        _cache["last_attempt_at"] = now
     except Exception as exc:
         print(f"retrieval: failed to load index: {exc}")
-        _cache["at"] = now
+        _cache["last_attempt_at"] = now
 
 
 def _embed_query(query: str):

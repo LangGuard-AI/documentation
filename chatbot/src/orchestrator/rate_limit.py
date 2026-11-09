@@ -8,11 +8,11 @@ PER_IP_HOURLY_LIMIT = int(os.environ.get("RATE_LIMIT_PER_IP_HOUR", "30"))
 GLOBAL_DAILY_LIMIT = int(os.environ.get("RATE_LIMIT_GLOBAL_DAY", "500"))
 _SALT = os.environ.get("RATE_SALT", "langguard-docs-chatbot")
 
-PRICE_IN_PER_M = float(os.environ.get("BEDROCK_PRICE_IN_PER_M", "0.80"))
-PRICE_OUT_PER_M = float(os.environ.get("BEDROCK_PRICE_OUT_PER_M", "3.20"))
+MICROS_PER_INPUT_TOKEN = float(os.environ.get("BEDROCK_PRICE_IN_PER_M", "0.80"))
+MICROS_PER_OUTPUT_TOKEN = float(os.environ.get("BEDROCK_PRICE_OUT_PER_M", "3.20"))
 MONTHLY_USD_CAP = float(os.environ.get("COST_CAP_MONTH_USD", "20"))
 DAILY_USD_CAP = float(os.environ.get("COST_CAP_DAY_USD", "4"))
-_USD = 1_000_000
+_MICROS_PER_USD = 1_000_000
 
 
 def ip_hash(ip: str) -> str:
@@ -45,7 +45,7 @@ def allow_request(table, ip: str) -> bool:
 
 
 def _micros(in_tok: int, out_tok: int) -> int:
-    return int(round(in_tok * PRICE_IN_PER_M + out_tok * PRICE_OUT_PER_M))
+    return int(round(in_tok * MICROS_PER_INPUT_TOKEN + out_tok * MICROS_PER_OUTPUT_TOKEN))
 
 
 def _spent_micros(table, key: str) -> int:
@@ -58,10 +58,10 @@ def budget_ok(table, now: float = None) -> bool:
     t = time.gmtime(now if now is not None else time.time())
     month, day = time.strftime("%Y%m", t), time.strftime("%Y%m%d", t)
     try:
-        if _spent_micros(table, f"cost#{month}") >= MONTHLY_USD_CAP * _USD:
+        if _spent_micros(table, f"cost#{month}") >= MONTHLY_USD_CAP * _MICROS_PER_USD:
             print(f"rate_limit: monthly spend cap ${MONTHLY_USD_CAP} reached for {month}")
             return False
-        if _spent_micros(table, f"cost#{day}") >= DAILY_USD_CAP * _USD:
+        if _spent_micros(table, f"cost#{day}") >= DAILY_USD_CAP * _MICROS_PER_USD:
             print(f"rate_limit: daily spend cap ${DAILY_USD_CAP} reached for {day}")
             return False
         return True

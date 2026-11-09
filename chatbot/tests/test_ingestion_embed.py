@@ -65,12 +65,6 @@ class EmbedRetryTests(unittest.TestCase):
                 app._embed_one("hello")
         self.assertEqual(fake.calls, 1, "must not burn retries on a permanent error")
 
-    def test_oversized_text_is_truncated(self):
-        fake = FakeBedrock()
-        with mock.patch.object(app, "bedrock", fake):
-            app._embed_one("x" * 60000)
-        self.assertEqual(len(fake.seen[0]), 45000)
-
 
 class EmbedAllTests(unittest.TestCase):
     def setUp(self):

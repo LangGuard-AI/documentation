@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import os
-
 SEARCH_DOCS = "search_docs"
 
 DOCS_SYSTEM_PROMPT = """\
@@ -60,21 +58,10 @@ SEARCH_DOCS_SPEC = {
     }
 }
 
-_ENABLE_CACHE = os.environ.get("ENABLE_PROMPT_CACHE", "true").lower() == "true"
-_CACHE_POINT = {"cachePoint": {"type": "default"}}
+
+def build_system():
+    return [{"text": DOCS_SYSTEM_PROMPT}]
 
 
-def build_system(with_cache: bool = None):
-    with_cache = _ENABLE_CACHE if with_cache is None else with_cache
-    blocks = [{"text": DOCS_SYSTEM_PROMPT}]
-    if with_cache:
-        blocks.append(dict(_CACHE_POINT))
-    return blocks
-
-
-def build_tool_config(with_cache: bool = None):
-    with_cache = _ENABLE_CACHE if with_cache is None else with_cache
-    tools = [SEARCH_DOCS_SPEC]
-    if with_cache:
-        tools.append(dict(_CACHE_POINT))
-    return {"tools": tools}
+def build_tool_config():
+    return {"tools": [SEARCH_DOCS_SPEC]}
