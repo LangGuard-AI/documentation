@@ -1,0 +1,273 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  LangGuard docs assistant backend. Ingestion chunks docs/ markdown, embeds it
+  with Titan, and writes a vector index to S3. The orchestrator runs a Bedrock
+  Converse loop with search_docs behind an HTTP API, with DynamoDB rate limits
+  and a spend cap.
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Architectures: [x86_64]
+    MemorySize: 1024
+
+Resources:
+  DocsSourceBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: langguard-docs-chatbot-source
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: expire-noncurrent
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 30
+      LoggingConfiguration:
+        DestinationBucketName: !Sub "aws-cloudtrail-access-logs-${AWS::AccountId}-${AWS::Region}"
+        LogFilePrefix: s3-access-logs/langguard-docs-chatbot-source/
+
+  RagIndexBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: langguard-docs-chatbot-index
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: expire-noncurrent
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 7
+      LoggingConfiguration:
+        DestinationBucketName: !Sub "aws-cloudtrail-access-logs-${AWS::AccountId}-${AWS::Region}"
+        LogFilePrefix: s3-access-logs/langguard-docs-chatbot-index/
+
+  # Principal is a bare "*" rather than {"AWS":"*"} on purpose: the latter does
+  # not match anonymous requests, which this exists to catch.
+  DocsSourceBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DocsSourceBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !GetAtt DocsSourceBucket.Arn
+              - !Sub "${DocsSourceBucket.Arn}/*"
+            Condition:
+              Bool:
+                aws:SecureTransport: "false"
+
+  RagIndexBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref RagIndexBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !GetAtt RagIndexBucket.Arn
+              - !Sub "${RagIndexBucket.Arn}/*"
+            Condition:
+              Bool:
+                aws:SecureTransport: "false"
+
+  RateLimitTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: langguard-docs-chatbot-ratelimit
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      # Blocks replacement as well as deletion: a future TableName or KeySchema
+      # change fails the update until this is turned off first.
+      DeletionProtectionEnabled: true
+
+  IngestionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: langguard-docs-chatbot-ingestion
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+              ArnLike:
+                aws:SourceArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:langguard-docs-chatbot-ingestion*
+      Handler: app.handler
+      CodeUri: src/ingestion/
+      # One embedding call per chunk, so wall time scales with the corpus. The
+      # ceiling is headroom for retries, not the expected duration.
+      Timeout: 900
+      Environment:
+        Variables:
+          RAG_INDEX_BUCKET: !Ref RagIndexBucket
+          TITAN_MODEL_ID: amazon.titan-embed-text-v2:0
+          DOCS_BASE_URL: https://docs.langguard.ai
+          EMBED_WORKERS: "8"
+          EMBED_ATTEMPTS: "5"
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref DocsSourceBucket
+        - S3CrudPolicy:
+            BucketName: !Ref RagIndexBucket
+        - Statement:
+            - Effect: Allow
+              Action: [bedrock:InvokeModel]
+              Resource: !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/amazon.titan-embed-text-v2:0
+
+  ChatApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Name: langguard-docs-chatbot-api
+      CorsConfiguration:
+        AllowOrigins:
+          - https://docs.langguard.ai
+          - http://localhost:3000
+          - http://127.0.0.1:3000
+        AllowMethods: [POST, OPTIONS]
+        AllowHeaders: [content-type]
+        MaxAge: 86400
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 20
+        ThrottlingRateLimit: 10
+      AccessLogSettings:
+        DestinationArn: !GetAtt ChatApiAccessLogs.Arn
+        Format: >-
+          {"requestId":"$context.requestId","ip":"$context.identity.sourceIp","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","routeKey":"$context.routeKey","status":"$context.status","protocol":"$context.protocol","responseLength":"$context.responseLength","integrationError":"$context.integrationErrorMessage"}
+
+  ChatApiAccessLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/apigateway/langguard-docs-chatbot-access
+      RetentionInDays: 90
+
+  OrchestratorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: langguard-docs-chatbot-orchestrator
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+              ArnLike:
+                aws:SourceArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:langguard-docs-chatbot-orchestrator*
+      Handler: app.handler
+      CodeUri: src/orchestrator/
+      Timeout: 28 # under the HTTP API 30s integration ceiling
+      Environment:
+        Variables:
+          BEDROCK_MODEL_ID: us.amazon.nova-pro-v1:0
+          TITAN_MODEL_ID: amazon.titan-embed-text-v2:0
+          RAG_INDEX_BUCKET: !Ref RagIndexBucket
+          RATE_LIMIT_TABLE: !Ref RateLimitTable
+          ENABLE_PROMPT_CACHE: "true"
+          RATE_LIMIT_PER_IP_HOUR: "30"
+          RATE_LIMIT_GLOBAL_DAY: "500"
+          RATE_SALT: langguard-docs-chatbot
+          COST_CAP_MONTH_USD: "20"
+          COST_CAP_DAY_USD: "4"
+          # Nova Pro on-demand, $ per million tokens. Change these with the
+          # model or the spend cap stops being accurate.
+          BEDROCK_PRICE_IN_PER_M: "0.80"
+          BEDROCK_PRICE_OUT_PER_M: "3.20"
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref RagIndexBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RateLimitTable
+        - Statement:
+            - Effect: Allow
+              Action: [bedrock:InvokeModel]
+              Resource:
+                # A us. inference profile routes to any US region, so the
+                # foundation-model grant cannot be pinned to this one.
+                - arn:aws:bedrock:*::foundation-model/amazon.nova*
+                - !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/amazon.titan-embed-text-v2:0
+                - !Sub arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/us.amazon.nova*
+      Events:
+        ChatPost:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ChatApi
+            Path: /chat
+            Method: POST
+
+  SyncRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: langguard-docs-chatbot-sync
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: repo:LangGuard-AI/documentation:ref:refs/heads/main
+      Policies:
+        - PolicyName: sync-docs-markdown
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: [s3:ListBucket]
+                Resource: !GetAtt DocsSourceBucket.Arn
+              - Effect: Allow
+                Action: [s3:PutObject, s3:DeleteObject]
+                Resource: !Sub ${DocsSourceBucket.Arn}/*
+              - Effect: Allow
+                Action: [lambda:InvokeFunction]
+                Resource: !GetAtt IngestionFunction.Arn
+
+Outputs:
+  ChatApiUrl:
+    Description: POST endpoint for the widget. Set as the DOCS_CHATBOT_API_URL repo variable.
+    Value: !Sub https://${ChatApi}.execute-api.${AWS::Region}.amazonaws.com/chat
+  SyncRoleArn:
+    Description: Role for the sync workflow. Set as the DOCS_CHATBOT_SYNC_ROLE_ARN repo variable.
+    Value: !GetAtt SyncRole.Arn
