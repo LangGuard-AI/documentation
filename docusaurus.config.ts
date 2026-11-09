@@ -24,7 +24,7 @@ const config: Config = {
   onBrokenAnchors: 'warn',
 
   customFields: {
-    chatApiUrl: 'https://3eg9mmv0qe.execute-api.us-west-2.amazonaws.com/chat',
+    chatApiUrl: process.env.CHAT_API_URL ?? '',
   },
 
   markdown: {

@@ -97,7 +97,6 @@ async function requestReply(
       body: JSON.stringify({
         message,
         history: history.map(({role, text}) => ({role, text})),
-        assistant: 'docs',
       }),
       signal,
     });
