@@ -3,10 +3,10 @@ import Link from '@docusaurus/Link';
 
 const DOCS_HOST = 'docs.langguard.ai';
 
-const FENCE = /^[ \t]*```[^\n]*\n([\s\S]*?)(?:^[ \t]*```[ \t]*$|(?![\s\S]))/gm;
+const FENCE_TO_CLOSE_OR_END = /^[ \t]*```[^\n]*\n([\s\S]*?)(?:^[ \t]*```[ \t]*$|(?![\s\S]))/gm;
 
 const INLINE =
-  /`([^`\n]+)`|\*\*(.+?)\*\*|\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<>)\]"'`*]*[^\s<>)\]"'`*.,:;!?])/g;
+  /`(?<code>[^`\n]+)`|\*\*(?<bold>.+?)\*\*|\[(?<label>[^\]\n]+)\]\((?<target>https?:\/\/[^\s)]+)\)|(?<bare>https?:\/\/[^\s<>)\]"'`*]*[^\s<>)\]"'`*.,:;!?])/g;
 
 export function parseHttpUrl(raw: string): URL | null {
   try {
@@ -17,7 +17,7 @@ export function parseHttpUrl(raw: string): URL | null {
   }
 }
 
-export function ChatLink({url, children}: {url: URL; children: ReactNode}) {
+export function ChatLink({url, children}: {url: URL; children: string}) {
   if (url.hostname === DOCS_HOST) {
     return <Link to={url.pathname + url.hash}>{children}</Link>;
   }
@@ -47,14 +47,8 @@ function splitBy(
   return nodes;
 }
 
-function renderInlineToken([
-  raw,
-  code,
-  bold,
-  label,
-  target,
-  bare,
-]: RegExpExecArray): ReactNode {
+function renderInlineToken(match: RegExpExecArray): ReactNode {
+  const {code, bold, label, target, bare} = match.groups ?? {};
   if (code !== undefined) {
     return <code>{code}</code>;
   }
@@ -63,7 +57,7 @@ function renderInlineToken([
   }
   const url = parseHttpUrl(target ?? bare);
   if (url === null) {
-    return raw;
+    return match[0];
   }
   return <ChatLink url={url}>{label ?? bare}</ChatLink>;
 }
@@ -75,7 +69,7 @@ function renderInline(text: string): ReactNode[] {
 export function renderMessage(text: string): ReactNode[] {
   return splitBy(
     text,
-    FENCE,
+    FENCE_TO_CLOSE_OR_END,
     ([, code]) => (
       <pre>
         <code>{code.replace(/\n$/, '')}</code>

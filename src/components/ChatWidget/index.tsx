@@ -60,7 +60,7 @@ function readStoredTurns(): Turn[] {
   }
 }
 
-function writeStoredTurns(turns: Turn[]): void {
+function tryStoreTurns(turns: Turn[]): void {
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(turns));
   } catch {
@@ -154,17 +154,13 @@ function TurnMessage({turn}: {turn: Turn}) {
 
 export default function ChatWidget({apiUrl}: {apiUrl: string}) {
   const [open, setOpen] = useState(false);
-  const [turns, setTurns] = useState<Turn[]>([]);
+  const [turns, setTurns] = useState<Turn[]>(readStoredTurns);
   const [status, setStatus] = useState<Status>({kind: 'idle'});
   const [draft, setDraft] = useState('');
   const bubbleRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
   const inFlightRef = useRef<AbortController | null>(null);
-
-  useEffect(() => {
-    setTurns(readStoredTurns());
-  }, []);
 
   useEffect(() => {
     if (logRef.current) {
@@ -190,7 +186,7 @@ export default function ChatWidget({apiUrl}: {apiUrl: string}) {
   function commitTurns(next: Turn[]): Turn[] {
     const kept = next.slice(-MAX_TURNS);
     setTurns(kept);
-    writeStoredTurns(kept);
+    tryStoreTurns(kept);
     return kept;
   }
 
@@ -216,7 +212,6 @@ export default function ChatWidget({apiUrl}: {apiUrl: string}) {
     const withQuestion = commitTurns([...turns, {role: 'user', text: message}]);
     setDraft('');
     setStatus({kind: 'sending'});
-    inputRef.current?.focus();
 
     const result = await requestReply(
       apiUrl,
@@ -298,7 +293,13 @@ export default function ChatWidget({apiUrl}: {apiUrl: string}) {
           {turns.length === 0 && (
             <div className={styles.chips}>
               {CHIPS.map((chip) => (
-                <button key={chip} type="button" onClick={() => void send(chip)}>
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() => {
+                    void send(chip);
+                    inputRef.current?.focus();
+                  }}>
                   {chip}
                 </button>
               ))}

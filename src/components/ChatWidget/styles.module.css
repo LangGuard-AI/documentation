@@ -1,3 +1,7 @@
+:global(:root) {
+  --chat-bubble-clearance: 88px;
+}
+
 .root {
   --chat-z-index: calc(var(--ifm-z-index-fixed) - 1);
   --chat-on-accent: #051018;
@@ -46,13 +50,13 @@
 }
 
 :global(.theme-back-to-top-button) {
-  right: 88px;
+  right: var(--chat-bubble-clearance);
 }
 
 .panel {
   position: fixed;
   right: 20px;
-  bottom: 88px;
+  bottom: var(--chat-bubble-clearance);
   z-index: var(--chat-z-index);
   display: flex;
   flex-direction: column;
@@ -60,7 +64,7 @@
   width: 380px;
   max-width: calc(100vw - 24px);
   height: 560px;
-  max-height: calc(100dvh - var(--ifm-navbar-height) - 96px);
+  max-height: calc(100dvh - var(--ifm-navbar-height) - var(--chat-bubble-clearance) - 8px);
   border: 1px solid var(--chat-hairline);
   border-radius: 18px;
   background: var(--ifm-background-surface-color);
@@ -322,7 +326,11 @@
 }
 
 @media print {
-  .root {
+  :global(:root) {
+  --chat-bubble-clearance: 88px;
+}
+
+.root {
     display: none;
   }
 }
