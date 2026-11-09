@@ -191,6 +191,11 @@ A quarantine that you place does not change the approval status of the agent.
 | [Webhooks](/settings/webhooks#agent-quarantine-events) | The event type `agent.quarantine` |
 | [Slack](/settings/slack#channel-notices) | A notice in the escalation channel when the agent is quarantined. A change or a release updates the notice. |
 
+**Placed by** shows the name of the person who placed the quarantine. A user with no
+name shows the e-mail. An API key shows "API key" and the key name, for example
+"API key SOC automation". A Slack user shows the linked LangGuard user. When LangGuard
+placed the quarantine itself, the row shows **System**.
+
 **Blocked attempts** counts the calls that the LangGuard server blocked. A block that
 an Arbiter device makes from its local marker is not in this count. LangGuard updates
 the count every 30 seconds. LangGuard writes a trace for at most 60 blocked calls per

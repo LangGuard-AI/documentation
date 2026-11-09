@@ -61,11 +61,13 @@ route it gets HTTP 403 with the message `This API key may only be used to quaran
 | `placedAt` | string | When the quarantine started |
 | `placedByType` | string | `user`, `api_key`, `slack_user` or `system` |
 | `placedById` | string | ID of the user, of the API key, of the LangGuard user linked to the Slack user, or of the system actor |
+| `placedByName` | string or null | Display name of the actor: the user name (else the e-mail) for `user` and `slack_user`, the key name for `api_key`. `null` for `system` and when LangGuard cannot find the actor. LangGuard reads it for each response. It is not stored. |
 | `placedVia` | string | `ui`, `api`, `mcp`, `slack` or `approval` |
 | `expiresAt` | string or null | Automatic release time. `null` means until released. |
 | `releasedAt` | string or null | When the quarantine was released |
 | `releasedByType` | string or null | As `placedByType` |
 | `releasedById` | string or null | As `placedById` |
+| `releasedByName` | string or null | As `placedByName`, for the actor that released the quarantine. `null` while the quarantine is active. |
 | `releasedVia` | string or null | `ui`, `api`, `mcp`, `slack`, `approval` or `expiry` |
 | `releaseNote` | string or null | The note of the release |
 | `revision` | integer | Increases on each change |
@@ -134,11 +136,13 @@ POST /api/agent-quarantines
     "placedAt": "2026-11-09T12:00:00.000Z",
     "placedByType": "api_key",
     "placedById": "5c4b3a29-1807-4f6e-9d5c-4b3a29180716",
+    "placedByName": "SOC automation",
     "placedVia": "api",
     "expiresAt": "2026-11-10T12:00:00.000Z",
     "releasedAt": null,
     "releasedByType": null,
     "releasedById": null,
+    "releasedByName": null,
     "releasedVia": null,
     "releaseNote": null,
     "revision": 0,
@@ -299,7 +303,8 @@ A quarantine error has this body:
 Read the `code` field. For `FORBIDDEN`, `error` is `Forbidden`.
 
 Some errors add fields: `candidates` on `AMBIGUOUS_AGENT`, and `quarantine` on a
-`NOT_ACTIVE` answer of the release route and on most `STALE_REVISION` answers.
+`NOT_ACTIVE` answer of the release route and on most `STALE_REVISION` answers. In the
+`quarantine` of an error body, `placedByName` and `releasedByName` are `null`.
 
 | Status | Code | When |
 |--------|------|------|
