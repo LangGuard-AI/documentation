@@ -55,6 +55,20 @@ const config: Config = {
     ],
   ],
 
+  themes: [
+    [
+      '@easyops-cn/docusaurus-search-local',
+      {
+        // Search index is built at `npm run build`; search doesn't work in
+        // `npm run start`.
+        hashed: true,
+        docsRouteBasePath: '/',
+        indexBlog: false,
+        highlightSearchTermsOnTargetPage: true,
+      },
+    ],
+  ],
+
   plugins: [
     [
       '@docusaurus/plugin-client-redirects',
