@@ -49,6 +49,19 @@ Deep-dive into individual traces with powerful analysis tools:
 
 ---
 
+### Agent Quarantine
+
+Stop all activity of one agent at once, and release it with one action:
+
+- **One action** - Quarantine from the app, the REST API, the LangGuard MCP server or Slack
+- **Inference and tools** - Blocks LLM calls, MCP tool calls and Arbiter hook events
+- **Devices** - Blocks new prompts and tool calls on Arbiter devices in cooperative and strict mode
+- **Visible** - A banner, a badge and the agent panel show each quarantined agent
+
+[Learn more about Agent Quarantine →](/features/agent-quarantine)
+
+---
+
 ### Data Catalog
 
 Browse and manage discovered entities:

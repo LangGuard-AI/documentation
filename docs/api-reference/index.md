@@ -17,6 +17,12 @@ extension (SEP-2624).
 
 ---
 
+### [Agent Quarantine API](/api-reference/agent-quarantine)
+Quarantine and release agents, and read the quarantine state. Writes need an admin
+session or an API key with the **Quarantine** scope.
+
+---
+
 ### OTLP ingestion
 Traces and logs are ingested over standard OpenTelemetry Protocol endpoints using an
 **Ingest**-scoped key. See [API Keys](/settings/api-keys#otlp-ingestion) for the

@@ -30,6 +30,7 @@ const sidebars: SidebarsConfig = {
         'features/workflow-governance',
         'features/ai-registry',
         'features/identity',
+        'features/agent-quarantine',
       ],
     },
     {
@@ -86,6 +87,7 @@ const sidebars: SidebarsConfig = {
         'settings/arbiter-management',
         'settings/arbiter-deployment',
         'settings/webhooks',
+        'settings/slack',
         'settings/custom-checks',
         'settings/tags',
         'settings/audit-log',
@@ -169,6 +171,7 @@ const sidebars: SidebarsConfig = {
       },
       items: [
         'api-reference/interceptor',
+        'api-reference/agent-quarantine',
       ],
     },
     {

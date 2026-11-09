@@ -16,7 +16,7 @@ Because policies are served live, updates propagate instantly: change a policy i
 LangGuard and connected agents pick up the new guardrails on their next run — no
 agent restarts or config drift.
 
-## Two ways to use it
+## Ways to use it
 
 ### Agent compliance guardrails (read scope)
 
@@ -43,6 +43,15 @@ everything above, write-scope agents can:
 - Toggle policies on/off and change enforcement mode
 
 Use a **`write`-scope** [API key](/settings/api-keys).
+
+### Agent quarantine (quarantine scope)
+
+Let an incident-response agent or an operator [quarantine an agent](/features/agent-quarantine)
+and release it. Use a **`quarantine`-scope** [API key](/settings/api-keys#scopes). A
+`quarantine` key connects to the MCP server, but it can list and call only the four
+[agent quarantine tools](#agent-quarantine-tools). A user with the **admin** role who
+connects with a session can also use them. `write` and `admin` keys cannot place or
+release a quarantine.
 
 ## Connecting an agent
 
@@ -98,8 +107,8 @@ guardrails:
 
 ## Available tools
 
-Read-scope tools are available to every connected agent; write-scope tools require
-a `write` key.
+Read-scope tools are available to read, write and admin keys; write-scope tools
+require a `write` key.
 
 | Tool | Scope | Purpose |
 |------|-------|---------|
@@ -113,11 +122,42 @@ a `write` key.
 | `update_violation_status` | write | Acknowledge or resolve violations |
 | `add_entity_tag` / `remove_entity_tag` | write | Tag entities with metadata/classifications |
 | `toggle_policy` | write | Enable/disable a policy or change its mode |
+| `quarantine_agent` | quarantine | Quarantine an agent |
+| `release_agent_quarantine` | quarantine | Release an active quarantine |
+| `list_quarantined_agents` | read or quarantine | List quarantines |
+| `get_agent_quarantine` | read or quarantine | Get the quarantine state of one agent |
 
 …plus additional tools (24+ in total). The settings page lists the full set.
 
+`add_entity_tag`, `update_entity_system_tags`, `update_violation_status`,
+`quarantine_agent` and `release_agent_quarantine` record the user or the API key that
+calls them as the actor.
+
+### Agent quarantine tools
+
+| Tool | Input | Result |
+|------|-------|--------|
+| `quarantine_agent` | `agent_id` or `agent_name` (exactly one), `reason`, optional `expires_in_minutes` (at most 525600, which is 365 days) | `data` (the quarantine), `already_quarantined` and `message`. An agent that is already quarantined returns its active quarantine, which does not change. |
+| `release_agent_quarantine` | `quarantine_id`, `agent_id` or `agent_name` (exactly one), optional `note` | `data` (the released quarantine) and `message` |
+| `list_quarantined_agents` | optional `status`: `active` (default), `released` or `all` | `data` (the quarantines) and `count` |
+| `get_agent_quarantine` | `agent_id` or `agent_name` (exactly one) | `agentEntityId`, `current`, `history` and `devices` |
+
+`agent_name` must match the name or the display name of one agent. The match is exact
+and does not use case. The quarantine object is the same as in the
+[Agent Quarantine API](/api-reference/agent-quarantine#the-quarantine-object).
+
+`quarantine_agent` and `release_agent_quarantine` have the `destructiveHint`
+annotation, so most MCP clients ask you to confirm the call. The read tools have
+`readOnlyHint`.
+
+A failed call returns an error result with `{ "error", "code", "message" }`. The codes
+are the same as in the [API](/api-reference/agent-quarantine#errors): for example
+`AMBIGUOUS_AGENT` (with `candidates`), `NOT_ACTIVE`, `BANNED_AGENT`, `SELF_RELEASE`
+and `FORBIDDEN`. `release_agent_quarantine` by agent returns `NOT_ACTIVE` when the
+agent is not quarantined.
+
 ## Next steps
 
-- [API Keys](/settings/api-keys) — create the read- or write-scope key to connect with
+- [API Keys](/settings/api-keys) — create the read-, write- or quarantine-scope key to connect with
 - [Creating Policies](/policies/creating-policies) — the guardrails agents enforce
 - [Trace Explorer](/features/trace-explorer) — what agents can query

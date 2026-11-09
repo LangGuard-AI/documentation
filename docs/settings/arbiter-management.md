@@ -118,6 +118,13 @@ In strict mode, if the daemon genuinely cannot start (for example Node.js is mis
 the OPA download fails), the developer is blocked from MCP tool calls until it is fixed.
 :::
 
+:::info Agent Quarantine does not depend on the mode
+A device that knows of an [agent quarantine](/features/agent-quarantine#arbiter-devices)
+blocks in cooperative mode and in strict mode in the same way. A dead daemon, a
+rejected key or an unreachable server does not release it. The quarantine never
+answers ASK.
+:::
+
 ### Verdicts
 
 Fleet traffic is counted in three buckets:
@@ -134,6 +141,10 @@ Antigravity) support ASK. Codex and shell have no ask affordance, so an ASK verd
 harness children shows which is which.
 
 ### How verdicts are decided
+
+[Agent Quarantine](/features/agent-quarantine) runs before this table. On the device,
+it runs after the catastrophic deny-list and before the native-tool rule, the verdict
+cache and the policy engine. A quarantined agent gets BLOCK.
 
 Every gated tool call runs through a fixed, first-match-wins rule table. The inputs are
 the tool's **approval status** in the [Data Catalog](/features/data-catalog#approval-status),
@@ -234,6 +245,10 @@ requires you to type `REVOKE` to confirm.
 A revoked **cooperative** device loses governance and visibility because its hooks fail
 open until it is re-provisioned. Only **strict-mode** devices are actually blocked. This
 is why strict mode is recommended for managed rollouts.
+
+To stop an agent also on cooperative devices, use
+[Agent Quarantine](/features/agent-quarantine). A quarantine blocks in both modes.
+The devices must run the current daemon and plugins.
 :::
 
 ### Forget
