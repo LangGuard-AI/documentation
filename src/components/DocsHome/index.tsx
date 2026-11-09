@@ -31,7 +31,7 @@ const FEATURES = [
 
 export default function DocsHome(): ReactNode {
   return (
-    <div className="lg-home">
+    <div>
       <ThemedImage
         className="lg-home-shot"
         alt="The LangGuard Discovery page, listing agents grouped by team with their risk level and downstream systems"

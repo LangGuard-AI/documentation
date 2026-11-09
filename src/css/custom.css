@@ -555,8 +555,26 @@ html [class*='hitWrapper'] mark {
   --ifm-h3-font-size: 1.125rem;
 }
 
-.markdown > :is(p, ul, ol, blockquote, h2, h3, h4, h5, h6),
-.markdown > header {
+/* One column for prose and media, so every block ends on the same right edge.
+   Each column gives up 2rem to its gutters; the outline takes what is left. */
+@media (min-width: 997px) {
+  main[class*='docMainContainer'] > .container {
+    max-width: calc(var(--lg-measure) + 23rem);
+  }
+
+  [class*='docItemCol'] {
+    flex: none;
+    width: min(75%, var(--lg-measure) + 2rem);
+  }
+
+  [class*='docItemCol'] + .col--3 {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: none;
+  }
+}
+
+.docs-doc-id-intro .markdown > p {
   max-width: var(--lg-measure);
 }
 
@@ -697,7 +715,6 @@ html [class*='hitWrapper'] mark {
 .theme-admonition {
   --lg-rail: var(--lg-sev-resolved);
   --lg-rail-tint: transparent;
-  max-width: calc(var(--lg-measure) + 2.75rem);
   padding: 0.875rem 1.25rem 0.875rem 1.375rem;
   background-image: linear-gradient(90deg, var(--lg-rail) 4px, var(--lg-rail-tint) 4px);
   font-size: 0.9375rem;
@@ -750,7 +767,6 @@ html [class*='hitWrapper'] mark {
   --ifm-alert-foreground-color: var(--lg-foreground);
   --docusaurus-details-decoration-color: var(--lg-muted-foreground);
   --ifm-alert-border-color: var(--lg-border);
-  max-width: calc(var(--lg-measure) + 2.75rem);
   font-size: 0.9375rem;
 }
 
@@ -826,6 +842,15 @@ html [class*='hitWrapper'] mark {
   position: relative;
   font-size: 0.8125rem;
   line-height: 1.4;
+}
+
+/* The first outline row starts on the breadcrumb line. */
+.theme-doc-toc-desktop .table-of-contents {
+  padding-top: 0.1875rem;
+}
+
+.theme-doc-toc-desktop .table-of-contents > li:first-child {
+  margin-top: 0;
 }
 
 .table-of-contents__link--active {
@@ -916,10 +941,6 @@ html [class*='hitWrapper'] mark {
 /* The front door composes like an app page: title, actions, then surfaces. */
 .docs-doc-id-intro .theme-doc-breadcrumbs {
   display: none;
-}
-
-.lg-home {
-  max-width: 60rem;
 }
 
 .lg-home-actions {

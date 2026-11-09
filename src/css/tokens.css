@@ -111,7 +111,7 @@
 /* Docs-only tokens. The app has no long-form copy, so it has no reading
    measure, and its primary button text fails AA on light cyan. */
 :root {
-  --lg-measure: 37rem;
+  --lg-measure: 48rem;
   --lg-primary-ink: var(--lg-accent-foreground);
 }
 
