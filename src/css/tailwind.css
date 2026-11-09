@@ -66,30 +66,3 @@
     background-color: var(--lg-elevate-2);
   }
 }
-
-/* Arc reads its color tokens from a document stylesheet we do not load, and
- * its type tokens from :host. An outer rule on the element beats :host, so
- * this one block is the whole theme. */
-arc-lightbox {
-  --surface-base: var(--lg-background);
-  --surface-hover: var(--lg-muted);
-  --surface-overlay: var(--lg-card);
-  --text-primary: var(--lg-foreground);
-  --text-secondary: var(--lg-muted-foreground);
-  --text-muted: var(--lg-muted-foreground);
-  --accent-primary: var(--lg-primary);
-  --interactive: var(--lg-primary);
-  --interactive-focus: 0 0 0 2px var(--lg-ring);
-  --interactive-focus-ring: 0 0 0 2px var(--lg-ring);
-  --accent-primary-ring: 0 0 0 2px var(--lg-ring);
-  --overlay-backdrop: color-mix(in oklab, var(--lg-background) 88%, transparent);
-  --font-body-family: 'Plus Jakarta Sans';
-  --font-label-family: 'Plus Jakarta Sans';
-  --font-mono-family: 'JetBrains Mono';
-  --radius-md: 0.375rem;
-}
-
-/* Screenshots open one at a time, so "1 / 1" says nothing. */
-arc-lightbox::part(counter) {
-  display: none;
-}

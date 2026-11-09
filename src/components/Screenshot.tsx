@@ -1,14 +1,18 @@
+import {lazy, Suspense, useRef, useState} from 'react';
 import type {ComponentProps, ReactNode} from 'react';
 import {usePluginData} from '@docusaurus/useGlobalData';
 import {ThemedComponent} from '@docusaurus/theme-common';
 import type {Props as ThemedImageProps} from '@theme/ThemedImage';
 
-import {openLightbox, preloadLightbox} from '@/components/lightbox';
+import type {ZoomImage} from '@/components/ScreenshotZoom';
 import {BrowserWindow} from '@/components/ui/browser-window';
 import {cn} from '@/lib/utils';
 import type {ImageDimensions} from '@/plugins/image-dimensions';
 
 const IMAGE_CLASS = 'h-auto max-w-full';
+
+const loadZoom = () => import('@/components/ScreenshotZoom');
+const ScreenshotZoom = lazy(loadZoom);
 
 export function ScreenshotFrame({
   alt,
@@ -17,21 +21,37 @@ export function ScreenshotFrame({
   alt?: string;
   children: ReactNode;
 }) {
+  const trigger = useRef<HTMLButtonElement>(null);
+  const [image, setImage] = useState<ZoomImage | null>(null);
+  const [open, setOpen] = useState(false);
   return (
     <BrowserWindow className="my-6">
       <button
+        ref={trigger}
         type="button"
         aria-label={alt ? `View larger: ${alt}` : 'View larger image'}
         className="hover-elevate flex w-full cursor-zoom-in border-0 bg-transparent p-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
-        onPointerEnter={preloadLightbox}
-        onFocus={preloadLightbox}
+        onPointerEnter={() => void loadZoom()}
+        onFocus={() => void loadZoom()}
         onClick={(event) => {
-          const image = event.currentTarget.querySelector('img');
-          if (image) void openLightbox(image);
+          const shown = event.currentTarget.querySelector('img');
+          if (!shown) return;
+          setImage({src: shown.currentSrc || shown.src, alt: shown.alt});
+          setOpen(true);
         }}
       >
         {children}
       </button>
+      {image && (
+        <Suspense fallback={null}>
+          <ScreenshotZoom
+            image={image}
+            open={open}
+            onOpenChange={setOpen}
+            trigger={trigger}
+          />
+        </Suspense>
+      )}
     </BrowserWindow>
   );
 }
