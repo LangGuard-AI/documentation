@@ -376,14 +376,14 @@ html [class*='hitWrapper'] mark {
   }
 
   .navbar__items--right {
-    position: relative;
     flex: 1;
   }
 
+  /* Centered on the sheet below it, measured against the whole navbar. */
   [class*='navbarSearchContainer'] {
     position: absolute;
-    left: 50%;
-    width: min(35rem, 100% - 19rem);
+    left: calc(50% + (var(--doc-sidebar-width) + 1px) / 2);
+    width: min(35rem, 100% - 40rem);
     padding: 0;
     transform: translateX(-50%);
   }
@@ -392,7 +392,7 @@ html [class*='hitWrapper'] mark {
     width: 100%;
   }
 
-  [class*='searchBarContainer'] {
+  .navbar__search[class*='searchBarContainer'] {
     margin-left: 0;
   }
 
@@ -894,7 +894,7 @@ html [class*='hitWrapper'] mark {
   --ifm-button-color: var(--lg-foreground);
 }
 
-/* The footer continues the zone, aligned to the sheet above it. */
+/* The footer continues the zone, aligned to the content column above it. */
 .footer {
   font-size: 0.8125rem;
   line-height: 1.5;
@@ -921,15 +921,15 @@ html [class*='hitWrapper'] mark {
 
 @media (min-width: 997px) {
   .footer {
-    padding-left: calc(var(--doc-sidebar-width) + 1px);
+    padding-inline: calc(var(--doc-sidebar-width) + 1px) 0;
   }
 
   .footer .container {
-    margin-inline: 0;
-    max-width: 44rem;
+    max-width: calc(var(--lg-measure) + 23rem);
   }
 
   .footer__links {
+    max-width: calc(var(--lg-measure) + 2rem);
     margin-bottom: 0;
   }
 
