@@ -25,7 +25,6 @@ Requires Node.js 24 (pinned in `.nvmrc`).
 - **sidebars.ts** - Defines navigation structure (maps to docs/ hierarchy)
 - **docusaurus.config.ts** - Site configuration (title, URLs, navbar, footer, theme)
 - **src/css/custom.css** - Theme customizations
-- **chatbot/** - Self-contained AWS SAM backend for the docs assistant widget (see `chatbot/README.md`)
 
 ## Documentation Structure
 
