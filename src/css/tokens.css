@@ -1,0 +1,120 @@
+/* Copied verbatim from webapp client/src/index.css (light :root, dark .dark),
+   names prefixed --lg-. Do not edit values here. Docs-only additions live in
+   the second pair of blocks below. */
+:root {
+  --lg-background: oklch(0.975 0.003 250);
+  --lg-foreground: oklch(0.23 0.02 260);
+  --lg-card: oklch(1.0 0 0);
+  --lg-card-foreground: oklch(0.23 0.02 260);
+  --lg-popover: oklch(1.0 0 0);
+  --lg-popover-foreground: oklch(0.23 0.02 260);
+  --lg-primary: oklch(0.62 0.2 200);
+  --lg-primary-foreground: oklch(1.0 0 0);
+  --lg-secondary: oklch(0.92 0.03 190);
+  --lg-secondary-foreground: oklch(0.28 0.10 195);
+  --lg-muted: oklch(0.94 0.006 250);
+  --lg-muted-foreground: oklch(0.46 0.015 260);
+  --lg-accent: oklch(0.74 0.17 172);
+  --lg-accent-foreground: oklch(0.15 0.06 180);
+  --lg-destructive: oklch(0.6368 0.2078 25.3313);
+  --lg-border: oklch(0.88 0.01 250);
+  --lg-input: oklch(0.88 0.01 250);
+  --lg-ring: oklch(0.62 0.2 200);
+  --lg-sidebar: oklch(0.95 0.012 240);
+  --lg-sidebar-foreground: oklch(0.23 0.02 260);
+  --lg-sidebar-primary: oklch(0.62 0.2 200);
+  --lg-sidebar-accent: oklch(0.92 0.015 240);
+  --lg-sidebar-accent-foreground: oklch(0.30 0.08 200);
+  --lg-sidebar-border: oklch(0.88 0.015 240);
+  --lg-sidebar-ring: oklch(0.62 0.2 200);
+  --lg-elevate-1: rgba(0, 0, 0, 0.035);
+  --lg-elevate-2: rgba(0, 0, 0, 0.07);
+  --lg-sev-critical: oklch(0.6368 0.2078 25.3313);
+  --lg-sev-high: oklch(0.7484 0.1562 75.6653);
+  --lg-sev-low: oklch(0.6200 0.2000 200);
+  --lg-sev-resolved: oklch(0.46 0.015 260);
+  --lg-sev-critical-row-tint: oklch(0.6368 0.2078 25.3313 / 0.04);
+  --lg-sev-high-row-tint: oklch(0.7484 0.1562 75.6653 / 0.04);
+  --lg-verdict-healthy-accent: #059669;
+  --lg-verdict-watch-accent: #b45309;
+  --lg-ink: #0f5962;
+  --lg-font-sans: Plus Jakarta Sans, ui-sans-serif, sans-serif, system-ui;
+  --lg-font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+  --lg-radius-sm: 0.25rem;
+  --lg-radius-md: 0.375rem;
+  --lg-radius-lg: 0.5rem;
+  --lg-radius-xl: 0.75rem;
+  --lg-radius-2xl: 1rem;
+  --lg-shadow-sm: 0px 1px 3px 0px hsl(220 20% 20% / 0.06), 0px 1px 2px -1px hsl(220 20% 20% / 0.05);
+  --lg-shadow: 0px 1px 3px 0px hsl(220 20% 20% / 0.06), 0px 1px 2px -1px hsl(220 20% 20% / 0.05);
+  --lg-shadow-md: 0px 4px 6px -1px hsl(220 20% 20% / 0.07), 0px 2px 4px -2px hsl(220 20% 20% / 0.05);
+  --lg-shadow-glass-md: 0 8px 24px -4px rgba(0, 0, 0, 0.12), 0 12px 32px -6px rgba(0, 0, 0, 0.1);
+  --lg-shadow-glass-lg: 0 12px 32px -6px rgba(0, 0, 0, 0.15), 0 16px 40px -8px rgba(0, 0, 0, 0.12);
+  --lg-drawer-bg: oklch(0.98 0.003 250 / 0.92);
+  --lg-drawer-border: oklch(0.88 0.008 250 / 0.6);
+  --lg-drawer-overlay: oklch(0.1 0 0 / 0.35);
+  --lg-k-tool: oklch(0.52 0.19 300);
+  --lg-k-model: oklch(0.52 0.13 190);
+  --lg-k-data: oklch(0.52 0.15 255);
+  --lg-k-table: oklch(0.5 0.13 150);
+  --lg-shell-strip-h: 68px;
+}
+
+[data-theme='dark'] {
+  --lg-background: oklch(0.1891 0.0188 255.7530);
+  --lg-foreground: oklch(0.9500 0.0152 241.7732);
+  --lg-card: oklch(0.2362 0.0291 255.2534);
+  --lg-card-foreground: oklch(0.9500 0.0152 241.7732);
+  --lg-popover: oklch(0.2362 0.0291 255.2534);
+  --lg-popover-foreground: oklch(0.9500 0.0152 241.7732);
+  --lg-primary: oklch(0.8045 0.1653 166.7880);
+  --lg-primary-foreground: oklch(0.1891 0.0188 255.7530);
+  --lg-secondary: oklch(0.3771 0.0644 194.7689);
+  --lg-secondary-foreground: oklch(0.8045 0.1653 166.7880);
+  --lg-muted: oklch(0.2565 0.0269 253.3441);
+  --lg-muted-foreground: oklch(0.6999 0.0419 249.5922);
+  --lg-accent: oklch(0.3771 0.0644 194.7689);
+  --lg-accent-foreground: oklch(0.8045 0.1653 166.7880);
+  --lg-border: oklch(0.3771 0.0644 194.7689);
+  --lg-input: oklch(0.2565 0.0269 253.3441);
+  --lg-ring: oklch(0.8045 0.1653 166.7880);
+  --lg-sidebar: oklch(0.1789 0.0156 248.7102);
+  --lg-sidebar-foreground: oklch(0.9500 0.0152 241.7732);
+  --lg-sidebar-primary: oklch(0.8045 0.1653 166.7880);
+  --lg-sidebar-accent: oklch(0.2907 0.0496 194.7689);
+  --lg-sidebar-accent-foreground: oklch(0.8045 0.1653 166.7880);
+  --lg-sidebar-border: oklch(0.2507 0.0428 194.7689);
+  --lg-sidebar-ring: oklch(0.8045 0.1653 166.7880);
+  --lg-elevate-1: rgba(255, 255, 255, 0.05);
+  --lg-elevate-2: rgba(255, 255, 255, 0.1);
+  --lg-sev-low: oklch(0.8045 0.1653 166.7880);
+  --lg-sev-resolved: oklch(0.6999 0.0419 249.59);
+  --lg-sev-critical-row-tint: oklch(0.6368 0.2078 25.3313 / 0.06);
+  --lg-sev-high-row-tint: oklch(0.7484 0.1562 75.6653 / 0.05);
+  --lg-verdict-healthy-accent: #34d399;
+  --lg-verdict-watch-accent: #fbbf24;
+  --lg-ink: var(--lg-primary);
+  --lg-shadow-sm: 0px 8px 15px -5px hsl(0 0 0 / 0.30), 0px 1px 2px -6px hsl(0 0 0 / 0.30);
+  --lg-shadow: 0px 8px 15px -5px hsl(0 0 0 / 0.30), 0px 1px 2px -6px hsl(0 0 0 / 0.30);
+  --lg-shadow-md: 0px 8px 15px -5px hsl(0 0 0 / 0.30), 0px 2px 4px -6px hsl(0 0 0 / 0.30);
+  --lg-shadow-glass-md: 0 8px 24px -4px rgba(0, 0, 0, 0.6), 0 12px 32px -6px rgba(0, 0, 0, 0.5);
+  --lg-shadow-glass-lg: 0 12px 32px -6px rgba(0, 0, 0, 0.7), 0 16px 40px -8px rgba(0, 0, 0, 0.6);
+  --lg-drawer-bg: oklch(0.22 0.02 248 / 0.95);
+  --lg-drawer-border: oklch(0.35 0.04 248 / 0.5);
+  --lg-drawer-overlay: oklch(0.05 0 0 / 0.8);
+  --lg-k-tool: oklch(0.72 0.16 300);
+  --lg-k-model: oklch(0.8 0.13 180);
+  --lg-k-data: oklch(0.76 0.12 255);
+  --lg-k-table: oklch(0.78 0.14 145);
+}
+
+/* Docs-only tokens. The app has no long-form copy, so it has no reading
+   measure, and its primary button text fails AA on light cyan. */
+:root {
+  --lg-measure: 48rem;
+  --lg-primary-ink: var(--lg-accent-foreground);
+}
+
+[data-theme='dark'] {
+  --lg-primary-ink: var(--lg-primary-foreground);
+}

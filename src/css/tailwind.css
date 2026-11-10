@@ -1,0 +1,68 @@
+/* No preflight: Infima owns the reset.
+ *
+ * source(none) plus the two @source lines keep Tailwind out of docs/. Scanning
+ * prose would emit utilities for ordinary words, and .container, .table, and
+ * .hidden would then restyle Infima markup.
+ *
+ * important: custom.css is unlayered, so a layered utility loses to any rule
+ * in it, and .markdown a outranks an unlayered .text-foreground. Important
+ * utilities win without guessing what the theme stylesheet declares. */
+@layer theme;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' source(none) important;
+
+@source "../components";
+@source "../theme";
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* --color-*: initial drops Tailwind's palette, so a registry class such as
+ * bg-red-500 generates nothing. Only LangGuard's semantic colors exist here,
+ * which is how Warning-Light holds for pasted components. */
+@theme inline {
+  --color-*: initial;
+  --color-background: var(--lg-background);
+  --color-foreground: var(--lg-foreground);
+  --color-card: var(--lg-card);
+  --color-primary: var(--lg-primary);
+  --color-primary-foreground: var(--lg-primary-foreground);
+  --color-secondary: var(--lg-secondary);
+  --color-secondary-foreground: var(--lg-secondary-foreground);
+  --color-muted: var(--lg-muted);
+  --color-muted-foreground: var(--lg-muted-foreground);
+  --color-accent: var(--lg-accent);
+  --color-accent-foreground: var(--lg-accent-foreground);
+  --color-border: var(--lg-border);
+  --color-ring: var(--lg-ring);
+  --color-destructive: var(--lg-destructive);
+
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, sans-serif, system-ui;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+}
+
+/* The webapp's Overlay-Elevation: hover is a brightness overlay, never a
+ * shadow change or movement. */
+@utility hover-elevate {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  &:hover::after {
+    background-color: var(--lg-elevate-1);
+  }
+
+  &:active::after {
+    background-color: var(--lg-elevate-2);
+  }
+}
