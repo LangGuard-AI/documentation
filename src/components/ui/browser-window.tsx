@@ -17,7 +17,7 @@ export function BrowserWindow({
   return (
     <span
       className={cn(
-        'block w-fit max-w-full overflow-hidden rounded-xl border border-border bg-background',
+        'block w-full overflow-hidden rounded-xl border border-border bg-background',
         className,
       )}
     >

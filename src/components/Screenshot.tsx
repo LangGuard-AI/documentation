@@ -15,7 +15,7 @@ import {
 import {cn} from '@/lib/utils';
 import type {ImageDimensions} from '@/plugins/image-dimensions';
 
-const IMAGE_CLASS = 'h-auto max-w-full';
+const IMAGE_CLASS = 'h-auto w-full';
 const MORPH = {type: 'spring', visualDuration: 0.4, bounce: 0} as const;
 
 export function ScreenshotFrame({

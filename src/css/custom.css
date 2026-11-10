@@ -555,6 +555,27 @@ html [class*='hitWrapper'] mark {
   --ifm-h3-font-size: 1.125rem;
 }
 
+/* Wide screens: the layout is in rem, so a larger root grows all of it and each
+   line keeps its character count. Set here, not through --ifm-font-size-base,
+   which Infima also applies to blockquotes, so they would scale twice. */
+@media (min-width: 1800px) {
+  html {
+    font-size: 112.5%;
+  }
+}
+
+@media (min-width: 2300px) {
+  html {
+    font-size: 125%;
+  }
+}
+
+@media (min-width: 3000px) {
+  html {
+    font-size: 137.5%;
+  }
+}
+
 /* One column for prose and media, so every block ends on the same right edge.
    Each column gives up 2rem to its gutters; the outline takes what is left. */
 @media (min-width: 997px) {
