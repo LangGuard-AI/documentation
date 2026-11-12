@@ -145,7 +145,7 @@ Configure automatic synchronization:
 
 ### Manual Sync
 
-Trigger sync on-demand by clicking the **Sync Now** button on the integration card.
+Trigger sync on-demand by clicking the **Sync now** button on the integration card.
 
 ### Push-Based Ingestion
 
@@ -173,7 +173,7 @@ See individual integration guides for setup.
 
 ### Sync History
 
-View recent sync operations:
+Open the menu (**⋮**) on the integration card and select **View sync history** to view recent sync operations:
 
 - Success/failure status
 - Items fetched and ingested
