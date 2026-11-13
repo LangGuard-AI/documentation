@@ -45,6 +45,8 @@ To change the value:
 
 A change that archives or deletes traces (a turn-on or a lower value) opens a confirm dialog. It shows the number of traces that no rule matches and that the new value makes due, the oldest arrival date and the cutoff date. When the default action is delete, you can click **Download traces first** to download these traces as gzip NDJSON before the delete. Hold the button for 3 seconds to save. A higher value or a turn-off saves at once.
 
+If another admin saved the lifecycle after the card loaded it, the save is refused and the dialog closes. The card loads the saved lifecycle; check it and save again.
+
 ## How the age of a trace is counted
 
 The age of a trace is counted from the UTC day on which LangGuard received it, in whole days. The start time of the trace is not used.
@@ -121,7 +123,7 @@ LangGuard never shows the secret again after you save it. A change of the endpoi
 The destination is **ready** when it is enabled and its last test passed. You can select **Archive** in the default lifecycle or a rule only when the destination is ready. You cannot remove the destination while the lifecycle uses archive.
 
 :::warning Archive paused
-When the destination is not ready (for example, the credentials stopped working), LangGuard archives nothing and removes nothing. The page shows **Archive paused: destination not ready**. LangGuard never deletes a trace in place of an archive.
+When the destination is not ready (for example, the credentials stopped working), LangGuard archives nothing and removes nothing. If you change or turn off the destination while an archive batch uploads, the batch stops: LangGuard removes nothing from the workspace and tries to delete the files of that batch. The page shows **Archive paused: destination not ready**. LangGuard never deletes a trace in place of an archive.
 :::
 
 ### Files in your bucket
@@ -178,7 +180,7 @@ The page shows a **Preview** of what the next runs do with the draft: the number
 
 Click **Save lifecycle** to save the default lifecycle and the rules. When the save archives or deletes traces, or a count is not known, a confirm dialog opens. Hold the button for 3 seconds to save. A change that only compresses saves with no dialog.
 
-- If another admin saved first, the page loads the saved lifecycle and you make your change again.
+- If another admin saved the lifecycle first, or changed the retention value after the page loaded it, the page loads the saved settings and you make your change again. If this happens while the confirm dialog is open, the dialog closes before it saves.
 - If a new UTC day started after the preview, the dialog shows the new numbers and you hold the button again.
 
 ## Schedule
@@ -237,7 +239,9 @@ LangGuard records these actions in the [Audit Log](/settings/audit-log):
 - A trace that still receives spans is compressed or archived later: compression waits until the trace and its spans are 15 days old, archive until no span arrived in the last 24 hours. Delete does not wait.
 - A span that arrives after its trace was archived or deleted makes a new trace in LangGuard. That trace starts a new lifecycle. A later archive of it writes a second, partial copy.
 - A policy violation that LangGuard records for a trace after the trace was archived or deleted stays in LangGuard.
-- When an archive batch fails and LangGuard cannot delete its files, files can stay in your bucket. LangGuard tries to delete them again in later runs.
+- When an archive batch fails and LangGuard cannot delete its files, files can stay in your bucket. LangGuard tries to delete them again in later runs, but only while the destination has the same endpoint and bucket. After you move the destination to another endpoint or bucket, delete those files in the old bucket yourself.
+- A trace with a date that Parquet cannot store (before year 1 or after year 9999) is not archived. It stays in LangGuard. Delete still removes it.
+- A trace whose tags contain text that is not valid Unicode matches no **Tag** condition.
 - The ages of a rule are at most 365 days. To keep traces longer, use **Keep**.
 - Compression and delete free space in the database, but the database files do not become smaller.
 
