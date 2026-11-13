@@ -40,3 +40,7 @@ Configure how your workspace appears to members:
 
 - **Workspace Name** — The name shown across the platform
 - **Timezone** — Default timezone for displaying dates and times
+
+## Trace Retention
+
+An admin can set the trace retention value here: the number of days after which LangGuard archives or deletes the traces that no lifecycle rule matches. Retention is off for a new workspace. The same card is on the [Trace Retention](/settings/trace-retention) page, which also has the default lifecycle, the rules and the archive destination.

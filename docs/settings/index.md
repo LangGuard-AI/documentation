@@ -85,7 +85,7 @@ Configure cost-per-token rates for different models to power cost metrics in Tra
 ---
 
 ### [Trace Retention](/settings/trace-retention)
-Set how long LangGuard keeps traces, and add rules that give different traces a different retention.
+Set what happens to traces as they get older: compress, archive to your object storage, or delete. Add rules that give different traces a different lifecycle.
 
 ---
 
