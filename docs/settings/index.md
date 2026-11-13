@@ -84,6 +84,11 @@ Configure cost-per-token rates for different models to power cost metrics in Tra
 
 ---
 
+### [Trace Retention](/settings/trace-retention)
+Set how long LangGuard keeps traces, and add rules that give different traces a different retention.
+
+---
+
 ### [Enforcement Mode](/settings/enforcement-mode)
 Switch the MCP gateway between Shadow mode, which does not block for a policy verdict and records what Enforce mode would do, and Enforce mode, which blocks your MCP tool calls.
 
