@@ -108,7 +108,7 @@ The archive destination is the object storage that receives archived traces. Any
 
 1. Go to **Settings > Trace Retention > Archive destination**.
 2. Enter:
-   - **Endpoint**: an `https` URL with a host only, for example `https://s3.us-east-1.amazonaws.com`. No path, query or user name.
+   - **Endpoint**: an `https` URL with a host only, for example `https://s3.us-east-1.amazonaws.com`. No path, query or user name. On a private install, the endpoint can be on your private network (for example MinIO at `https://minio.internal:9000`). On LangGuard SaaS, the endpoint must be a public address.
    - **Region**, for example `us-east-1`.
    - **Bucket**: 3 to 63 characters, `a-z`, `0-9`, dot and hyphen.
    - **Prefix (optional)**: segments of letters, digits and `!_.*'()-`, separated by `/`, up to 512 characters.
