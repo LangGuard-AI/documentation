@@ -97,6 +97,7 @@ Compression keeps the trace in LangGuard. The trace detail, search, the trace ex
 
 - Only quiet traces are compressed: the trace and all its spans are older than 15 days.
 - A trace with more than 64 MB of payload text is not compressed.
+- A trace with less than 2 KB of payload text is not compressed. The database does not compress data that small, so compression would make the trace larger.
 - Data that arrives for a trace after its compression is stored without compression.
 
 ## Archive
@@ -178,6 +179,8 @@ If you must keep the evidence of a violation in LangGuard for longer, add a rule
 
 The page shows a **Preview** of what the next runs do with the draft: the number of traces to compress, archive and delete, in total and for each rule. When a count takes too long, the preview says that there are too many traces to count.
 
+The counts are what a run does. A run deletes and archives before it compresses, so a trace that a run deletes or archives is not in the compress count. The compress count does not include the traces that are not compressed because of their size (less than 2 KB or more than 64 MB of payload text).
+
 Click **Save lifecycle** to save the default lifecycle and the rules. When the save archives or deletes traces, or a count is not known, a confirm dialog opens. Hold the button for 3 seconds to save. A change that only compresses saves with no dialog.
 
 - If another admin saved the lifecycle first, or changed the retention value after the page loaded it, the page loads the saved settings and you make your change again. If this happens while the confirm dialog is open, the dialog closes before it saves.
@@ -236,6 +239,7 @@ LangGuard records these actions in the [Audit Log](/settings/audit-log):
 
 - LangGuard cannot restore an archived or deleted trace.
 - A trace with more than 64 MB of payload text is not compressed and not archived.
+- A trace with less than 2 KB of payload text is not compressed.
 - A trace that still receives spans is compressed or archived later: compression waits until the trace and its spans are 15 days old, archive until no span arrived in the last 24 hours. Delete does not wait.
 - A span that arrives after its trace was archived or deleted makes a new trace in LangGuard. That trace starts a new lifecycle. A later archive of it writes a second, partial copy.
 - A policy violation that LangGuard records for a trace after the trace was archived or deleted stays in LangGuard.
