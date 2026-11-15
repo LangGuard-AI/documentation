@@ -332,6 +332,26 @@ Limits of the AI gateway:
 - There is no direct route to `litellm`. All gateway traffic goes through
   `https://<domain>/aigateway`.
 
+### Trace archive with workload identity {#archive-workload-identity}
+
+The trace archive can write to your bucket with the identity of the dashboard pods, without an access key. Bind an identity to the ServiceAccount `langguard-dashboard`, then set the cloud:
+
+```yaml
+archive:
+  workloadIdentity:
+    cloud: aws          # aws, gcp or azure
+    buckets:            # optional: the buckets that the archive can use
+      - example-trace-archive
+```
+
+| `cloud` | Bind the identity | Permissions |
+|---|---|---|
+| `aws` | IRSA: `dashboard.serviceAccount.annotations` with `eks.amazonaws.com/role-arn: <role ARN>`. Or an EKS Pod Identity association for `langguard-dashboard`. | `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject` on the prefix |
+| `gcp` | `dashboard.serviceAccount.annotations` with `iam.gke.io/gcp-service-account: <service account email>`. The Google service account needs `roles/iam.workloadIdentityUser` for `<project>.svc.id.goog[<namespace>/langguard-dashboard]`. | `roles/storage.objectUser` on the bucket |
+| `azure` | `workloadIdentity.azure.clientId` (the chart fails without it). | **Storage Blob Data Contributor** on the container |
+
+For Azure, a `buckets` item is `<storage account>/<container>`. With `cloud: gcp` and `networkPolicy.enabled`, the dashboard can reach the GKE metadata server (169.254.169.254, TCP 80). After the install, an admin selects **Workload identity** in **Settings > Trace Retention > Archive destination** and clicks **Test connection**.
+
 ### Changes for other cases {#other-cases}
 
 | Case | Values |

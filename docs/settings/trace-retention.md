@@ -121,6 +121,17 @@ Use credentials that can only write to this bucket and prefix. The archive needs
 
 LangGuard never shows the secret again after you save it. A change of the endpoint host needs the secret again. A change of the endpoint, region, bucket, prefix or access key ID clears the test result, so you must test again before the destination is used.
 
+#### Workload identity (private installs only) {#workload-identity}
+
+On a private install, your operator can let LangGuard sign in to the bucket with the workload identity of its own deployment. Then no access key is stored. This option is never available on LangGuard SaaS. When your operator has turned it on, the card shows **Sign in with**:
+
+- **Access key**: the fields above.
+- **Workload identity (AWS)**: Amazon S3 with the IAM role of the deployment (IRSA or EKS Pod Identity). Enter the **Region**, the **Bucket** and the **Prefix**. The **Endpoint** is prefilled (`https://s3.<region>.amazonaws.com`); change it for a VPC endpoint.
+- **Workload identity (Google Cloud)**: Cloud Storage with the Google service account of the deployment. Enter the **Bucket** and the **Prefix**. The **Endpoint** is prefilled (`https://storage.googleapis.com`); change it for Private Service Connect.
+- **Workload identity (Azure)**: Blob Storage with the managed identity of the deployment. Enter the **Storage account**, the **Container** and the **Prefix**. The **Endpoint** is `https://<account>.blob.core.windows.net`; change it for a sovereign cloud.
+
+Give the identity permission to write, read and delete objects under the prefix (for example `roles/storage.objectUser` on the bucket in Google Cloud, or the **Storage Blob Data Contributor** role on the container in Azure). Your operator can limit workload identity to a list of buckets; another bucket is refused. All workspaces of the install use the same identity.
+
 The destination is **ready** when it is enabled and its last test passed. You can select **Archive** in the default lifecycle or a rule only when the destination is ready. You cannot remove the destination while the lifecycle uses archive.
 
 :::warning Archive paused

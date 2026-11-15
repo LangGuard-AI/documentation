@@ -143,6 +143,24 @@ workloadIdentity:
   cannot use the managed identity. Change the integration to a client secret before you
   remove the value.
 
+### Trace archive with workload identity {#archive-workload-identity}
+
+The trace archive can write to Blob Storage with the dashboard managed identity
+(`workloadIdentity.azure.clientId`), without an access key:
+
+```yaml
+archive:
+  workloadIdentity:
+    cloud: azure
+    buckets:                      # optional: <storage account>/<container>
+      - examplearchive/langguard-traces
+```
+
+Give the dashboard managed identity the **Storage Blob Data Contributor** role on the
+container. After the install, an admin selects **Workload identity (Azure)** in **Settings >
+Trace Retention > Archive destination** and clicks **Test connection**. See
+[Trace archive with workload identity](/private-install/helm/installation#archive-workload-identity).
+
 ### Turn on the AI gateway {#ai-gateway}
 
 The values file above sets `aiGateway.enabled: false`. To install the AI gateway, at the
