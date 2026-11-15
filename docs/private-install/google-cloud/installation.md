@@ -542,6 +542,22 @@ service account has `roles/aiplatform.user`. The application uses Gemini 2.5 Fla
 (`google/gemini-2.5-pro`) for the most demanding requests. `--ai-model` does not change
 these models.
 
+### Trace archive with workload identity {#archive-workload-identity}
+
+The trace archive can write to Cloud Storage with the application service account (Workload
+Identity), without an HMAC key. Set these variables in your own `--tfvars` file:
+
+```hcl
+trace_archive_workload_identity = true
+trace_archive_buckets           = ["example-trace-archive"]
+```
+
+Each listed bucket gets `roles/storage.objectUser` for the application service account, and
+the application accepts only these buckets for workload identity. With an empty list, the
+application accepts any bucket, and you give the role yourself. After the install, an admin
+selects **Workload identity (Google Cloud)** in **Settings > Trace Retention > Archive
+destination** and clicks **Test connection**.
+
 ### Agent discovery
 
 By default, the Google Agent Platform integration in LangGuard uses a separate Google

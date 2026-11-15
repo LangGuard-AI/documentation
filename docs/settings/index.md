@@ -84,6 +84,11 @@ Configure cost-per-token rates for different models to power cost metrics in Tra
 
 ---
 
+### [Trace Retention](/settings/trace-retention)
+Set what happens to traces as they get older: compress, archive to your object storage, or delete. Add rules that give different traces a different lifecycle.
+
+---
+
 ### [Enforcement Mode](/settings/enforcement-mode)
 Switch the MCP gateway between Shadow mode, which does not block for a policy verdict and records what Enforce mode would do, and Enforce mode, which blocks your MCP tool calls.
 
