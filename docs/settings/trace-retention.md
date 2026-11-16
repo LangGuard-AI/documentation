@@ -19,7 +19,10 @@ A trace can be compressed first, and then kept, archived or deleted. You set a d
 **Navigation:**
 
 - **Settings > General > Trace retention**: the retention value only.
-- **Settings > Trace Retention** (`/settings/trace-retention`): the retention value, the default lifecycle, the rules, the archive destination and the preview.
+- **Settings > Trace Retention** (`/settings/trace-retention`) has three sections, in this order:
+  1. **Trace retention**: the retention value.
+  2. **Archive destination**: the object storage for archived traces.
+  3. **Lifecycle rules**: the default lifecycle first, then the rules, then **Preview** and **Save lifecycle**.
 
 :::info Admin Required
 Only an **admin** can see and change trace retention. An API key cannot read or change these settings.
@@ -53,14 +56,9 @@ The age of a trace is counted from the UTC day on which LangGuard received it, i
 
 A stage with an age of _N_ days acts on the traces that arrived before UTC midnight of today minus _N_ days. The traces of one day are acted on together.
 
-## Default lifecycle
-
-The default lifecycle applies to every trace that no enabled rule matches.
-
-- **Compress after**: off, or 15 to 364 days. When retention is on, it must be below the retention value.
-- **At the retention days**: **Archive** or **Delete**. While retention is off, the default keeps traces, and you cannot change the action.
-
 ## Lifecycle rules
+
+The **Lifecycle rules** section shows the default lifecycle first, then the rules.
 
 1. LangGuard examines the rules from top to bottom.
 2. The first **enabled** rule whose conditions **all** match a trace sets the lifecycle of that trace.
@@ -72,6 +70,13 @@ Each rule has a lifecycle:
 - **Then**: **Keep**, **Archive after** _M_ days or **Delete after** _M_ days. _M_ is from 7 to 365 days, and not above the maximum of your plan. When the action is not **Keep**, the compress days must be below _M_.
 
 A new rule starts with **Keep** and no compression. A workspace can have a maximum of 50 rules. Each rule can have a maximum of 10 conditions. To stop a rule without removing it, set **Enabled** to off.
+
+### Default lifecycle
+
+The default lifecycle applies to every trace that no enabled rule matches.
+
+- **Compress after**: off, or 15 to 364 days. When retention is on, it must be below the retention value.
+- **At the retention days**: **Archive** or **Delete**. While retention is off, the default keeps traces, and you cannot change the action.
 
 ### Conditions
 
@@ -188,7 +193,7 @@ If you must keep the evidence of a violation in LangGuard for longer, add a rule
 
 ## Preview and save
 
-The page shows a **Preview** of what the next runs do with the draft: the number of traces to compress, archive and delete, in total and for each rule. When a count takes too long, the preview says that there are too many traces to count.
+**Preview** and **Save lifecycle** are at the bottom of the **Lifecycle rules** section. **Preview** shows what the next runs do with the draft: the number of traces to compress, archive and delete, in total and for each rule. When a count takes too long, the preview says that there are too many traces to count.
 
 The counts are what a run does. A run deletes and archives before it compresses, so a trace that a run deletes or archives is not in the compress count. The compress count does not include the traces that are not compressed because of their size (less than 2 KB or more than 64 MB of payload text).
 
