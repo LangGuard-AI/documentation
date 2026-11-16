@@ -474,7 +474,8 @@ To upgrade:
    For the upgrade from a bundle with the `langguard-discovery` image, also see
    [that upgrade](/private-install/google-cloud/installation#upgrade-catalog): the
    catalog moves into `otel-ingest`, and you delete the keys of a queue in `redis`
-   after the upgrade.
+   after the upgrade. To roll back, see
+   [that rollback](/private-install/google-cloud/installation#rollback-catalog).
 
 ## Uninstall
 

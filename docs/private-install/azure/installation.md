@@ -211,6 +211,8 @@ Follow [After install](/private-install/helm/installation#after-install),
   the gateway, see [Turn on the AI gateway](#ai-gateway).
 - For an upgrade from a chart version with the `opencite` Deployment, do the steps in
   [Upgrade from a chart version with the opencite Deployment](/private-install/helm/installation#upgrade-catalog).
+  For a rollback to such a chart version, do the steps in
+  [Roll back](/private-install/helm/installation#rollback-catalog).
   On Azure, the federated credential of the discovery identity does not change: its
   subject stays `system:serviceaccount:langguard:opencite`. The `otel-ingest` pods get
   the identity, so `otel-ingest` restarts once.

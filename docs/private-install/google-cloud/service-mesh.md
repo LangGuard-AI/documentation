@@ -152,7 +152,7 @@ install with `--no-network-policies`:
 | `langguard-dashboard-ingress` | `langguard-dashboard` | Ingress on TCP 5000 from the Google Cloud load balancer and health check ranges (`35.191.0.0/16`, `130.211.0.0/22`, `209.85.152.0/22`, `209.85.204.0/22`) and from pods in `langguard` |
 | `opa-policy` | `opa` | Ingress on TCP 8181 from pods in `langguard` |
 | `otel-ingest-ingress` | `otel-ingest` | Ingress on TCP 4317, 4318 and 8080, and on TCP 4319 when you install with `--backend-tls`, from all sources. Ingress on TCP 8081 (the catalog API, Service `opencite`) only from `langguard-dashboard` and `otel-ingest` |
-| `cloudsql-proxy-ingress` | `cloudsql-proxy` | Ingress on TCP 5432 from `langguard-dashboard` and `otel-ingest`. Also from the pods with the label `app: opencite`: during an upgrade from a bundle with the `langguard-discovery` image, the catalog pod of that bundle uses the database until it stops |
+| `cloudsql-proxy-ingress` | `cloudsql-proxy` | Ingress on TCP 5432 from `langguard-dashboard` and `otel-ingest`. Also from the pods with the label `app: opencite`: during an upgrade from a bundle with the `langguard-discovery` image, the catalog pod of that bundle uses the database until `install.sh` deletes it after the apply |
 | `otel-ingest-egress` | `otel-ingest` | Only with `enable_gcp_discovery = false`. Egress to DNS, to pods in `langguard`, and to external addresses except the metadata server |
 
 :::note

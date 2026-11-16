@@ -645,17 +645,20 @@ In this bundle, the catalog runs in the `otel-ingest` pod. The bundle has two im
 `langguard-dashboard` and `otel-ingest`. The first apply with this bundle makes these
 changes:
 
-- Terraform deletes the Deployment `opencite`, the ConfigMap `opencite-config`, the
-  Secrets `opencite-secrets`, `opencite-webhook-secret` and
-  `opencite-database-credentials`, and the NetworkPolicy `opencite-policy`. The Service `opencite` stays, with port 8080. It now selects the
-  `otel-ingest` pod, on its port 8081.
+- Terraform deletes the Secrets `opencite-secrets`, `opencite-webhook-secret` and
+  `opencite-database-credentials`, and the NetworkPolicy `opencite-policy`. It does not
+  delete the Deployment `opencite` and the ConfigMap `opencite-config`: the catalog of the
+  bundle before runs until the Service `opencite` selects the `otel-ingest` pod.
+  `install.sh` deletes them after the apply. The Service `opencite` stays, with port 8080.
+  It then selects the `otel-ingest` pod, on its port 8081.
 - `otel-ingest` runs under the Kubernetes service account `opencite`. Before, it ran
   under `langguard-dashboard`. With `enable_gcp_discovery = true` (the default), it gets
   the Google service account `lg-discovery-<environment>` and has no egress NetworkPolicy
   (see [Agent discovery](#agent-discovery)).
 - The `otel-ingest` pod requests 256 MiB of memory and has a limit of 1 GiB. Before, the
   requests were 128 MiB and the limit 512 MiB. The `opencite` pod (512 MiB requested,
-  2 GiB limit) is gone, so the total memory requests decrease.
+  2 GiB limit) is gone after the upgrade, so the total memory requests decrease. During
+  the apply, the `opencite` pod and the new `otel-ingest` pod run at the same time.
 - Terraform generates the key of the catalog API in the new Secret `opencite-api-key`.
   The dashboard sends the key, and the catalog API in `otel-ingest` accepts only requests
   with it. You do not supply a value.
@@ -686,45 +689,47 @@ changes:
 
 The apply does the rollout in this order:
 
-1. Terraform deletes the Deployment `opencite` at the start of the apply.
-2. The `db-migration` Job runs. Then Terraform updates `langguard-dashboard` and waits
-   until its rollout completes.
-3. Terraform updates `otel-ingest`.
+1. The `db-migration` Job runs. Then Terraform updates `otel-ingest` and waits until its
+   rollout completes. During this time, the Service `opencite` selects the catalog pod
+   of the bundle before. That pod receives the traces and logs of the old `otel-ingest`
+   pod, and sends its data to the dashboard of the bundle before.
+2. Terraform waits 60 seconds one time, for the last data of the old catalog.
+3. The Service `opencite` selects the `otel-ingest` pod.
+4. Terraform updates `langguard-dashboard` and waits until its rollout completes.
+5. After the apply, `install.sh` deletes the Deployment `opencite` and the ConfigMap
+   `opencite-config`. If it cannot delete them, it shows a warning. Then delete them
+   yourself:
+   `kubectl -n langguard delete deployment/opencite configmap/opencite-config --ignore-not-found`.
 
-From step 1 until the new `otel-ingest` pod is ready, the catalog is not available. The
-Discovery pages and the syncs of the integrations that the catalog reads can show
-`Discovery service is not available`. The old `otel-ingest` pod continues to receive
-traces and logs. It stores the traces. It keeps the logs and the data for the catalog in a
-queue in `redis`. The new pod gives the queued data to the catalog during its first 30
-minutes. Do not restart `redis` until the queue is empty: a restart deletes the queued
-logs. If `redis` does not restart, no trace and no log is lost.
+From step 1 to step 4, the dashboard of the bundle before processes the traces that the
+new `otel-ingest` pod receives. It evaluates the policies on them, but these traces can
+miss data that this bundle adds, for example the token and cost totals. From step 3
+until the dashboard rollout completes, the Discovery pages and the syncs of integrations
+can fail, because the dashboard of the bundle before has no key for the catalog API. After
+the upgrade, click **Sync Now** for each integration.
 
-After the installer completes, delete the keys of this queue in `redis`. Connect to the
-cluster (see [Operational access](#operational-access)). This command shows the number of
-items that are left in the queue:
+The old `otel-ingest` pod puts the data that it cannot send to the catalog in a queue in
+`redis`. The dashboard of the bundle before sends these items until its rollout. After the
+installer completes, delete the keys of this queue. Connect to the cluster (see
+[Operational access](#operational-access)). This command shows the number of items that
+were not sent:
 
 ```bash
 kubectl -n langguard exec deploy/redis -c redis -- sh -c \
-  'q=bull:langguard-opencite-forward; echo $(( $(redis-cli llen $q:wait) + $(redis-cli llen $q:paused) + $(redis-cli llen $q:active) + $(redis-cli zcard $q:delayed) + $(redis-cli zcard $q:failed) ))'
+  'q=bull:langguard-opencite-forward; echo $(( $(redis-cli llen $q:wait) + $(redis-cli llen $q:paused) + $(redis-cli llen $q:active) + $(redis-cli zcard $q:delayed) ))'
 ```
 
-If it does not show `0`, wait 1 minute and run it again. The new pod sends the queued
-items every 30 seconds. If it does not show `0` 30 minutes after the new `otel-ingest`
-pod started, the catalog did not accept the items. Make sure that the catalog is
-available: `kubectl logs -n langguard -l app=otel-ingest --tail=-1 | grep "catalog:"`
-shows the state of the catalog database. Then restart `otel-ingest` and run the command
-again. Each new pod sends the queued items again for 30 minutes:
-
-```bash
-kubectl rollout restart deployment/otel-ingest -n langguard
-```
-
-When it shows `0`, delete the keys. The command deletes nothing when no key is left:
+When it shows `0`, delete the keys. The keys can also hold failed items: the bundle before
+stopped them after their last attempt. The command deletes nothing when no key is left:
 
 ```bash
 kubectl -n langguard exec deploy/redis -c redis -- sh -c \
   'redis-cli --scan --pattern "bull:langguard-opencite-forward:*" | xargs -r redis-cli unlink'
 ```
+
+If it shows a different number, no pod of this bundle sends these items. Do not delete
+the keys, and contact LangGuard support. Do not restart `redis` before you delete the
+keys: a restart deletes the items.
 
 After the upgrade, do these checks:
 
@@ -739,12 +744,47 @@ With `--registry`, load only the two images of this bundle (see
 You can delete the `langguard-discovery` image from your registry when you do not need to
 roll back.
 
-To roll back, run `install.sh` from the `gcp/` directory of the bundle before, with the
-same flags and the same `--tfvars` file. With `--registry`, the images of that bundle must
-be in your registry. Terraform creates the Deployment `opencite` again, and `otel-ingest`
-runs the image of that bundle. The migration of this bundle only adds tables, so the
-catalog of the bundle before starts again. It shows the assets that it had at the
-upgrade.
+#### Roll back to a bundle with the `langguard-discovery` image {#rollback-catalog}
+
+Roll back the dashboard first, then the other workloads. The rollback starts the catalog
+of the bundle before again. That catalog sends its data to a route that only the
+dashboard of the bundle before has. A dashboard pod of this bundle answers these requests
+with its web page and the status 200. The catalog then does not send the data again, and
+the data is lost. `install.sh` updates all Deployments in one apply. So first apply only
+the dashboard of the bundle before:
+
+1. Unpack the bundle before. The images of that bundle must still be in your registry.
+   From its `gcp/` directory, run `install.sh` with the same flags, the same `--tfvars`
+   file and `--plan-only`. This writes `terraform/environments/<environment>.tfvars` and
+   connects Terraform to the state bucket. It changes nothing.
+2. From the `gcp/terraform` directory of that bundle, apply only the dashboard. The
+   notes on access to the Kubernetes API in [Uninstall](#uninstall) also apply here.
+   Only the installer supplies the admin password, so give the current password in
+   `TF_VAR_auth_password`. If you do not, the apply clears it. With
+   `--email-provider ses`, also export `TF_VAR_aws_ses_access_key_id` and
+   `TF_VAR_aws_ses_secret_access_key`, as for `install.sh`. With `--tfvars`, add
+   `-var-file=<your file>` after the generated file:
+
+   ```bash
+   export TF_VAR_auth_password="$(kubectl get secret userpass-credentials -n langguard \
+     -o jsonpath='{.data.AUTH_PASSWORD}' | base64 -d)"
+   terraform apply -target=kubernetes_deployment.langguard_dashboard \
+     -var-file="environments/<environment>.tfvars"
+   kubectl rollout status deployment/langguard-dashboard -n langguard --timeout 10m
+   ```
+
+3. From the `gcp/` directory of that bundle, run `install.sh` with the same flags and the
+   same `--tfvars` file. Terraform creates the Deployment `opencite` again, and
+   `otel-ingest` runs the image of that bundle. Then do the steps in
+   [Run the installer again](#run-the-installer-again).
+
+Between step 2 and step 3, the Discovery pages and the syncs of integrations can fail:
+the dashboard of the bundle before has no key for the catalog API of this bundle.
+LangGuard continues to receive and store traces and logs.
+
+The migration of this bundle only adds tables, so the catalog of the bundle before starts
+again. It shows the assets that it had at the upgrade. The apply of step 3 deletes the
+Secret `opencite-api-key`. The next upgrade generates a new key.
 
 #### Upgrade from a bundle with the `opencite` image
 
