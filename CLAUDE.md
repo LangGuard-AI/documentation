@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is the public documentation site for LangGuard, an AI Governance & Observability Platform. Built with Docusaurus 3.9 and hosted at https://docs.langguard.ai.
+This is the public documentation site for LangGuard, a runtime AI controls and governance platform with full observability and audit-ready evidence. Built with Docusaurus 3.9 and hosted at https://docs.langguard.ai.
 
 ## Commands
 

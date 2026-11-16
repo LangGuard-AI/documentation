@@ -2,7 +2,7 @@
 slug: /
 sidebar_position: 1
 title: Introduction
-description: LangGuard is an AI governance and observability platform for monitoring, managing, and securing AI agent operations.
+description: LangGuard is a runtime AI controls and governance platform with full observability and audit-ready evidence. Monitor, manage, and secure AI agent operations in one place.
 hide_title: true
 hide_table_of_contents: true
 ---

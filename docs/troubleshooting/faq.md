@@ -10,7 +10,7 @@ description: Frequently asked questions about LangGuard
 
 ### What is LangGuard?
 
-LangGuard is an AI governance and observability platform that helps organizations monitor, manage, and secure their AI agent operations. It aggregates data from multiple observability platforms and provides unified governance through policy enforcement.
+LangGuard is a runtime AI controls and governance platform with full observability and audit-ready evidence. It helps organizations monitor, manage, and secure their AI agent operations. It aggregates data from multiple observability platforms and provides unified governance through policy enforcement.
 
 ### What platforms does LangGuard support?
 
