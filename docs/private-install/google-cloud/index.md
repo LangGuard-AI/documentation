@@ -116,10 +116,10 @@ How the parts connect:
   It stores traces in Cloud SQL and queues them for processing in `redis`.
 - **Catalog.** The catalog runs in the `otel-ingest` pods. It discovers agents, tools,
   models and MCP servers in the traces and logs, and keeps the results in the schema
-  `discovery` of Cloud SQL and in `redis`. It also reads the platforms of your
-  integrations when the dashboard syncs them. The dashboard connects to the catalog API
-  through the Service `opencite` (port 8080), with the key in the Secret
-  `opencite-api-key`.
+  `discovery` of Cloud SQL. It keeps the context of recent traces in `redis`. It also
+  reads the platforms of your integrations when the dashboard syncs them. The dashboard
+  connects to the catalog API through the Service `opencite` (port 8080), with the key in
+  the Secret `opencite-api-key`.
 - **Policy and PII.** `langguard-dashboard` evaluates policies with `opa` and detects PII
   with `presidio-analyzer`. It uses `redis` for job queues, rate limits and cache. It
   stores user sessions in Cloud SQL.

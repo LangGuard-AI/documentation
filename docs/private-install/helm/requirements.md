@@ -130,7 +130,8 @@ kubectl rollout restart deployment/litellm -n langguard   # with the AI gateway
 Without a CA certificate, the clients do not do the same thing with `require`. With
 `database.sslMode: require`, `langguard-dashboard`, `db-migration` and the AI gateway
 verify the server certificate and the host name as with `verify-full`, so the connection
-still fails, and `otel-ingest` encrypts the connection but does not verify the server. With `database.jobsSslMode: require`, the psql Jobs (`db-bootstrap` and
+still fails, and `otel-ingest` encrypts the connection but does not verify the server.
+With `database.jobsSslMode: require`, the psql Jobs (`db-bootstrap` and
 `db-grants`) encrypt the connection but do not verify the server.
 :::
 

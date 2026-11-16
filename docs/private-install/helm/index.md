@@ -101,14 +101,15 @@ architecture, so it adds about 1 GB to the bundle.
   HTTP 404. It stores the traces in PostgreSQL and queues them in `redis`.
 - **Catalog.** The catalog runs in each `otel-ingest` pod. It discovers agents, tools,
   models and MCP servers in the traces and logs, and keeps the results in the schema
-  `discovery` and in `redis`. All `otel-ingest` pods are the same: each pod can serve a
-  request. The catalog also reads the platforms of your integrations, for example
-  [Azure AI Foundry](/integrations/azure-ai-foundry) and Databricks, when the dashboard
-  syncs them. The catalog stores no integration credentials: the dashboard sends the
-  configuration with each request. The dashboard connects to the catalog API through the
-  Service `opencite` (port 8080, target port 8081 of the `otel-ingest` pods). The catalog
-  API accepts only requests that have the key in the Secret `opencite-api-key`. On AKS,
-  the catalog can sign in to Azure with its own managed identity (see
+  `discovery`. It keeps the context of recent traces in `redis`. All `otel-ingest` pods
+  are the same: each pod can serve a request. The catalog also reads the platforms of your
+  integrations, for example [Azure AI Foundry](/integrations/azure-ai-foundry) and
+  Databricks, when the dashboard syncs them. The catalog stores no integration
+  credentials: the dashboard sends the configuration with each request. The dashboard
+  connects to the catalog API through the Service `opencite` (port 8080, target port 8081
+  of the `otel-ingest` pods). The catalog API accepts only requests that have the key in
+  the Secret `opencite-api-key`. On AKS, the catalog can sign in to Azure with its own
+  managed identity (see
   [Discovery identity](/private-install/azure/requirements#discovery-identity)).
 - **Queue.** `redis` keeps the work queues and the job schedules. It has no persistent
   volume. When the `redis` pod is replaced (deleted, evicted, rescheduled or rolled out),
@@ -122,7 +123,8 @@ architecture, so it adds about 1 GB to the bundle.
   admin role that you supply. All database clients connect with TLS and verify the server
   certificate. The workloads use the database role `langguard_app`. It can read and write
   the application tables but cannot change their schema. It owns the schema `discovery`,
-  which the catalog in `otel-ingest` migrates when it starts. With the AI gateway, the role `litellm_app` owns the schema
+  which the catalog in `otel-ingest` migrates when it starts. With the AI gateway, the
+  role `litellm_app` owns the schema
   `litellm`, which the Job `ai-gateway-migration` migrates. Each of the two roles has no
   rights in the schemas of the other.
 - **AI gateway.** `litellm` is the LangGuard AI gateway: LiteLLM with the LangGuard
