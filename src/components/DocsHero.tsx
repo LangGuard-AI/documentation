@@ -8,9 +8,10 @@ export function DocsHero(): ReactNode {
     <>
       <GradientHeading>Welcome to LangGuard</GradientHeading>
       <p>
-        LangGuard is an AI governance and observability platform. It connects to
-        your AI platforms, frameworks, coding agents, and identity providers so
-        you can monitor, manage, and secure AI agent operations in one place.
+        LangGuard is a runtime AI controls and governance platform with full
+        observability and audit-ready evidence. It connects to your AI platforms,
+        frameworks, coding agents, and identity providers so you can monitor,
+        manage, and secure AI agent operations in one place.
       </p>
       <div className="lg-home-actions">
         <Link className="button button--primary" to="/getting-started/quick-start">

@@ -4,7 +4,7 @@ import prismTheme from './src/components/prismTheme';
 
 const config: Config = {
   title: 'LangGuard',
-  tagline: 'AI Governance & Observability Platform',
+  tagline: 'Runtime AI Controls & Governance Platform',
   favicon: 'img/favicon.ico',
 
   future: {
