@@ -648,9 +648,9 @@ changes:
 - Terraform deletes the Secrets `opencite-secrets`, `opencite-webhook-secret` and
   `opencite-database-credentials`, and the NetworkPolicy `opencite-policy`. It does not
   delete the Deployment `opencite` and the ConfigMap `opencite-config`: the catalog of the
-  bundle before runs until the Service `opencite` selects the `otel-ingest` pod.
-  `install.sh` deletes them after the apply. The Service `opencite` stays, with port 8080.
-  It then selects the `otel-ingest` pod, on its port 8081.
+  bundle before runs until `install.sh` deletes them after the apply (see step 5 below).
+  The Service `opencite` stays, with port 8080. It then selects the `otel-ingest` pod, on
+  its port 8081.
 - `otel-ingest` runs under the Kubernetes service account `opencite`. Before, it ran
   under `langguard-dashboard`. With `enable_gcp_discovery = true` (the default), it gets
   the Google service account `lg-discovery-<environment>` and has no egress NetworkPolicy
@@ -705,8 +705,14 @@ From step 1 to step 4, the dashboard of the bundle before processes the traces t
 new `otel-ingest` pod receives. It evaluates the policies on them, but these traces can
 miss data that this bundle adds, for example the token and cost totals. From step 3
 until the dashboard rollout completes, the Discovery pages and the syncs of integrations
-can fail, because the dashboard of the bundle before has no key for the catalog API. After
-the upgrade, click **Sync Now** for each integration.
+can fail, because the dashboard of the bundle before has no key for the catalog API.
+
+From step 4 until `install.sh` deletes it, the catalog of the bundle before continues to
+read the platforms of your integrations. It sends these data to a route that only the
+dashboard of the bundle before has. The data that it sends to a dashboard pod of this
+bundle is lost. The catalog of this bundle reads these data again at the next sync of
+each integration. After the upgrade, click **Sync Now** for each integration to get them
+at once.
 
 The old `otel-ingest` pod puts the data that it cannot send to the catalog in a queue in
 `redis`. The dashboard of the bundle before sends these items until its rollout. After the
@@ -755,7 +761,8 @@ the dashboard of the bundle before:
 
 1. Unpack the bundle before. The images of that bundle must still be in your registry.
    From its `gcp/` directory, run `install.sh` with the same flags, the same `--tfvars`
-   file and `--plan-only`. This writes `terraform/environments/<environment>.tfvars` and
+   file and `--plan-only`. With `--image-tag`, give the tag of the bundle before, not the
+   tag of this bundle. This writes `terraform/environments/<environment>.tfvars` and
    connects Terraform to the state bucket. It changes nothing.
 2. From the `gcp/terraform` directory of that bundle, apply only the dashboard. The
    notes on access to the Kubernetes API in [Uninstall](#uninstall) also apply here.
@@ -774,9 +781,9 @@ the dashboard of the bundle before:
    ```
 
 3. From the `gcp/` directory of that bundle, run `install.sh` with the same flags and the
-   same `--tfvars` file. Terraform creates the Deployment `opencite` again, and
-   `otel-ingest` runs the image of that bundle. Then do the steps in
-   [Run the installer again](#run-the-installer-again).
+   same `--tfvars` file. With `--image-tag`, again give the tag of the bundle before.
+   Terraform creates the Deployment `opencite` again, and `otel-ingest` runs the image of
+   that bundle. Then do the steps in [Run the installer again](#run-the-installer-again).
 
 Between step 2 and step 3, the Discovery pages and the syncs of integrations can fail:
 the dashboard of the bundle before has no key for the catalog API of this bundle.

@@ -706,7 +706,10 @@ Before the upgrade:
    If a tool manages the Secret, add the key in that tool. This version does not read the
    keys `OPENCITE_WEBHOOK_SECRET` and `OPENCITE_CONFIG_KEY`, but the old catalog and the
    old dashboard read them until step 4 of the upgrade steps. Remove them only after
-   that step. A rollback to the chart version before needs them again.
+   that step. A rollback to the chart version before needs them again (see
+   [Roll back](#rollback-catalog)). Before you remove `OPENCITE_CONFIG_KEY`, keep a copy
+   of its value in a safe location. A rollback needs the same value: with a different
+   value, the catalog cannot read the integration credentials in `plugin_configs`.
 3. Make sure that the nodes have the memory for the new limits of `otel-ingest` and, during
    the upgrade, for the `opencite` pod (see
    [Capacity](/private-install/helm/requirements#capacity)).
@@ -759,6 +762,10 @@ dashboard.
      'q=bull:langguard-opencite-forward; echo $(( $(redis-cli llen $q:wait) + $(redis-cli llen $q:paused) + $(redis-cli llen $q:active) + $(redis-cli zcard $q:delayed) ))'
    sleep 60
    ```
+
+   Only a dashboard container that started before step 2 sends these items. If the number
+   does not decrease for 10 minutes, do not continue to step 4. Keep the dashboard paused
+   and contact LangGuard support.
 
 4. Delete the old catalog. The Service `opencite` then selects only the `otel-ingest`
    pods. Wait until the old catalog pod stops: a pod that stops sends its last data to the
@@ -827,28 +834,40 @@ again. The old catalog sends its data to a route that only the old dashboard has
 dashboard pod of this version answers these requests with its web page and the status
 200. The old catalog then does not send the data again, and the data is lost. So pause
 `otel-ingest` first: the old `otel-ingest` pods then start only after the dashboard
-rollout. Do not use `--wait`. Use the revision before the upgrade
-(`helm history langguard -n langguard`):
+rollout. Do not use `--wait`.
 
-```bash
-kubectl -n langguard rollout pause deployment/otel-ingest
-helm rollback langguard <revision> -n langguard
-kubectl -n langguard rollout status deployment/langguard-dashboard --timeout 15m
-kubectl -n langguard rollout resume deployment/otel-ingest
-kubectl -n langguard rollout status deployment/otel-ingest --timeout 15m
-```
+1. With `secrets.existingSecret`, do this step before the rollback. If you removed the
+   keys `OPENCITE_WEBHOOK_SECRET` and `OPENCITE_CONFIG_KEY` from that Secret, put them
+   back. Without them, the dashboard and catalog pods of the chart version before do not
+   start (`CreateContainerConfigError`). `OPENCITE_CONFIG_KEY` must have the same value
+   as before the upgrade. `OPENCITE_WEBHOOK_SECRET` can have a new value:
 
-Keep the pause short, and always end with
-`kubectl rollout resume deployment/otel-ingest -n langguard`.
+   ```bash
+   kubectl patch secret <your Secret> -n langguard --type merge \
+     -p "{\"stringData\":{\"OPENCITE_WEBHOOK_SECRET\":\"$(openssl rand -hex 32)\",\"OPENCITE_CONFIG_KEY\":\"<the value before the upgrade>\"}}"
+   ```
+
+   If a tool manages the Secret, add the keys in that tool.
+
+2. Roll back to the revision before the upgrade (`helm history langguard -n langguard`):
+
+   ```bash
+   kubectl -n langguard rollout pause deployment/otel-ingest
+   helm rollback langguard <revision> -n langguard
+   kubectl -n langguard rollout status deployment/langguard-dashboard --timeout 15m
+   kubectl -n langguard rollout resume deployment/otel-ingest
+   kubectl -n langguard rollout status deployment/otel-ingest --timeout 15m
+   ```
+
+   Keep the pause short, and always end with
+   `kubectl rollout resume deployment/otel-ingest -n langguard`.
 
 The old catalog starts with the rollback. The data that it reads from the platforms of
 your integrations and sends to a dashboard pod of this version during the dashboard
 rollout is lost. The catalog of this version stored most of these data before.
 
 The migration of this version only adds tables, so the catalog of the version before
-starts again. It shows the assets that it had at the upgrade. With
-`secrets.existingSecret`, the Secret must then have the keys `OPENCITE_WEBHOOK_SECRET` and
-`OPENCITE_CONFIG_KEY`.
+starts again. It shows the assets that it had at the upgrade.
 
 The rollback does not delete the Secret `opencite-api-key`. The next upgrade uses its key
 again. If you do not upgrade again, delete it:
