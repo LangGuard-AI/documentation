@@ -1,0 +1,392 @@
+/* Mirrors website/_includes/react_footer.html. Values are the website's, so the
+   two footers read as one. Light is the base, dark overrides the tokens. */
+.footer {
+  --f-bg: #f8fafb;
+  --f-glow:
+    radial-gradient(ellipse 55% 110% at 22% 0%, rgba(0, 144, 181, 0.04), transparent),
+    radial-gradient(ellipse 40% 80% at 78% 60%, rgba(0, 85, 204, 0.03), transparent),
+    radial-gradient(ellipse 60% 80% at 15% 0%, rgba(0, 180, 160, 0.03), transparent);
+  --f-top-accent: linear-gradient(90deg, #0090b5, #4da8da 35%, #0055cc 65%, transparent);
+  --f-text: #64748b;
+  --f-tagline: #64748b;
+  --f-social: #64748b;
+  --f-strong: #1a2332;
+  --f-copyright: #94a3b8;
+  --f-social-bg: #ffffff;
+  --f-social-bg-hover: #f0f4f8;
+  --f-social-border: rgba(0, 0, 0, 0.1);
+  --f-social-border-hover: rgba(0, 0, 0, 0.18);
+  --f-social-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --f-mark: rgba(0, 144, 181, 0.25);
+  --f-mark-dot: rgba(0, 144, 181, 0.2);
+  --f-mark-dot-border: rgba(0, 144, 181, 0.35);
+  --f-divider-v: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.08) 25%, rgba(0, 0, 0, 0.12) 50%, rgba(0, 0, 0, 0.08) 75%, transparent);
+  --f-divider-h: rgba(0, 0, 0, 0.08);
+  --f-col-accent: linear-gradient(90deg, #0090b5, #4da8da);
+  --f-col-accent-shadow: none;
+  --f-switch-bg: #ffffff;
+  --f-switch-border: rgba(0, 0, 0, 0.08);
+  --f-switch-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  --f-switch-color: #94a3b8;
+  --f-switch-hover: #64748b;
+  --f-switch-active: #0090b5;
+  --f-logo-filter: none;
+
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  background: var(--f-bg);
+  font-family: var(--ifm-font-family-base);
+}
+
+[data-theme='dark'] .footer {
+  --f-bg: #0b0b0e;
+  --f-glow:
+    radial-gradient(ellipse 55% 110% at 22% 0%, rgba(26, 26, 58, 0.7), transparent),
+    radial-gradient(ellipse 40% 80% at 78% 60%, rgba(99, 102, 241, 0.06), transparent),
+    radial-gradient(ellipse 60% 80% at 15% 0%, rgba(50, 213, 131, 0.03), transparent);
+  --f-top-accent: linear-gradient(90deg, #32d583, #6ec6ff 35%, #6366f1 65%, transparent);
+  --f-text: #ababc0;
+  --f-tagline: #9494aa;
+  --f-social: #a0a0b8;
+  --f-strong: #e8e8f0;
+  --f-copyright: #9090b0;
+  --f-social-bg: #1c1c2e;
+  --f-social-bg-hover: #26263e;
+  --f-social-border: rgba(255, 255, 255, 0.13);
+  --f-social-border-hover: rgba(255, 255, 255, 0.22);
+  --f-social-shadow: 0 2px 12px rgba(0, 0, 0, 0.5), 0 0 20px rgba(99, 102, 241, 0.09);
+  --f-mark: rgba(50, 213, 131, 0.25);
+  --f-mark-dot: rgba(50, 213, 131, 0.25);
+  --f-mark-dot-border: rgba(50, 213, 131, 0.38);
+  --f-divider-v: linear-gradient(180deg, transparent, rgba(50, 213, 131, 0.19) 25%, rgba(99, 102, 241, 0.28) 50%, rgba(50, 213, 131, 0.19) 75%, transparent);
+  --f-divider-h: rgba(255, 255, 255, 0.16);
+  --f-col-accent: linear-gradient(90deg, #32d583, #6ec6ff);
+  --f-col-accent-shadow: 0 0 8px 1px rgba(50, 213, 131, 0.38);
+  --f-switch-bg: #13131c;
+  --f-switch-border: transparent;
+  --f-switch-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
+  --f-switch-color: #6b6b7e;
+  --f-switch-hover: #9b9bb0;
+  --f-switch-active: #32d583;
+  --f-logo-filter: brightness(0) invert(1);
+}
+
+.footer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--f-glow);
+  pointer-events: none;
+}
+
+.footer a:focus-visible,
+.footer button:focus-visible {
+  outline: 2px solid var(--f-switch-active);
+  outline-offset: 3px;
+}
+
+.topAccent {
+  height: 4px;
+  background: var(--f-top-accent);
+}
+
+.inner {
+  position: relative;
+  max-width: 1340px;
+  margin: 0 auto;
+  padding: 80px 48px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+}
+
+.upper {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 64px;
+  padding-bottom: 64px;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  flex: 1;
+  min-width: 240px;
+}
+
+.brandName {
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  gap: 0.4rem;
+}
+
+.brandName img {
+  display: block;
+  height: 1.625rem;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.logoText {
+  filter: var(--f-logo-filter);
+}
+
+.tagline {
+  margin: 15px 0;
+  max-width: 320px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--f-tagline);
+}
+
+.social {
+  display: flex;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.social a {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--f-social-bg);
+  border: 1px solid var(--f-social-border);
+  box-shadow: var(--f-social-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--f-social);
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
+}
+
+.social a:hover {
+  color: var(--f-strong);
+  background: var(--f-social-bg-hover);
+  border-color: var(--f-social-border-hover);
+}
+
+.social svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.editorialMark {
+  display: flex;
+  align-items: center;
+  height: 16px;
+}
+
+.editorialMark span {
+  width: 64px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--f-mark));
+}
+
+.editorialMark span:nth-child(2) {
+  width: 5px;
+  height: 5px;
+  border-radius: 1px;
+  background: var(--f-mark-dot);
+  border: 1px solid var(--f-mark-dot-border);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+
+.editorialMark span:nth-child(3) {
+  background: linear-gradient(90deg, var(--f-mark), transparent);
+}
+
+.dividerV {
+  width: 1px;
+  align-self: stretch;
+  background: var(--f-divider-v);
+  flex-shrink: 0;
+}
+
+.nav {
+  display: flex;
+  flex: 2;
+}
+
+.col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.colHeader {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 3.5px;
+  text-transform: uppercase;
+  color: var(--f-strong);
+}
+
+.colAccent {
+  width: 40px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--f-col-accent);
+  box-shadow: var(--f-col-accent-shadow);
+}
+
+.col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.col li {
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.col a {
+  color: var(--f-text);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.col a:hover {
+  color: var(--f-strong);
+}
+
+.bottom {
+  padding-bottom: 32px;
+}
+
+.dividerH {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--f-divider-h) 20%, var(--f-divider-h) 80%, transparent);
+}
+
+.bottomBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 24px;
+}
+
+.copyright {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.2px;
+  color: var(--f-copyright);
+}
+
+.switcher {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--f-switch-bg);
+  border: 1px solid var(--f-switch-border);
+  box-shadow: var(--f-switch-shadow);
+}
+
+.switcherBtn {
+  width: 32px;
+  height: 28px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--f-switch-color);
+  transition: color 0.15s;
+}
+
+.switcherBtn:hover {
+  color: var(--f-switch-hover);
+}
+
+.switcherBtn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Docusaurus writes the user's choice on <html> before hydration, so the
+   active button is right on first paint without reading it in React. */
+[data-theme-choice='light'] .switcherBtn[data-choice='light'],
+[data-theme-choice='system'] .switcherBtn[data-choice='system'],
+[data-theme-choice='dark'] .switcherBtn[data-choice='dark'] {
+  color: var(--f-switch-active);
+}
+
+@media (max-width: 1024px) {
+  .inner {
+    padding: 48px 32px 0;
+    gap: 40px;
+  }
+
+  .upper {
+    flex-direction: column;
+    gap: 40px;
+    padding-bottom: 40px;
+  }
+
+  .brand {
+    width: 100%;
+  }
+
+  .dividerV {
+    display: none;
+  }
+
+  .nav {
+    gap: 48px;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .inner {
+    padding: 32px 24px 0;
+  }
+
+  .nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 20px;
+  }
+
+  .col ul {
+    gap: 10px;
+  }
+
+  .col a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 6px 0;
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  .bottomBar {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 420px) {
+  .nav {
+    grid-template-columns: 1fr;
+  }
+}
