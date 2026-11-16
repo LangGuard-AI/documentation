@@ -149,7 +149,7 @@ export default function Footer(): ReactNode {
           <nav className={styles.nav} aria-label="Footer">
             {columns.map((column) => (
               <div key={column.title} className={styles.col}>
-                <h4 className={styles.colHeader}>{column.title}</h4>
+                <h3 className={styles.colHeader}>{column.title}</h3>
                 <div className={styles.colAccent} />
                 <ul>
                   {column.items.map((item) => (

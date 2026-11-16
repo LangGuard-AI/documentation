@@ -141,7 +141,7 @@ const config: Config = {
           title: 'Product',
           items: [
             {label: 'Home', href: 'https://langguard.ai/'},
-            {label: 'Features', href: 'https://langguard.ai/#solutions'},
+            {label: 'Features', href: 'https://langguard.ai/platform/#solutions'},
             {label: 'Platform', href: 'https://langguard.ai/platform/'},
             {label: 'AI Action Security Assessment', href: 'https://langguard.ai/ai-security-assessment/'},
             {label: 'Alternatives', href: 'https://langguard.ai/alternatives/'},
