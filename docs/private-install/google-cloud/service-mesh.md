@@ -151,7 +151,7 @@ install with `--no-network-policies`:
 |---|---|---|
 | `langguard-dashboard-ingress` | `langguard-dashboard` | Ingress on TCP 5000 from the Google Cloud load balancer and health check ranges (`35.191.0.0/16`, `130.211.0.0/22`, `209.85.152.0/22`, `209.85.204.0/22`) and from pods in `langguard` |
 | `opa-policy` | `opa` | Ingress on TCP 8181 from pods in `langguard` |
-| `otel-ingest-ingress` | `otel-ingest` | Ingress on TCP 4317, 4318 and 8080 from all sources. Ingress on TCP 8081 (the catalog API, Service `opencite`) only from `langguard-dashboard` and `otel-ingest` |
+| `otel-ingest-ingress` | `otel-ingest` | Ingress on TCP 4317, 4318 and 8080, and on TCP 4319 when you install with `--backend-tls`, from all sources. Ingress on TCP 8081 (the catalog API, Service `opencite`) only from `langguard-dashboard` and `otel-ingest` |
 | `cloudsql-proxy-ingress` | `cloudsql-proxy` | Ingress on TCP 5432 from `langguard-dashboard` and `otel-ingest`. Also from the pods with the label `app: opencite`: during an upgrade from a bundle with the `langguard-discovery` image, the catalog pod of that bundle uses the database until it stops |
 | `otel-ingest-egress` | `otel-ingest` | Only with `enable_gcp_discovery = false`. Egress to DNS, to pods in `langguard`, and to external addresses except the metadata server |
 
@@ -171,7 +171,9 @@ runs a mesh, this blocks:
   plane, for example `istiod` in `istio-system`. On GKE Dataplane V2, the egress rule for
   external addresses does not match pods, so it does not cover the control plane.
 - Ambient mode traffic: TCP 15008 (HBONE), and kubelet probes from `169.254.7.127/32`.
-  `otel-ingest-ingress` also blocks TCP 15008 to `otel-ingest`.
+  `otel-ingest-ingress` also blocks TCP 15008 to `otel-ingest`. Then OTLP from meshed
+  senders and the catalog API calls of the dashboard stop. An upgrade from a bundle without
+  `otel-ingest-ingress` adds this policy.
 - Linkerd traffic on opaque ports. Linkerd treats port 5432 as opaque by default and sends
   it to the proxy's inbound port 4143, so `cloudsql-proxy-ingress` drops the database
   connections. Allow TCP 4143 to the pods with the label `app: cloudsql-proxy`.
@@ -243,6 +245,29 @@ spec:
         - protocol: TCP
           port: 4143
 ```
+
+Example, for Istio ambient mode traffic to `otel-ingest`:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ambient-otel-ingest
+  namespace: langguard
+spec:
+  podSelector:
+    matchLabels:
+      app: otel-ingest
+  policyTypes: [Ingress]
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 15008
+```
+
+HBONE traffic on TCP 15008 can go to all ports of the pod, port 8081 included. The catalog
+API on port 8081 continues to need its key. To restrict port 8081 in the mesh, use an
+authorization policy of the mesh.
 
 ## Egress
 

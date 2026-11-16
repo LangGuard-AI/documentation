@@ -539,8 +539,10 @@ the key in your key vault:
 kubectl get secret encryption-key -n langguard -o jsonpath='{.data.ENCRYPTION_KEY}' | base64 -d
 ```
 
-The catalog stores no integration credentials, so it has no encryption key. The dashboard
-sends the configuration of an integration with each discovery request.
+The catalog stores no integration credentials, and it uses no encryption key of its own.
+The dashboard sends the configuration of an integration with each discovery request. For
+an install that you upgraded from a chart version with the `opencite` Deployment, see
+[Upgrade from a chart version with the opencite Deployment](#upgrade-catalog).
 
 ### Back up the AI gateway keys {#back-up-the-ai-gateway-keys}
 
@@ -652,15 +654,25 @@ these changes:
   requests were 128 MiB and the limit 512 MiB. The `opencite` pod (512 MiB requested,
   2 GiB limit) is gone, so the total memory requests of the release decrease.
 - The new Secret `opencite-api-key` holds the key of the catalog API. The chart generates
-  it. The dashboard sends the key, and `otel-ingest` accepts only requests with it.
+  it. The dashboard sends the key, and the catalog API in `otel-ingest` accepts only
+  requests with it.
 - The catalog stores no integration credentials. Helm deletes the Secret
   `opencite-webhook-secret`. The Secret `opencite-config-key` stays, because it has the
   policy `helm.sh/resource-policy: keep`, but no pod reads it.
+- The table `plugin_configs` in the schema `discovery` keeps the integration credentials
+  that the catalog of the chart version before stored, encrypted with
+  `OPENCITE_CONFIG_KEY`. The catalog of this version does not read them. After a
+  rollback, the catalog of the chart version before reads them again with that key.
 - The NetworkPolicy `opencite-ingress` now selects the `otel-ingest` pods. Port 8081
   accepts connections only from `langguard-dashboard` and `otel-ingest`. Helm deletes the
   NetworkPolicy `opencite-egress`: the egress rules of `otel-ingest` apply to the catalog.
 - When the new `otel-ingest` pods start, the catalog migrates the schema `discovery`. The
-  migration adds tables and copies the discovered assets into them. It deletes no table.
+  migration adds tables and copies the assets that the catalog found in the traces and
+  logs into them. It deletes no table.
+- The migration does not copy the assets that the catalog read from the platforms of the
+  Databricks, Azure AI Foundry, Google Agent Platform, AWS Bedrock and LiteLLM
+  integrations. They come back at the next sync of each integration. To get them at once,
+  click **Sync Now** for each of these integrations after the upgrade.
 - The catalog connects to the Databricks host, the LiteLLM URL and the Azure AI Foundry
   endpoints only over `https`, at public addresses, and without an HTTP proxy (see
   [Outbound access from the cluster](/private-install/helm/requirements#outbound-access-from-the-cluster)).
@@ -703,13 +715,32 @@ kubectl rollout resume deployment/otel-ingest -n langguard
 kubectl rollout status deployment/otel-ingest -n langguard --timeout 10m
 ```
 
+With Argo CD or another GitOps tool, run
+`kubectl rollout pause deployment/otel-ingest -n langguard` before the sync. Run
+`kubectl rollout resume deployment/otel-ingest -n langguard` when `langguard-dashboard` is
+healthy.
+
+If a step fails, for example `helm upgrade` or the rollout of `langguard-dashboard`,
+correct the cause and run the same commands again, or [roll back](#rollback-catalog).
+Always end with `kubectl rollout resume deployment/otel-ingest -n langguard`. A paused
+Deployment does not roll at the next upgrade, and Kubernetes shows no error. When the
+Deployment is not paused, this command shows nothing:
+
+```bash
+kubectl get deployment otel-ingest -n langguard -o jsonpath='{.spec.paused}'
+```
+
+Keep the pause short. The upgrade deletes the ServiceAccount `otel-ingest`, so an old
+`otel-ingest` pod that stops is not replaced.
+
 From the start of the upgrade until the first new `otel-ingest` pod is ready, the catalog
 is not available. During this time, the Discovery pages and the syncs of the Databricks,
 Azure AI Foundry, Google Agent Platform, AWS Bedrock and LiteLLM integrations can show
-`Discovery service is not available`. The old `otel-ingest` pods continue to receive and
-store traces and logs. They keep the data for the catalog in a queue in `redis`, and the
-new pods give the queued data to the catalog during their first 30 minutes. No trace and
-no log is lost.
+`Discovery service is not available`. The old `otel-ingest` pods continue to receive
+traces and logs. They store the traces. They keep the logs and the data for the catalog in
+a queue in `redis`. The new pods give the queued data to the catalog during their first
+30 minutes. Do not restart `redis` until the queue is empty: a restart deletes the queued
+logs. If `redis` does not restart, no trace and no log is lost.
 
 After the rollout, delete the keys of this queue in `redis`. This command shows the
 number of items that are left in the queue:
@@ -719,6 +750,17 @@ kubectl -n langguard exec deploy/redis -c redis -- sh -c \
   'q=bull:langguard-opencite-forward; echo $(( $(redis-cli llen $q:wait) + $(redis-cli llen $q:paused) + $(redis-cli llen $q:active) + $(redis-cli zcard $q:delayed) + $(redis-cli zcard $q:failed) ))'
 ```
 
+If it does not show `0`, wait 1 minute and run it again. The new pods send the queued
+items every 30 seconds. If it does not show `0` 30 minutes after the last new
+`otel-ingest` pod started, the catalog did not accept the items. Make sure that the
+catalog is available (see [Troubleshooting](#troubleshooting)). Then restart
+`otel-ingest` and run the command again. Each new pod sends the queued items again for
+30 minutes:
+
+```bash
+kubectl rollout restart deployment/otel-ingest -n langguard
+```
+
 When it shows `0`, delete the keys. The command deletes nothing when no key is left:
 
 ```bash
@@ -726,11 +768,38 @@ kubectl -n langguard exec deploy/redis -c redis -- sh -c \
   'redis-cli --scan --pattern "bull:langguard-opencite-forward:*" | xargs -r redis-cli unlink'
 ```
 
-To roll back, run `helm rollback langguard <revision> -n langguard` with the revision
-before the upgrade (`helm history langguard -n langguard`). The migration of this
-version only adds tables, so the catalog of the version before starts again. It shows
-the assets that it had at the upgrade. With `secrets.existingSecret`, the Secret must
-then have the keys `OPENCITE_WEBHOOK_SECRET` and `OPENCITE_CONFIG_KEY`.
+After the upgrade, do these checks:
+
+1. `kubectl get deployment opencite -n langguard` shows `NotFound`.
+2. `kubectl get endpoints opencite -n langguard` shows the addresses of the `otel-ingest`
+   pods with port 8081.
+3. `kubectl logs -n langguard -l app=otel-ingest --tail=-1 | grep "catalog: database open and migrated"`
+   shows one line for each `otel-ingest` pod.
+
+#### Roll back {#rollback-catalog}
+
+Roll back in the reverse order of the upgrade: the old `otel-ingest` first, then the old
+dashboard. `helm rollback` changes all Deployments at the same time, so pause the rollout
+of `langguard-dashboard` first. Use the revision before the upgrade
+(`helm history langguard -n langguard`):
+
+```bash
+kubectl rollout pause deployment/langguard-dashboard -n langguard
+helm rollback langguard <revision> -n langguard
+kubectl rollout status deployment/otel-ingest -n langguard --timeout 10m
+kubectl rollout resume deployment/langguard-dashboard -n langguard
+kubectl rollout status deployment/langguard-dashboard -n langguard --timeout 10m
+```
+
+Keep the pause short, and always end with
+`kubectl rollout resume deployment/langguard-dashboard -n langguard`. The rollback deletes
+the Secret `opencite-api-key` that the chart generated, so a new pod of the paused
+dashboard cannot start.
+
+The migration of this version only adds tables, so the catalog of the version before
+starts again. It shows the assets that it had at the upgrade. With
+`secrets.existingSecret`, the Secret must then have the keys `OPENCITE_WEBHOOK_SECRET` and
+`OPENCITE_CONFIG_KEY`.
 
 ## Uninstall {#uninstall}
 
@@ -777,9 +846,11 @@ delete the database, its roles, the discovery schema or the AI gateway schema `l
 - NetworkPolicies restrict which pods can connect to each workload, and where
   `langguard-dashboard`, `otel-ingest` (with the catalog) and the AI gateway can connect
   (see [Outbound access from the cluster](/private-install/helm/requirements#outbound-access-from-the-cluster)).
-  OPA and Presidio accept connections only from `langguard-dashboard`. The catalog API
-  (port 8081 of the `otel-ingest` pods) accepts them only from `langguard-dashboard` and
-  `otel-ingest`, and only with the key in the Secret `opencite-api-key`.
+  OPA and Presidio accept connections only from `langguard-dashboard`. Port 8081 of the
+  `otel-ingest` pods accepts them only from `langguard-dashboard` and `otel-ingest`. The
+  catalog API on this port needs the key in the Secret `opencite-api-key`. Port 8081 also
+  accepts OTLP traces and logs from `otel-ingest` pods, with a LangGuard API key, as on
+  the OTLP ports.
 - The `otel-ingest` pods receive the OTLP traffic from outside the cluster, and the
   catalog runs in them. With the
   [discovery identity](/private-install/azure/requirements#discovery-identity) on AKS,

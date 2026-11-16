@@ -53,7 +53,9 @@ On AKS, these pods also run:
 
 The AKS system pods request about 1.4 vCPU and 1.6 GiB more. On a test cluster with two
 `Standard_D4ds_v6` nodes (4 vCPU and 16 GB each, 3.86 vCPU and 11.5 GiB allocatable
-each), all pods together requested about 4.1 vCPU and 8.9 GiB, without the AI gateway.
+each), all pods together requested about 3.9 vCPU and 8.7 GiB, without the AI gateway.
+This value is the measured value of an earlier version, less the requests of its separate
+catalog pod, plus the larger memory requests of `otel-ingest`.
 
 The AI gateway is off on Azure by default. When you turn it on, the nodes need the
 [AI gateway capacity](/private-install/helm/requirements#capacity) too: 1 vCPU and 2 GiB

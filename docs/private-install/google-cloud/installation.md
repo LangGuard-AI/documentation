@@ -646,8 +646,8 @@ In this bundle, the catalog runs in the `otel-ingest` pod. The bundle has two im
 changes:
 
 - Terraform deletes the Deployment `opencite`, the ConfigMap `opencite-config`, the
-  Secrets `opencite-secrets` and `opencite-webhook-secret`, and the NetworkPolicy
-  `opencite-policy`. The Service `opencite` stays, with port 8080. It now selects the
+  Secrets `opencite-secrets`, `opencite-webhook-secret` and
+  `opencite-database-credentials`, and the NetworkPolicy `opencite-policy`. The Service `opencite` stays, with port 8080. It now selects the
   `otel-ingest` pod, on its port 8081.
 - `otel-ingest` runs under the Kubernetes service account `opencite`. Before, it ran
   under `langguard-dashboard`. With `enable_gcp_discovery = true` (the default), it gets
@@ -657,8 +657,8 @@ changes:
   requests were 128 MiB and the limit 512 MiB. The `opencite` pod (512 MiB requested,
   2 GiB limit) is gone, so the total memory requests decrease.
 - Terraform generates the key of the catalog API in the new Secret `opencite-api-key`.
-  The dashboard sends the key, and `otel-ingest` accepts only requests with it. You do
-  not supply a value.
+  The dashboard sends the key, and the catalog API in `otel-ingest` accepts only requests
+  with it. You do not supply a value.
 - The new NetworkPolicy `otel-ingest-ingress` keeps the OTLP and health ports of
   `otel-ingest` open, and accepts connections to port 8081 only from
   `langguard-dashboard` and `otel-ingest`. It blocks all other ports of `otel-ingest`.
@@ -666,9 +666,18 @@ changes:
   in Istio ambient mode (see
   [NetworkPolicies](/private-install/google-cloud/service-mesh#networkpolicies)).
 - When the new `otel-ingest` pod starts, the catalog migrates the schema `discovery`. The
-  migration adds tables and copies the discovered assets into them. It deletes no table.
+  migration adds tables and copies the assets that the catalog found in the traces and
+  logs into them. It deletes no table.
+- The migration does not copy the assets that the catalog read from the platforms of your
+  integrations, for example Databricks and LiteLLM. They come back at the next sync of
+  each integration. To get them at once, click **Sync Now** for each of these
+  integrations after the upgrade.
 - The catalog stores no integration credentials. The dashboard sends the configuration of
   an integration with each discovery request.
+- The table `plugin_configs` in the schema `discovery` keeps the integration credentials
+  that the catalog of the bundle before stored. That catalog did not encrypt them. The
+  catalog of this bundle does not read them. After a rollback, the catalog of the bundle
+  before reads them again.
 - The catalog connects to the Databricks host, the LiteLLM URL and the Azure AI Foundry
   endpoints only over `https`, at public addresses, and without an HTTP proxy.
 - The Terraform variables `discovery_image_tag`, `opencite_image_tag` and
@@ -684,10 +693,11 @@ The apply does the rollout in this order:
 
 From step 1 until the new `otel-ingest` pod is ready, the catalog is not available. The
 Discovery pages and the syncs of the integrations that the catalog reads can show
-`Discovery service is not available`. The old `otel-ingest` pod continues to receive and
-store traces and logs. It keeps the data for the catalog in a queue in `redis`, and the
-new pod gives the queued data to the catalog during its first 30 minutes. No trace and no
-log is lost.
+`Discovery service is not available`. The old `otel-ingest` pod continues to receive
+traces and logs. It stores the traces. It keeps the logs and the data for the catalog in a
+queue in `redis`. The new pod gives the queued data to the catalog during its first 30
+minutes. Do not restart `redis` until the queue is empty: a restart deletes the queued
+logs. If `redis` does not restart, no trace and no log is lost.
 
 After the installer completes, delete the keys of this queue in `redis`. Connect to the
 cluster (see [Operational access](#operational-access)). This command shows the number of
@@ -698,6 +708,17 @@ kubectl -n langguard exec deploy/redis -c redis -- sh -c \
   'q=bull:langguard-opencite-forward; echo $(( $(redis-cli llen $q:wait) + $(redis-cli llen $q:paused) + $(redis-cli llen $q:active) + $(redis-cli zcard $q:delayed) + $(redis-cli zcard $q:failed) ))'
 ```
 
+If it does not show `0`, wait 1 minute and run it again. The new pod sends the queued
+items every 30 seconds. If it does not show `0` 30 minutes after the new `otel-ingest`
+pod started, the catalog did not accept the items. Make sure that the catalog is
+available: `kubectl logs -n langguard -l app=otel-ingest --tail=-1 | grep "catalog:"`
+shows the state of the catalog database. Then restart `otel-ingest` and run the command
+again. Each new pod sends the queued items again for 30 minutes:
+
+```bash
+kubectl rollout restart deployment/otel-ingest -n langguard
+```
+
 When it shows `0`, delete the keys. The command deletes nothing when no key is left:
 
 ```bash
@@ -705,19 +726,43 @@ kubectl -n langguard exec deploy/redis -c redis -- sh -c \
   'redis-cli --scan --pattern "bull:langguard-opencite-forward:*" | xargs -r redis-cli unlink'
 ```
 
+After the upgrade, do these checks:
+
+1. `kubectl get deployment opencite -n langguard` shows `NotFound`.
+2. `kubectl get endpoints opencite -n langguard` shows the address of the `otel-ingest`
+   pod with port 8081.
+3. `kubectl logs -n langguard -l app=otel-ingest --tail=-1 | grep "catalog: database open and migrated"`
+   shows one line for each `otel-ingest` pod.
+
 With `--registry`, load only the two images of this bundle (see
 [Loading the images](/private-install/google-cloud/existing-infrastructure#loading-the-images)).
 You can delete the `langguard-discovery` image from your registry when you do not need to
 roll back.
 
+To roll back, run `install.sh` from the `gcp/` directory of the bundle before, with the
+same flags and the same `--tfvars` file. With `--registry`, the images of that bundle must
+be in your registry. Terraform creates the Deployment `opencite` again, and `otel-ingest`
+runs the image of that bundle. The migration of this bundle only adds tables, so the
+catalog of the bundle before starts again. It shows the assets that it had at the
+upgrade.
+
 #### Upgrade from a bundle with the `opencite` image
 
 Bundles that contain the `opencite` image run an earlier catalog. This bundle does not
 copy that catalog into the `discovery` schema. First upgrade with a bundle that contains
-the `langguard-discovery` image: that upgrade copies the catalog. Then upgrade with this
-bundle (see [Upgrade from a bundle with the langguard-discovery image](#upgrade-catalog)).
+the `langguard-discovery` image: that upgrade copies the catalog. The bundles from
+version 1.42.0 up to the bundle before this one contain the `langguard-discovery` image.
+The version of a bundle is the value `LANGGUARD_VERSION` in `images/manifest.env`. Use the
+latest of these bundles, or ask LangGuard support for it. Then upgrade with this bundle
+(see [Upgrade from a bundle with the langguard-discovery image](#upgrade-catalog)).
 
 The upgrade with the `langguard-discovery` bundle also makes these changes:
+
+- The `opencite` Deployment runs the `langguard-discovery` image, in the new `discovery`
+  schema. When it first starts, its `migrate` init container copies the earlier catalog
+  into that schema. The `opencite` schema is not changed. If the copy cannot start, or
+  stops before it completes, the catalog pod does not start.
+  `kubectl -n langguard logs <pod> -c migrate` shows the reason.
 
 - Terraform deletes the `ghcr-pull-secret` Secret and removes it from the pods. The
   affected pods restart once. The nodes continue to pull the images from your registry
