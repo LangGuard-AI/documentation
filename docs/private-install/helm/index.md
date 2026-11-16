@@ -42,8 +42,8 @@ langguard-install/
     └── INSTALL.md       Azure (AKS) specifics, used with helm/INSTALL.md
 ```
 
-`images/` holds the four LangGuard application images: `langguard-dashboard`,
-`otel-ingest`, `langguard-discovery` and `langguard-ai-gateway` (the AI gateway).
+`images/` holds the three LangGuard application images: `langguard-dashboard`,
+`otel-ingest` and `langguard-ai-gateway` (the AI gateway).
 `push-images.sh` pushes them to your container registry. You do not need a registry
 credential from LangGuard. The AI gateway image is about 0.5 GB compressed for each
 architecture, so it adds about 1 GB to the bundle.
@@ -66,7 +66,7 @@ architecture, so it adds about 1 GB to the bundle.
 │    /aigateway/ → langguard-dashboard (front proxy) → litellm             │
 │    all other paths → langguard-dashboard                                 │
 │                                                                          │
-│  langguard-dashboard   otel-ingest       opencite (langguard-discovery)  │
+│  langguard-dashboard   otel-ingest (OTLP receiver and catalog)           │
 │  opa                   presidio-analyzer redis                           │
 │  litellm (AI gateway, on by default)                                     │
 │  Helm hook Jobs: db-bootstrap → db-migration → db-grants                 │
@@ -98,11 +98,17 @@ architecture, so it adds about 1 GB to the bundle.
     pods, the traffic is plain HTTP inside the cluster.
 - **Telemetry.** `otel-ingest` receives OpenTelemetry traces and logs over OTLP/HTTP and
   OTLP/gRPC, both on port 443. It does not ingest metrics: it answers `/v1/metrics` with
-  HTTP 404. It stores the traces in PostgreSQL, queues them in `redis`, and forwards a
-  copy to `opencite`. `opencite` runs the `langguard-discovery` catalog, which discovers
-  agents, tools, models and MCP servers. The catalog also discovers the resources of the
-  [Azure AI Foundry](/integrations/azure-ai-foundry) integration. On AKS, it can sign in to
-  Azure with its own managed identity (see
+  HTTP 404. It stores the traces in PostgreSQL and queues them in `redis`.
+- **Catalog.** The catalog runs in each `otel-ingest` pod. It discovers agents, tools,
+  models and MCP servers in the traces and logs, and keeps the results in the schema
+  `discovery` and in `redis`. All `otel-ingest` pods are the same: each pod can serve a
+  request. The catalog also reads the platforms of your integrations, for example
+  [Azure AI Foundry](/integrations/azure-ai-foundry) and Databricks, when the dashboard
+  syncs them. The catalog stores no integration credentials: the dashboard sends the
+  configuration with each request. The dashboard connects to the catalog API through the
+  Service `opencite` (port 8080, target port 8081 of the `otel-ingest` pods). The catalog
+  API accepts only requests that have the key in the Secret `opencite-api-key`. On AKS,
+  the catalog can sign in to Azure with its own managed identity (see
   [Discovery identity](/private-install/azure/requirements#discovery-identity)).
 - **Queue.** `redis` keeps the work queues and the job schedules. It has no persistent
   volume. When the `redis` pod is replaced (deleted, evicted, rescheduled or rolled out),
@@ -116,7 +122,7 @@ architecture, so it adds about 1 GB to the bundle.
   admin role that you supply. All database clients connect with TLS and verify the server
   certificate. The workloads use the database role `langguard_app`. It can read and write
   the application tables but cannot change their schema. It owns the schema `discovery`,
-  which the catalog migrates. With the AI gateway, the role `litellm_app` owns the schema
+  which the catalog in `otel-ingest` migrates when it starts. With the AI gateway, the role `litellm_app` owns the schema
   `litellm`, which the Job `ai-gateway-migration` migrates. Each of the two roles has no
   rights in the schemas of the other.
 - **AI gateway.** `litellm` is the LangGuard AI gateway: LiteLLM with the LangGuard
@@ -148,23 +154,24 @@ architecture, so it adds about 1 GB to the bundle.
   Redis, the Presidio analyzer and PostgreSQL (for the Jobs) are public upstream images.
   The cert-manager images come from `quay.io`. Your Gateway API implementation or Ingress
   controller uses its own images.
-- **Availability.** `langguard-dashboard` (2 to 6 pods), `otel-ingest` (2 pods) and
-  `litellm` (2 pods) run more than one pod. `opa`, `presidio-analyzer`, `redis` and
-  `opencite` run one pod each. When the node of one of these pods is drained, for example
+- **Availability.** `langguard-dashboard` (2 to 6 pods), `otel-ingest` with the catalog
+  (2 pods) and `litellm` (2 pods) run more than one pod. `opa`, `presidio-analyzer` and
+  `redis` run one pod each. When the node of one of these pods is drained, for example
   for a node image upgrade, that workload stops until its pod starts on another node.
 
 ## What the chart installs {#installed}
 
 The chart installs these items in the namespace `langguard`:
 
-- The workloads `langguard-dashboard`, `otel-ingest`, `opencite` (the catalog), `opa`,
-  `redis` and `presidio-analyzer`
+- The workloads `langguard-dashboard`, `otel-ingest` (the OTLP receiver and the
+  catalog), `opa`, `redis` and `presidio-analyzer`
+- The Service `opencite` of the catalog API. It selects the `otel-ingest` pods.
 - The AI gateway `litellm`, on by default. To install LangGuard without it, set
   `aiGateway.enabled: false` (see [AI gateway](/private-install/helm/installation#ai-gateway)).
 - The Helm hook Jobs that prepare the database: `db-bootstrap`, `db-migration`,
   `db-grants` and, with the AI gateway, `ai-gateway-migration`
-- The generated Secrets, for example the encryption key and, with the AI gateway, the
-  gateway keys in the Secret `ai-gateway-credentials`
+- The generated Secrets, for example the encryption key, the catalog API key and, with
+  the AI gateway, the gateway keys in the Secret `ai-gateway-credentials`
 - The NetworkPolicies of the workloads
 - As options: the Gateway and its HTTPRoutes or the Ingress, and the cert-manager
   Certificate and ClusterIssuer

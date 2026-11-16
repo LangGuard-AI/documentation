@@ -78,7 +78,7 @@ See [Connecting Integrations](/getting-started/connecting-integrations) for deta
 How traces arrive in LangGuard depends on the type of integration you connected:
 
 - **OTLP-based integrations** (LangChain, CrewAI, Claude Code, Cursor, OpenCode) — Traces are pushed to LangGuard in real time as your agents run. No sync step is needed.
-- **Platform integrations** (Databricks, Azure AI Foundry, AWS Bedrock) — Traces are delivered via webhook in real time through LangGuard's OpenCITE connector.
+- **Platform integrations** (Databricks, Azure AI Foundry, AWS Bedrock) — At each sync of the integration, LangGuard's discovery service reads the new traces and the AI assets from the platform.
 - **Polling integrations** — Some integrations periodically fetch new traces. The default interval is 15 minutes, configurable from 1 minute to 1 hour. When no users are active, the interval automatically backs off to conserve resources.
 
 For polling integrations, you can see the **Last Sync** time and **Sync Status** on the integration card. Click the **Sync** button (refresh icon) to trigger an immediate sync.

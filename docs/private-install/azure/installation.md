@@ -126,17 +126,18 @@ workloadIdentity:
   catalog identity. Without Azure OpenAI, set only `workloadIdentity.azure.catalog`.
 - `tenantId` is optional. Without it, the workload identity webhook uses the tenant of
   the cluster.
-- The chart adds the client ID (and the tenant ID) to the ServiceAccount `opencite` and
-  the label `azure.workload.identity/use: "true"` to the catalog pod. The AKS webhook then
+- The catalog runs in the `otel-ingest` pods. The chart adds the client ID (and the
+  tenant ID) to the ServiceAccount `opencite` of these pods, and the label
+  `azure.workload.identity/use: "true"` to the `otel-ingest` pods. The AKS webhook then
   injects `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_FEDERATED_TOKEN_FILE`,
-  `AZURE_AUTHORITY_HOST` and a projected token volume into the pod. The catalog keeps
+  `AZURE_AUTHORITY_HOST` and a projected token volume into the pods. The pods keep
   `automountServiceAccountToken: false`.
-- The chart sets `OPENCITE_AZURE_WORKLOAD_IDENTITY=true` in the catalog and
+- The chart sets `OPENCITE_AZURE_WORKLOAD_IDENTITY=true` in `otel-ingest` and
   `AZURE_FOUNDRY_WORKLOAD_IDENTITY=true` in the dashboard ConfigMap. The
   [Azure AI Foundry](/integrations/azure-ai-foundry#managed-identity) integration then
   shows the sign-in method **This deployment's managed identity**. With it, the form asks
   for the subscription ID and no tenant ID, client ID or client secret.
-- The catalog restarts when the client ID or the tenant ID changes.
+- The `otel-ingest` pods restart when the client ID or the tenant ID changes.
 - If you remove `workloadIdentity.azure.catalog.clientId` later, an integration that uses
   the managed identity stops. Test Connection and a sync then fail with
   `Managed identity sign-in is not available on this deployment`, and a new integration
@@ -178,7 +179,8 @@ networkPolicy:
 - The database Jobs create the role `litellm_app` and the schema `litellm` with the server
   admin login. You do not create them.
 - The gateway has no Azure identity: workload identity applies only to
-  `langguard-dashboard` and, with the discovery identity, to the catalog. The gateway calls Azure OpenAI with an API key (BYOK). The
+  `langguard-dashboard` and, with the discovery identity, to `otel-ingest` (the catalog).
+  The gateway calls Azure OpenAI with an API key (BYOK). The
   account of LangGuard's own AI features has key authentication off (`disableLocalAuth`),
   so it does not accept that key. For Azure OpenAI models in the gateway, use a different
   account with key authentication on, and add its key on the AI Gateway settings page.
@@ -207,6 +209,11 @@ Follow [After install](/private-install/helm/installation#after-install),
   `aiGateway.enabled: false` to it before you upgrade. If you do not add it, the upgrade
   turns on the AI gateway, because `aiGateway.enabled` is `true` in the chart. To turn on
   the gateway, see [Turn on the AI gateway](#ai-gateway).
+- For an upgrade from a chart version with the `opencite` Deployment, do the steps in
+  [Upgrade from a chart version with the opencite Deployment](/private-install/helm/installation#upgrade-catalog).
+  On Azure, the federated credential of the discovery identity does not change: its
+  subject stays `system:serviceaccount:langguard:opencite`. The `otel-ingest` pods get
+  the identity, so `otel-ingest` restarts once.
 - The uninstall does not delete the database or the other Azure resources. They are
   yours. Delete them with the tools that you used to create them.
 
@@ -216,17 +223,21 @@ The [generic security points](/private-install/helm/installation#security) apply
 Azure:
 
 - Only `langguard-dashboard` and, with the
-  [discovery identity](/private-install/azure/requirements#discovery-identity), the
-  catalog have an Azure identity, through workload identity. Each has its own managed
-  identity and federated credential. The other workloads and the database Jobs have no
-  Azure identity.
+  [discovery identity](/private-install/azure/requirements#discovery-identity),
+  `otel-ingest` (where the catalog runs) have an Azure identity, through workload
+  identity. Each has its own managed identity and federated credential. The other
+  workloads and the database Jobs have no Azure identity.
+- The `otel-ingest` pods also receive the OTLP traffic from outside the cluster. Give the
+  discovery identity only the read roles in
+  [Discovery identity](/private-install/azure/requirements#discovery-identity).
 - With the discovery identity, LangGuard stores no secret for the Azure AI Foundry
-  integration. With a client secret, the catalog stores the secret encrypted with
-  `OPENCITE_CONFIG_KEY` (see [Security](/private-install/helm/installation#security)).
-- `langguard-dashboard`, `otel-ingest`, the catalog and, when it is on, the AI gateway
-  cannot connect to the Azure Instance Metadata Service (169.254.169.254) or to the Azure
-  WireServer (168.63.129.16), so they cannot get a token of the node identity or the node
-  provisioning data.
+  integration. With a client secret, the dashboard stores the secret encrypted with
+  `ENCRYPTION_KEY` and sends it to the catalog with each discovery request. The catalog
+  does not store it (see [Security](/private-install/helm/installation#security)).
+- `langguard-dashboard`, `otel-ingest` (with the catalog) and, when it is on, the AI
+  gateway cannot connect to the Azure Instance Metadata Service (169.254.169.254) or to
+  the Azure WireServer (168.63.129.16), so they cannot get a token of the node identity or
+  the node provisioning data.
 - The load balancer also opens TCP 15021, the status port of the Gateway proxy.
 - To encrypt Secrets at rest with your own key, turn on AKS KMS.
 
@@ -244,5 +255,6 @@ of the generic installation. On Azure, also check these items:
 | AI features fail | The deployments must exist with the names in `ai.models`. The federated credential subject must be `system:serviceaccount:langguard:langguard-dashboard`. Check `kubectl logs deployment/langguard-dashboard -n langguard \| grep -i "AI upstream"`. |
 | The Azure AI Foundry form shows no managed identity, or Test Connection fails with `Managed identity sign-in is not available on this deployment` | The release has no discovery identity. Set `workloadIdentity.azure.catalog.clientId` and run the upgrade (see [Discovery identity](#discovery-identity)). |
 | Test Connection of Azure AI Foundry fails with an `AADSTS` error | The federated credential of the discovery identity: the issuer must be the OIDC issuer URL of the cluster, the subject `system:serviceaccount:langguard:opencite` and the audience `api://AzureADTokenExchange`. `AADSTS70021` means that no federated credential matches. |
-| Azure AI Foundry sends no traces, and Test Connection passes | The discovery identity needs **Reader** on the resource group of the account, and the account needs a diagnostic setting that sends the **Request and Response Logs** category to a Log Analytics workspace. A setting that sends only other categories gives a workspace with no traces. Test Connection does not check the roles. `kubectl logs deployment/opencite -n langguard \| grep "Log Analytics workspaces"` shows how many workspaces the catalog found. After a start of the catalog, the first line can show `count=0`. A line with `count=0` after the next discovery run means that the catalog found no workspace. |
-| Azure AI Foundry shows no agent of a Foundry project, or its traces show the agent `azure-ai-foundry` | The discovery identity needs **Cognitive Services Data Reader** on the account or on the project (see [Discovery identity](/private-install/azure/requirements#discovery-identity)). `kubectl logs deployment/opencite -n langguard \| grep "cannot read the agents"` shows the projects whose agents the identity cannot read. The traces of a new agent (Responses API) do not name the agent, also with this role. |
+| Azure AI Foundry sends no traces, and Test Connection passes | The discovery identity needs **Reader** on the resource group of the account, and the account needs a diagnostic setting that sends the **Request and Response Logs** category to a Log Analytics workspace. A setting that sends only other categories gives a workspace with no traces. Test Connection does not check the roles. `kubectl logs -n langguard -l app=otel-ingest --tail=-1 \| grep "Log Analytics workspaces"` shows how many workspaces the catalog found (`count`). The catalog writes this line at each sync of the integration, in one of the `otel-ingest` pods. A count of 0 means that the catalog found no workspace. |
+| Azure AI Foundry shows no agent of a Foundry project, or its traces show the agent `azure-ai-foundry` | The discovery identity needs **Cognitive Services Data Reader** on the account or on the project (see [Discovery identity](/private-install/azure/requirements#discovery-identity)). `kubectl logs -n langguard -l app=otel-ingest --tail=-1 \| grep "cannot read the agents"` shows the projects whose agents the identity cannot read. The traces of a new agent (Responses API) do not name the agent, also with this role. |
+| Test Connection of Azure AI Foundry, or the `otel-ingest` log, shows `host is not allowed` | The catalog connects to the Azure endpoints only at public addresses. It refuses an endpoint that resolves to a private address in the cluster, for example a private endpoint of the account or of the Log Analytics workspace. |

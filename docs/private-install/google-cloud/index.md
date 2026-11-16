@@ -35,9 +35,9 @@ langguard-install/
 Keep this layout. The installer reads the images from `../images`, and the Terraform
 reads `.opa-version`.
 
-`images/` holds the three LangGuard application images: `langguard-dashboard`,
-`otel-ingest` and `langguard-discovery`. The installer pushes them to an Artifact Registry
-repository in your project. You do not need a registry credential from LangGuard.
+`images/` holds the two LangGuard application images: `langguard-dashboard` and
+`otel-ingest`. The installer pushes them to an Artifact Registry repository in your
+project. You do not need a registry credential from LangGuard.
 
 `gcp/install.sh` is the one command you run. It takes your project and domain as flags.
 When the installer creates the cluster, it also needs your admin CIDR. It writes a
@@ -81,8 +81,9 @@ The diagram shows an install with new infrastructure.
 ┌──────────────────────────────────┴──────────────────────────────────┐
 │ Private GKE cluster · namespace langguard                           │
 │                                                                     │
-│  langguard-dashboard       otel-ingest            opencite          │
-│    • Web UI and API          • OTLP receiver        • AI discovery  │
+│  langguard-dashboard       otel-ingest                              │
+│    • Web UI and API          • OTLP receiver                        │
+│                              • AI discovery (catalog)               │
 │                                                                     │
 │  opa                       presidio-analyzer      redis             │
 │    • Policy evaluation       • PII detection        • Job queues    │
@@ -112,9 +113,13 @@ How the parts connect:
   the name servers of the zone. The Google-managed certificate is provisioned after DNS
   resolves.
 - **Telemetry.** `otel-ingest` receives OpenTelemetry data over OTLP/HTTP and OTLP/gRPC.
-  It stores traces in Cloud SQL, queues them for processing in `redis`, and forwards a
-  copy to `opencite`. `opencite` runs the `langguard-discovery` catalog, which discovers
-  agents, tools, models and MCP servers.
+  It stores traces in Cloud SQL and queues them for processing in `redis`.
+- **Catalog.** The catalog runs in the `otel-ingest` pods. It discovers agents, tools,
+  models and MCP servers in the traces and logs, and keeps the results in the schema
+  `discovery` of Cloud SQL and in `redis`. It also reads the platforms of your
+  integrations when the dashboard syncs them. The dashboard connects to the catalog API
+  through the Service `opencite` (port 8080), with the key in the Secret
+  `opencite-api-key`.
 - **Policy and PII.** `langguard-dashboard` evaluates policies with `opa` and detects PII
   with `presidio-analyzer`. It uses `redis` for job queues, rate limits and cache. It
   stores user sessions in Cloud SQL.
@@ -128,10 +133,11 @@ How the parts connect:
   application, through Workload Identity. No API key is used. Vertex AI powers
   LangGuard's own AI features, for example policy authoring and custom checks.
 - **Google Cloud discovery.** By default, the installer creates a separate Google service
-  account for `opencite` and binds it through Workload Identity. It has read-only access
-  to Vertex AI, Cloud Trace, Cloud Logging and Compute Engine. When you connect the
-  Google Agent Platform integration in LangGuard, `opencite` uses this identity to
-  discover agents in your project. You do not need a service account key. See
+  account for the catalog and binds it through Workload Identity to the Kubernetes
+  service account `opencite` of the `otel-ingest` pods. It has read-only access to
+  Vertex AI, Cloud Trace, Cloud Logging and Compute Engine. When you connect the Google
+  Agent Platform integration in LangGuard, the catalog uses this identity to discover
+  agents in your project. You do not need a service account key. See
   [Agent discovery](/private-install/google-cloud/installation#agent-discovery).
 - **Images and secrets.** The nodes pull the LangGuard images from Artifact Registry.
   OPA, Redis, the Presidio analyzer, PostgreSQL (for the grants Job) and the Cloud SQL

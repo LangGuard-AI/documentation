@@ -71,7 +71,7 @@ The form shows the **Sign-in method** choice only when your operator set up this
 
 ### Which Identity It Uses
 
-The user-assigned managed identity of the discovery service (`opencite`), through AKS workload identity. It is not your user identity, and it is not the identity of the LangGuard dashboard. All Azure AI Foundry integrations of the deployment use this one identity, so they can read only the resources that its [roles](#roles) allow.
+The user-assigned managed identity of the discovery service, through AKS workload identity. The discovery service runs in the `otel-ingest` pods, under the Kubernetes service account `opencite`. It is not your user identity, and it is not the identity of the LangGuard dashboard. All Azure AI Foundry integrations of the deployment use this one identity, so they can read only the resources that its [roles](#roles) allow.
 
 ### Add the Integration with the Managed Identity
 

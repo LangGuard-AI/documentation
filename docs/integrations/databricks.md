@@ -31,23 +31,27 @@ The integration lets LangGuard:
 
 ## Architecture
 
-LangGuard's discovery service (**OpenCITE**) does the work of connecting to
-Databricks and extracting traces. LangGuard stores your connection credentials and
-configuration; OpenCITE connects to your workspace, performs discovery, and
-delivers traces back to LangGuard, where they are stored and policy-evaluated.
+LangGuard's discovery service does the work of connecting to Databricks and
+extracting traces. LangGuard stores your connection credentials and configuration.
+At each sync, LangGuard sends the configuration to the discovery service. The
+discovery service connects to your workspace, reads the activity since the last sync,
+and gives the traces and the discovered entities to LangGuard. LangGuard then stores
+the traces and evaluates them against your policies. The discovery service does not
+store your credentials.
 
 ```
 LangGuard (stores credentials + config)
-       │  provisions a Databricks discovery instance
+       │  at each sync: the configuration of the integration
        ▼
-OpenCITE discovery service ──► Databricks workspace
-       │                         (MLflow traces, Genie, AI Gateway usage)
-       │  delivers discovered traces + entities back
+Discovery service ──► Databricks workspace
+       │                (MLflow traces, Genie, AI Gateway usage)
+       │  traces + discovered entities
        ▼
 LangGuard  →  policy evaluation  →  Trace Explorer / Data Catalog
 ```
 
-A running discovery service is required for this integration.
+A running discovery service is required for this integration. The discovery service
+connects only to an `https` workspace URL at a public address.
 
 ## Prerequisites
 
@@ -103,13 +107,15 @@ integration's assets are scoped to that connection.
 
 **Message**: *"Discovery service is not available."*
 
-The Databricks integration requires a running discovery service (OpenCITE). If you
-see this, the service is unreachable — contact your administrator or LangGuard
-support.
+The Databricks integration requires a running discovery service. If you see this,
+the service is unreachable — contact your administrator or LangGuard support. On a
+private install, the discovery service runs in the `otel-ingest` pods.
 
 ### Connection validation failed
 
-1. Verify the **Host URL** includes `https://` and is correct.
+1. Verify the **Host URL** includes `https://` and is correct. A message with
+   `host is not allowed` means that the host does not resolve to a public address,
+   for example a workspace that LangGuard reaches only through a private endpoint.
 2. Confirm the access token hasn't expired and has the required permissions.
 3. If using a SQL Warehouse, ensure it is running and the token can access it.
 

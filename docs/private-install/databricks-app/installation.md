@@ -18,7 +18,7 @@ Install and authenticate these tools on the machine you deploy from:
 | Tool | Purpose |
 |------|---------|
 | [Databricks CLI](https://docs.databricks.com/dev-tools/cli/install.html) | Deploys the app bundle and configures the workspace. Must be authenticated (`databricks configure`). |
-| Python 3.8+ | Runs the OpenCITE sidecar and the installer. |
+| Python 3.8+ | Runs the installer. |
 | Node.js 18+ with `npx` | Runs the first-time workspace installer. |
 
 ### Workspace permissions
@@ -79,7 +79,8 @@ On a **fresh workspace** the script runs the interactive installer first:
 2. **Delta tables** — `langguard_otel_spans`, `langguard_otel_logs`,
    `trace_annotations`, `discovery_status`
 3. **Lakebase** — provisions the Lakebase PostgreSQL database and applies
-   migrations (you provide the connection string when prompted)
+   migrations (you provide the connection string when prompted). The discovery
+   sidecar creates its own schema `discovery` in this database when the app starts.
 4. **Secrets** — creates the `langguard-secrets` scope and stores connection
    strings and security keys
 5. **Deploy** — deploys the app via Databricks Asset Bundle (`databricks bundle deploy`)

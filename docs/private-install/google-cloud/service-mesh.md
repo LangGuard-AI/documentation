@@ -151,26 +151,27 @@ install with `--no-network-policies`:
 |---|---|---|
 | `langguard-dashboard-ingress` | `langguard-dashboard` | Ingress on TCP 5000 from the Google Cloud load balancer and health check ranges (`35.191.0.0/16`, `130.211.0.0/22`, `209.85.152.0/22`, `209.85.204.0/22`) and from pods in `langguard` |
 | `opa-policy` | `opa` | Ingress on TCP 8181 from pods in `langguard` |
-| `opencite-policy` | `opencite` | Ingress on TCP 8080 from pods in `langguard`. With `enable_gcp_discovery = false`, also egress to DNS, to external addresses on TCP 443 and 5432, and to the dashboard on TCP 5000 |
-| `cloudsql-proxy-ingress` | `cloudsql-proxy` | Ingress on TCP 5432 from `langguard-dashboard`, `otel-ingest` and `opencite` |
-| `otel-ingest-egress` | `otel-ingest` | Egress to DNS, to pods in `langguard`, and to external addresses except the metadata server |
+| `otel-ingest-ingress` | `otel-ingest` | Ingress on TCP 4317, 4318 and 8080 from all sources. Ingress on TCP 8081 (the catalog API, Service `opencite`) only from `langguard-dashboard` and `otel-ingest` |
+| `cloudsql-proxy-ingress` | `cloudsql-proxy` | Ingress on TCP 5432 from `langguard-dashboard` and `otel-ingest`. Also from the pods with the label `app: opencite`: during an upgrade from a bundle with the `langguard-discovery` image, the catalog pod of that bundle uses the database until it stops |
+| `otel-ingest-egress` | `otel-ingest` | Only with `enable_gcp_discovery = false`. Egress to DNS, to pods in `langguard`, and to external addresses except the metadata server |
 
 :::note
-`enable_gcp_discovery` is a Terraform variable. The default is `true`: `opencite` then has
-no egress policy. Set it to `false` in your tfvars file to restrict `opencite` egress. The
-Google Cloud integration then needs a service account key. The variable is documented in
-`gcp/terraform/variables.tf`.
+`enable_gcp_discovery` is a Terraform variable. The default is `true`: `otel-ingest` then
+has no egress policy, because the catalog in `otel-ingest` gets its Workload Identity token
+from the metadata server. Set it to `false` in your tfvars file to restrict `otel-ingest`
+egress. The Google Cloud integration then needs a service account key. The variable is
+documented in `gcp/terraform/variables.tf`.
 :::
 
 A policy that selects a pod denies all other traffic in its direction. In a cluster that
 runs a mesh, this blocks:
 
 - A gateway in another namespace from reaching the dashboard.
-- `otel-ingest` (and `opencite`, with `enable_gcp_discovery = false`) from reaching an
-  in-cluster control plane, for example `istiod` in `istio-system`. On GKE Dataplane V2,
-  the egress rule for external addresses does not match pods, so it does not cover the
-  control plane.
+- `otel-ingest`, with `enable_gcp_discovery = false`, from reaching an in-cluster control
+  plane, for example `istiod` in `istio-system`. On GKE Dataplane V2, the egress rule for
+  external addresses does not match pods, so it does not cover the control plane.
 - Ambient mode traffic: TCP 15008 (HBONE), and kubelet probes from `169.254.7.127/32`.
+  `otel-ingest-ingress` also blocks TCP 15008 to `otel-ingest`.
 - Linkerd traffic on opaque ports. Linkerd treats port 5432 as opaque by default and sends
   it to the proxy's inbound port 4143, so `cloudsql-proxy-ingress` drops the database
   connections. Allow TCP 4143 to the pods with the label `app: cloudsql-proxy`.
@@ -238,16 +239,10 @@ spec:
         - podSelector:
             matchLabels:
               app: otel-ingest
-        - podSelector:
-            matchLabels:
-              app: opencite
       ports:
         - protocol: TCP
           port: 4143
 ```
-
-With `enable_gcp_discovery = false`, also allow egress on TCP 4143 from pods with the label
-`app: opencite` to pods with the label `app: cloudsql-proxy`.
 
 ## Egress
 
@@ -281,7 +276,9 @@ Features that you configure in LangGuard need their own endpoints registered:
 - Google Workspace directory integration: `admin.googleapis.com` and
   `oauth2.googleapis.com` on TCP 443, from `langguard-dashboard`.
 - Google Cloud integration: the Vertex AI, Cloud Trace, Cloud Logging and Compute Engine
-  APIs, from `opencite`.
+  APIs, from `otel-ingest` (the catalog).
+- Other integrations that the catalog reads, for example Databricks and Azure AI Foundry:
+  the endpoints of each service on TCP 443, from `otel-ingest`.
 - Email: the SMTP relay host on TCP 587, or `email.<aws_ses_region>.amazonaws.com` on TCP
   443, from `langguard-dashboard`. See
   [Sign-in and Email](/private-install/google-cloud/sign-in-and-email#email).

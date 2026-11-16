@@ -26,7 +26,7 @@ adds the Azure-specific requirements and the Azure commands.
 
 | | CPU requests | Memory requests | Memory limits |
 |---|---|---|---|
-| LangGuard workloads without the AI gateway (2 dashboard pods) | 1.5 vCPU | 3.1 GiB | 7.8 GiB |
+| LangGuard workloads without the AI gateway (2 dashboard pods) | 1.25 vCPU | 2.8 GiB | 6.8 GiB |
 | Each dashboard pod above 2 (the autoscaler goes up to 6) | 0.2 vCPU | 0.5 GiB | 1 GiB |
 | AI gateway (2 `litellm` pods, `aiGateway.replicas`) | 1 vCPU | 2 GiB | 4 GiB |
 | Job `ai-gateway-migration`, only while an install or upgrade runs | 0.25 vCPU | 1 GiB | 2 GiB |
@@ -35,16 +35,20 @@ adds the Azure-specific requirements and the Azure commands.
 Each `litellm` pod uses about 1 GiB of memory after it starts. During a rollout, the
 gateway runs one more pod for a short time.
 
+The catalog runs in the `otel-ingest` pods. Each `otel-ingest` pod requests 256 MiB of
+memory and has a limit of 1 GiB (`otelIngest.resources`). The discovery requests of your
+integrations also run in these pods.
+
 Your Gateway API implementation or Ingress controller, cert-manager and the system pods
 of the cluster need capacity in addition to the LangGuard workloads.
 
 Use at least two nodes with 4 vCPU and 16 GB of memory. Do not use nodes with less than
-8 GB of memory: the catalog and the Presidio analyzer can each use up to 2 GB.
+8 GB of memory: the Presidio analyzer can use up to 2 GB.
 
 ## Container registry
 
-- A container registry that the nodes can pull from. `push-images.sh` pushes the four
-  LangGuard images to it: `langguard-dashboard`, `otel-ingest`, `langguard-discovery` and
+- A container registry that the nodes can pull from. `push-images.sh` pushes the three
+  LangGuard images to it: `langguard-dashboard`, `otel-ingest` and
   `langguard-ai-gateway`. Set the registry path in `global.imageRegistry`. The AI gateway
   image is about 0.5 GB compressed for each architecture.
 - When the nodes need a credential to pull, create a pull Secret in the namespace
@@ -107,8 +111,8 @@ database:
 ```
 
 The chart mounts the file read-only at `/etc/ssl/langguard-db` in `langguard-dashboard`,
-`otel-ingest`, `opencite`, `db-migration`, `db-bootstrap`, `db-grants` and, with the AI
-gateway, `litellm` and `ai-gateway-migration`. It adds
+`otel-ingest`, `db-migration`, `db-bootstrap`, `db-grants` and, with the AI gateway,
+`litellm` and `ai-gateway-migration`. It adds
 `sslrootcert=/etc/ssl/langguard-db/<key>` to every connection URL except the AI gateway
 URL. The AI gateway URL names the file in `sslcert` (with `require`, `verify-ca` and
 `verify-full`), because its database client (Prisma) reads the CA certificate from there.
@@ -118,8 +122,7 @@ restart the Deployments that read it. The database Jobs read the file each time 
 run.
 
 ```bash
-kubectl rollout restart deployment/langguard-dashboard deployment/otel-ingest \
-  deployment/opencite -n langguard
+kubectl rollout restart deployment/langguard-dashboard deployment/otel-ingest -n langguard
 kubectl rollout restart deployment/litellm -n langguard   # with the AI gateway
 ```
 
@@ -127,8 +130,7 @@ kubectl rollout restart deployment/litellm -n langguard   # with the AI gateway
 Without a CA certificate, the clients do not do the same thing with `require`. With
 `database.sslMode: require`, `langguard-dashboard`, `db-migration` and the AI gateway
 verify the server certificate and the host name as with `verify-full`, so the connection
-still fails, and `otel-ingest` and `opencite` encrypt the connection but do not verify
-the server. With `database.jobsSslMode: require`, the psql Jobs (`db-bootstrap` and
+still fails, and `otel-ingest` encrypts the connection but does not verify the server. With `database.jobsSslMode: require`, the psql Jobs (`db-bootstrap` and
 `db-grants`) encrypt the connection but do not verify the server.
 :::
 
@@ -171,13 +173,19 @@ The admin host pulls the cert-manager chart from
 443 to `acme-v02.api.letsencrypt.org`.
 
 The workloads also need TCP 443 to the internet for your integrations and the AI
-provider. The NetworkPolicies limit the outbound connections of `langguard-dashboard`,
-`otel-ingest` and `opencite`:
+provider. The NetworkPolicies limit the outbound connections of `langguard-dashboard` and
+`otel-ingest`:
 
-- Outside the namespace, `otel-ingest` and `opencite` can connect only to DNS, the
-  database port and TCP 443. Add ports in `networkPolicy.egressExtraPorts`.
+- Outside the namespace, `otel-ingest` can connect only to DNS, the database port and
+  TCP 443. The catalog in `otel-ingest` connects to the platforms of your integrations,
+  for example Azure AI Foundry and Databricks, on TCP 443. If a platform uses a different
+  port, add the port in `networkPolicy.egressExtraPorts`.
+- For the Databricks, LiteLLM and Azure AI Foundry integrations, the catalog connects only
+  to `https` URLs at public addresses, and it does not use an HTTP proxy. It refuses a
+  host that resolves to a private, loopback or link-local address, for example a private
+  endpoint, with the message `host is not allowed`.
 - `langguard-dashboard` can connect to all ports.
-- None of the three can connect to 169.254.169.254 (the instance metadata service) or to
+- Neither of the two can connect to 169.254.169.254 (the instance metadata service) or to
   168.63.129.16 (the Azure WireServer). Both addresses can give node credentials. The
   chart blocks them on all clusters.
 
@@ -237,14 +245,14 @@ select the pods of the database Jobs `db-bootstrap`, `db-migration` and `db-gran
 `app: langguard-db`). If the namespace has a default-deny egress policy, let these pods
 connect to the database.
 
-The database and TCP 443 rules of `otel-ingest` and `opencite`, and the outbound rules of
-`litellm`, use an IP block. Some CNIs, for example Cilium, do not apply an IP block to
-pods. If PostgreSQL runs in the cluster in another namespace, add a NetworkPolicy that
-lets `otel-ingest`, `opencite`, `litellm` and the Job `ai-gateway-migration` (label
+The database and TCP 443 rules of `otel-ingest`, and the outbound rules of `litellm`, use
+an IP block. Some CNIs, for example Cilium, do not apply an IP block to pods. If
+PostgreSQL runs in the cluster in another namespace, add a NetworkPolicy that lets
+`otel-ingest`, `litellm` and the Job `ai-gateway-migration` (label
 `app: litellm-migration`) connect to it, or run PostgreSQL in the namespace `langguard`.
 
-DNS: the three workloads and, with the AI gateway, `litellm` and `ai-gateway-migration`
-can send DNS queries (UDP and TCP 53) to all pods in the namespace `kube-system` (CoreDNS)
+DNS: `langguard-dashboard`, `otel-ingest` and, with the AI gateway, `litellm` and
+`ai-gateway-migration` can send DNS queries (UDP and TCP 53) to all pods in the namespace `kube-system` (CoreDNS)
 and to the addresses in `networkPolicy.nodeLocalDnsCidrs`. If the cluster DNS runs in
 another namespace, add a NetworkPolicy that allows DNS to it. The default of
 `networkPolicy.nodeLocalDnsCidrs` is the addresses of AKS LocalDNS (`169.254.10.10/32`

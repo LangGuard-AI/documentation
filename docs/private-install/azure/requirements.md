@@ -149,12 +149,12 @@ identity of the node, because the Instance Metadata Service is blocked.
 
 The [Azure AI Foundry](/integrations/azure-ai-foundry) integration discovers your Azure AI
 Foundry accounts, their model deployments, projects and agents, and reads their traces
-from Log Analytics. The catalog (`opencite`) does this work. It signs in to Azure in one of
-two ways:
+from Log Analytics. The catalog does this work. It runs in the `otel-ingest` pods, under
+the ServiceAccount `opencite`. It signs in to Azure in one of two ways:
 
 - With the client secret of a Microsoft Entra app registration, which you enter in the
-  integration form. The catalog stores this secret (see
-  [Security](/private-install/helm/installation#security)).
+  integration form. The dashboard stores this secret and sends it to the catalog with
+  each discovery request (see [Security](/private-install/helm/installation#security)).
 - With the discovery identity: a user-assigned managed identity of the catalog, through
   AKS workload identity. LangGuard stores no secret. The integration form then shows the
   sign-in method **This deployment's managed identity**, and selects it for a new
@@ -165,7 +165,7 @@ use the dashboard identity of [Azure OpenAI](#azure-openai) for the catalog.
 
 | Requirement | Notes |
 |---|---|
-| A user-assigned managed identity | Not the dashboard identity. Each workload has its own identity and its own roles. |
+| A user-assigned managed identity | Not the dashboard identity. Each workload has its own identity and its own roles. The `otel-ingest` pods hold this identity, and they also receive the OTLP traffic, so give it only the read roles below. |
 | A federated credential on the identity | Issuer: the OIDC issuer URL of the cluster. Subject: `system:serviceaccount:langguard:opencite`. Audience: `api://AzureADTokenExchange`. |
 | The roles in the table below | On each Azure AI Foundry account that LangGuard discovers, not on the account of LangGuard's own AI features. |
 
@@ -267,8 +267,9 @@ On Azure, it also needs:
 
 - `langguard-dashboard` needs TCP 443 to `login.microsoftonline.com` for workload
   identity.
-- For the Azure AI Foundry integration, the catalog (`opencite`) needs TCP 443 to these
-  hosts, with the [discovery identity](#discovery-identity) or with a client secret:
+- For the Azure AI Foundry integration, the catalog in the `otel-ingest` pods needs TCP
+  443 to these hosts, with the [discovery identity](#discovery-identity) or with a client
+  secret:
 
   | Host | Use |
   |---|---|
@@ -277,9 +278,11 @@ On Azure, it also needs:
   | `<custom subdomain>.services.ai.azure.com`, for each Foundry account | Foundry Agent Service: the agents of the account and of its projects, and the agent runs that name the agent of each trace |
   | `api.loganalytics.azure.com` | The Log Analytics queries (traces) |
 
-  The NetworkPolicy of the catalog allows TCP 443 to all addresses, so you do not add a
-  NetworkPolicy. A firewall between the cluster and the internet must allow these hosts.
-  The catalog does not connect to the Instance Metadata Service or to the WireServer.
+  The NetworkPolicy `otel-ingest-egress` allows TCP 443 to all addresses, so you do not
+  add a NetworkPolicy. A firewall between the cluster and the internet must allow these
+  hosts. The catalog connects to them directly, not through an HTTP proxy, and only at
+  public addresses: it refuses a host that resolves to a private endpoint. The catalog
+  does not connect to the Instance Metadata Service or to the WireServer.
 - Keep the default of `networkPolicy.nodeLocalDnsCidrs`. It is the AKS LocalDNS
   addresses (see
   [Outbound access from the cluster](/private-install/helm/requirements#outbound-access-from-the-cluster)).

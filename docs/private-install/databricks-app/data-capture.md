@@ -58,7 +58,7 @@ the app polls Unity Catalog directly:
 - **AI Gateway inference tables** — the `langguard_inference_traces` view UNIONs
   every discovered `*_payload` inference table, so plain Databricks served
   agents/endpoints with inference tables enabled are captured even without OTLP.
-- **`system.ai_gateway.usage`** — OpenCITE polls this system table for
+- **`system.ai_gateway.usage`** — the discovery sidecar polls this system table for
   cross-endpoint token/cost aggregates (optional; requires the `system` catalog
   grant described in [Installation](/private-install/databricks-app/installation)).
 
@@ -79,10 +79,12 @@ The intervals are tunable via `DATABRICKS_POLL_INTERVAL_MS`,
 
 ## Discovery
 
-As traces are processed, the **OpenCITE** sidecar discovers the agents, models,
+As traces are processed, the **discovery** sidecar discovers the agents, models,
 tools, MCP servers, and downstream systems in your workspace and populates the
 [Data Catalog](/features/data-catalog) and [Agent Discovery](/features/discovery).
-No per-agent instrumentation is required.
+No per-agent instrumentation is required. The sidecar keeps its catalog in the
+Lakebase database of the app (schema `discovery`), so the discovered assets stay
+when the app restarts.
 
 ## Next steps
 

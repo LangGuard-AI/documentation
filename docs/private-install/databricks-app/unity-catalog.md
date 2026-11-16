@@ -33,7 +33,7 @@ LangGuard creates a catalog — `langguard_app` by default (the name is stored i
 | `langguard_otel_spans` | `langguard_otel` | Delta table | Raw OTEL spans (the native OTLP ingestion target) |
 | `langguard_otel_logs` | `langguard_otel` | Delta table | Raw OTEL logs |
 | `trace_annotations` | `langguard` | Delta table | User tags/notes, policy results, entity mappings (merged into trace views) |
-| `discovery_status` | `langguard` | Delta table | OpenCITE discovery high-water marks |
+| `discovery_status` | `langguard` | Delta table | Created by the setup. The discovery sidecar keeps its read positions in the Lakebase database (schema `discovery`), not in this table. |
 
 ### Views (the read path)
 
@@ -73,6 +73,12 @@ a schema named `catalog`:
 | `model_pricing` | Per-model token pricing (drives cost computation) |
 | `app_config`, `session` | Internal config (poller checkpoints) and web sessions |
 
+The discovery sidecar keeps its catalog in the same database, in the schema
+`discovery`: the discovered agents, tools, models and MCP servers, their lineage, and
+the read positions of the workspace. The sidecar creates and migrates this schema when
+it starts. LangGuard copies the discovered assets from the sidecar into the `entities`
+tables above.
+
 ## How cost is computed
 
 Trace cost isn't stored — it's computed on read. The `langguard_traces` view
@@ -85,8 +91,8 @@ it immediately.
 ## Data residency
 
 Nothing leaves your workspace. Traces are ingested into your Unity Catalog tables
-on your external storage, metadata lives in your Lakebase database, and the app
-runs on your Databricks compute. You can apply your own Unity Catalog grants,
+on your external storage, metadata and the discovery catalog live in your Lakebase
+database, and the app runs on your Databricks compute. You can apply your own Unity Catalog grants,
 lineage, and auditing to every LangGuard table.
 
 ![Unity Catalog Explorer showing the langguard_app catalog and OTEL tables](/img/databricks-unity-catalog.png)

@@ -36,8 +36,8 @@ langguard-install/
 
 Keep this layout. The installer reads the images from `../images`.
 
-The bundle contains the LangGuard images `langguard-dashboard`, `otel-ingest` and
-`langguard-discovery` as `images/*.tar.gz`. The installer pushes them to an Artifact Registry
+The bundle contains the LangGuard images `langguard-dashboard` and `otel-ingest` as
+`images/*.tar.gz`. The installer pushes them to an Artifact Registry
 repository in your project. You do not need a registry credential from LangGuard.
 
 The install is not air-gapped. The installer host needs access to the Google Cloud APIs,
@@ -79,9 +79,10 @@ The installer deploys into one region of your project:
   public IP addresses. The control plane accepts connections only from your admin CIDR, or
   only from inside the VPC (see [Cluster access](#cluster-access)).
 - Cloud SQL for PostgreSQL 16 on a private IP address.
-- Workloads in the `langguard` namespace: `langguard-dashboard`, `otel-ingest`,
-  `opencite` (the `langguard-discovery` catalog), `opa`, `redis`, `presidio-analyzer`,
-  `cloudsql-proxy` and `cloudsql-proxy-admin`.
+- Workloads in the `langguard` namespace: `langguard-dashboard`, `otel-ingest` (the OTLP
+  receiver and the catalog), `opa`, `redis`, `presidio-analyzer`, `cloudsql-proxy` and
+  `cloudsql-proxy-admin`. The Service `opencite` of the catalog API selects the
+  `otel-ingest` pods.
 - An external HTTPS load balancer (GKE Ingress) with a static IP address and a
   Google-managed certificate.
 - A Cloud DNS zone for your domain, with an `A` record for `<domain>` that points to the
@@ -216,7 +217,7 @@ two APIs in [Google Cloud APIs](#google-cloud-apis) must be enabled.
 | `--cloudsql-tier` | `db-custom-2-7680` | Cloud SQL machine tier. See [Sizing](#sizing). |
 | `--node-machine` | `e2-standard-2` | GKE node machine type. See [Sizing](#sizing). |
 | `--ai-model` | `google/gemini-2.5-flash` | Not used with Vertex AI. The application selects the Vertex AI models itself. See [AI](#ai). |
-| `--image-tag` | Version in `images/manifest.env` | Tag of the three LangGuard images. |
+| `--image-tag` | Version in `images/manifest.env` | Tag of the two LangGuard images. |
 | `--dns-zone-name` | Derived from `--domain` | Name of the Cloud DNS zone. The default is the domain with each dot changed to a dash, plus `-zone`, for example `app-mycompany-com-zone`. |
 | `--use-existing-dns-zone` | | Write the records to the existing zone that `--dns-zone-name` names, or to the zone with the derived name. The installer does not create a zone. See [Delegate DNS](#delegate-dns). |
 | `--auth` | `userpass` | Sign-in method. `userpass` is the only supported value. The installer generates an admin password. See [Sign-in and Email](/private-install/google-cloud/sign-in-and-email). |
@@ -271,8 +272,8 @@ flag for these variables:
 | `dns_zone_name` | `--dns-zone-name` |
 | `use_existing_dns_zone` | `--use-existing-dns-zone` |
 
-The installer sets `create_artifact_registry`, `artifact_registry_name`,
-`enable_tenant_provisioning` and `catalog_impl` itself. You cannot change them.
+The installer sets `create_artifact_registry`, `artifact_registry_name` and
+`enable_tenant_provisioning` itself. You cannot change them.
 
 This page uses these variables:
 
@@ -334,7 +335,7 @@ Steps 3/4 and 4/4 each run three Kubernetes Jobs in the `langguard` namespace:
 | Job | Function |
 |---|---|
 | `db-migration` | Applies the LangGuard database schema with `/app/langguard ops db-migrate`, as the `lg_admin` database user. Terraform updates the `langguard-dashboard` Deployment only after this Job completes. |
-| `cloudsql-discovery-schema` | Creates the `discovery` schema and makes the application's IAM database user its owner. `langguard-discovery` applies its own schema there when it starts. Terraform starts the catalog only after this Job completes. |
+| `cloudsql-discovery-schema` | Creates the `discovery` schema and makes the application's IAM database user its owner. The catalog in `otel-ingest` applies its own schema there when it starts. Terraform updates the `otel-ingest` Deployment only after this Job completes and after the `langguard-dashboard` rollout completes. |
 | `cloudsql-app-grants` | Gives the application's IAM database user `SELECT`, `INSERT`, `UPDATE` and `DELETE` on the tables in the `public`, `catalog`, `opencite` and `drizzle` schemas. It runs after `db-migration`. |
 
 Each Job name ends with a timestamp. Terraform waits up to 5 minutes for each Job.
@@ -356,7 +357,8 @@ selects in the region. The cluster runs 3 to 9 nodes.
 | Production | `e2-standard-4` | 4 / 16 GB |
 
 Do not use nodes with less than 8 GB of memory. GKE reserves approximately 1 GB, and
-the catalog (`opencite`) can use up to approximately 2 GB.
+`presidio-analyzer` can use up to approximately 2 GB. The catalog runs in the
+`otel-ingest` pod, which requests 256 MiB of memory and has a limit of 1 GiB.
 
 To change the node counts, set `node_pool_config` in your `--tfvars` file. Give all of
 the fields. The object replaces the generated value, so `--node-machine` then has no
@@ -545,16 +547,20 @@ these models.
 ### Agent discovery
 
 By default, the Google Agent Platform integration in LangGuard uses a separate Google
-service account of this deployment. The `opencite` pod gets this service account through
-Workload Identity. The service account has only read roles: `roles/aiplatform.viewer`,
-`roles/cloudtrace.user`, `roles/logging.viewer` and `roles/compute.viewer`. You do not
-need a service account key.
+service account of this deployment, `lg-discovery-<environment>`. The catalog runs in the
+`otel-ingest` pod, which gets this service account through Workload Identity and the
+Kubernetes service account `opencite`. The service account has only read roles:
+`roles/aiplatform.viewer`, `roles/cloudtrace.user`, `roles/logging.viewer` and
+`roles/compute.viewer`. You do not need a service account key.
 
-With this setting, the `opencite` NetworkPolicy controls only inbound traffic.
+With this setting, `otel-ingest` has no egress NetworkPolicy. The catalog gets its token
+from the GKE metadata server, and on GKE Dataplane V2 an egress NetworkPolicy blocks that
+traffic. The `otel-ingest` pod also receives the OTLP traffic from the internet. A
+compromise of the pod gives the read-only roles of this service account.
 
-To turn it off, set `enable_gcp_discovery = false` in your `--tfvars` file. The `opencite`
-NetworkPolicy then also controls outbound traffic, and the integration needs a service
-account key.
+To turn it off, set `enable_gcp_discovery = false` in your `--tfvars` file. The
+NetworkPolicy `otel-ingest-egress` then controls the outbound traffic of `otel-ingest` and
+blocks the metadata server, and the integration needs a service account key.
 
 ## Feature flags
 
@@ -633,23 +639,93 @@ The Terraform state is in the state bucket, so the new bundle continues the same
 installation. The installer pushes the new images. Terraform runs the `db-migration` Job,
 then updates the Deployments.
 
-#### Upgrade from a bundle with OpenCITE
+#### Upgrade from a bundle with the `langguard-discovery` image {#upgrade-catalog}
 
-Bundles that contain the `opencite` image run the earlier catalog. This bundle runs
-`langguard-discovery`. The first apply with this bundle makes these changes:
+In this bundle, the catalog runs in the `otel-ingest` pod. The bundle has two images:
+`langguard-dashboard` and `otel-ingest`. The first apply with this bundle makes these
+changes:
 
-- The `opencite` Deployment runs the `langguard-discovery` image, in the new `discovery`
-  schema. When it first starts, its `migrate` init container copies the OpenCITE catalog
-  into that schema (`migrate-from-python --if-empty`). The `opencite` schema is not
-  changed. If the copy cannot start, or stops before it completes, the catalog pod does not
-  start. `kubectl -n langguard logs <pod> -c migrate` shows the reason.
+- Terraform deletes the Deployment `opencite`, the ConfigMap `opencite-config`, the
+  Secrets `opencite-secrets` and `opencite-webhook-secret`, and the NetworkPolicy
+  `opencite-policy`. The Service `opencite` stays, with port 8080. It now selects the
+  `otel-ingest` pod, on its port 8081.
+- `otel-ingest` runs under the Kubernetes service account `opencite`. Before, it ran
+  under `langguard-dashboard`. With `enable_gcp_discovery = true` (the default), it gets
+  the Google service account `lg-discovery-<environment>` and has no egress NetworkPolicy
+  (see [Agent discovery](#agent-discovery)).
+- The `otel-ingest` pod requests 256 MiB of memory and has a limit of 1 GiB. Before, the
+  requests were 128 MiB and the limit 512 MiB. The `opencite` pod (512 MiB requested,
+  2 GiB limit) is gone, so the total memory requests decrease.
+- Terraform generates the key of the catalog API in the new Secret `opencite-api-key`.
+  The dashboard sends the key, and `otel-ingest` accepts only requests with it. You do
+  not supply a value.
+- The new NetworkPolicy `otel-ingest-ingress` keeps the OTLP and health ports of
+  `otel-ingest` open, and accepts connections to port 8081 only from
+  `langguard-dashboard` and `otel-ingest`. It blocks all other ports of `otel-ingest`.
+  In a service mesh, this also applies to the ports of the mesh, for example TCP 15008
+  in Istio ambient mode (see
+  [NetworkPolicies](/private-install/google-cloud/service-mesh#networkpolicies)).
+- When the new `otel-ingest` pod starts, the catalog migrates the schema `discovery`. The
+  migration adds tables and copies the discovered assets into them. It deletes no table.
+- The catalog stores no integration credentials. The dashboard sends the configuration of
+  an integration with each discovery request.
+- The catalog connects to the Databricks host, the LiteLLM URL and the Azure AI Foundry
+  endpoints only over `https`, at public addresses, and without an HTTP proxy.
+- The Terraform variables `discovery_image_tag`, `opencite_image_tag` and
+  `opencite_webhook_secret` no longer exist. If your `--tfvars` file sets one of them,
+  Terraform shows a warning and ignores the value. Remove them from the file.
+
+The apply does the rollout in this order:
+
+1. Terraform deletes the Deployment `opencite` at the start of the apply.
+2. The `db-migration` Job runs. Then Terraform updates `langguard-dashboard` and waits
+   until its rollout completes.
+3. Terraform updates `otel-ingest`.
+
+From step 1 until the new `otel-ingest` pod is ready, the catalog is not available. The
+Discovery pages and the syncs of the integrations that the catalog reads can show
+`Discovery service is not available`. The old `otel-ingest` pod continues to receive and
+store traces and logs. It keeps the data for the catalog in a queue in `redis`, and the
+new pod gives the queued data to the catalog during its first 30 minutes. No trace and no
+log is lost.
+
+After the installer completes, delete the keys of this queue in `redis`. Connect to the
+cluster (see [Operational access](#operational-access)). This command shows the number of
+items that are left in the queue:
+
+```bash
+kubectl -n langguard exec deploy/redis -c redis -- sh -c \
+  'q=bull:langguard-opencite-forward; echo $(( $(redis-cli llen $q:wait) + $(redis-cli llen $q:paused) + $(redis-cli llen $q:active) + $(redis-cli zcard $q:delayed) + $(redis-cli zcard $q:failed) ))'
+```
+
+When it shows `0`, delete the keys. The command deletes nothing when no key is left:
+
+```bash
+kubectl -n langguard exec deploy/redis -c redis -- sh -c \
+  'redis-cli --scan --pattern "bull:langguard-opencite-forward:*" | xargs -r redis-cli unlink'
+```
+
+With `--registry`, load only the two images of this bundle (see
+[Loading the images](/private-install/google-cloud/existing-infrastructure#loading-the-images)).
+You can delete the `langguard-discovery` image from your registry when you do not need to
+roll back.
+
+#### Upgrade from a bundle with the `opencite` image
+
+Bundles that contain the `opencite` image run an earlier catalog. This bundle does not
+copy that catalog into the `discovery` schema. First upgrade with a bundle that contains
+the `langguard-discovery` image: that upgrade copies the catalog. Then upgrade with this
+bundle (see [Upgrade from a bundle with the langguard-discovery image](#upgrade-catalog)).
+
+The upgrade with the `langguard-discovery` bundle also makes these changes:
+
 - Terraform deletes the `ghcr-pull-secret` Secret and removes it from the pods. The
   affected pods restart once. The nodes continue to pull the images from your registry
   with their own identity.
 - The Terraform variables `use_ghcr_images`, `opencite_use_artifact_registry`,
   `ghcr_username`, `ghcr_token`, `enable_backup` and `log_retention_days` no longer exist. If your `--tfvars` file sets one of
   them, Terraform shows a warning and ignores the value. Remove them from the file.
-- `--opencite-image-tag` no longer exists. `--image-tag` sets the tag of all three LangGuard
+- `--opencite-image-tag` no longer exists. `--image-tag` sets the tag of all LangGuard
   images.
 - `cloudsql-proxy-admin` restarts with the new Google service account
   `lg-sqladmin-<environment>`. It becomes ready only once it can connect with that

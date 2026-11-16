@@ -73,13 +73,14 @@ The installer always creates these resources:
 
 - **In the cluster:**
   - The `langguard` namespace.
-  - Deployments and Services for `langguard-dashboard`, `otel-ingest`, `opencite` (the
-    `langguard-discovery` catalog), `opa`, `presidio-analyzer`, `redis`, `cloudsql-proxy`
-    and `cloudsql-proxy-admin`.
+  - Deployments and Services for `langguard-dashboard`, `otel-ingest` (the OTLP receiver
+    and the catalog), `opa`, `presidio-analyzer`, `redis`, `cloudsql-proxy` and
+    `cloudsql-proxy-admin`, and the Service `opencite` of the catalog API, which selects
+    the `otel-ingest` pod.
   - The Kubernetes service accounts `langguard-dashboard`, `cloudsql-admin`, `opencite`
     and `external-dns`. Workload Identity maps the first three to Google service accounts
     (`opencite` only with `enable_gcp_discovery = true`, the default).
-    `otel-ingest` and `cloudsql-proxy` run as `langguard-dashboard`.
+    `cloudsql-proxy` runs as `langguard-dashboard`. `otel-ingest` runs as `opencite`.
     `cloudsql-proxy-admin` runs as `cloudsql-admin`. `opa`, `presidio-analyzer` and
     `redis` run as the `default` service account of the namespace.
   - Two Roles, each with a RoleBinding: `managed-cert-manager` and
@@ -111,9 +112,9 @@ Google Cloud integration use:
 
 | Service account | Roles | Used by | To turn off |
 |---|---|---|---|
-| `lg-app-<env>` | `roles/cloudsql.client`, `roles/cloudsql.instanceUser`, `roles/aiplatform.user` | `langguard-dashboard`, `otel-ingest`, `cloudsql-proxy`: IAM database login and Vertex AI | Not possible |
+| `lg-app-<env>` | `roles/cloudsql.client`, `roles/cloudsql.instanceUser`, `roles/aiplatform.user` | `langguard-dashboard`, `cloudsql-proxy`: IAM database login and Vertex AI. `otel-ingest` connects to the database through `cloudsql-proxy`. | Not possible |
 | `lg-sqladmin-<env>` | `roles/cloudsql.client` | `cloudsql-proxy-admin`: the `lg_admin` connection for the Jobs | Not possible |
-| `lg-discovery-<env>` | `roles/aiplatform.viewer`, `roles/cloudtrace.user`, `roles/logging.viewer`, `roles/compute.viewer` | `opencite`: the Google Agent Platform integration | `enable_gcp_discovery = false` |
+| `lg-discovery-<env>` | `roles/aiplatform.viewer`, `roles/cloudtrace.user`, `roles/logging.viewer`, `roles/compute.viewer` | `otel-ingest` (the catalog), through the Kubernetes service account `opencite`: the Google Agent Platform integration | `enable_gcp_discovery = false` |
 | `lg-nodes-<env>` | `roles/container.defaultNodeServiceAccount`. Without `--registry`, also `roles/artifactregistry.reader` on the `langguard-dashboard` repository. | GKE nodes: logs, metrics and image pulls | Not possible |
 
 Set the variable in the last column in your `--tfvars` file. Only the node pool of a
@@ -129,8 +130,8 @@ cluster that the installer creates uses `lg-nodes-<env>`. The full definitions a
 - The cluster is regional, in `--region` and in `--project`. The installer also looks up
   the VPC, subnet, Cloud SQL instance and DNS zone in `--project`.
 - Capacity for the LangGuard pods. With `--environment prod` (the default), the pods
-  request approximately 2 vCPU and 4 GB of memory. The dashboard scales automatically from
-  3 to 9 pods, so the requests can increase to approximately 3 vCPU and 7 GB. Plan for at
+  request approximately 1.6 vCPU and 3.6 GB of memory. The dashboard scales automatically
+  from 3 to 9 pods, so the requests can increase to approximately 2.8 vCPU and 6.8 GB. Plan for at
   least 4 vCPU and 8 GB allocatable, in addition to your own workloads.
 - A network path from the installer host to the control plane. The installer does not
   change control-plane access.
@@ -283,7 +284,7 @@ Service Mesh and Linkerd, and the egress destinations to register.
 ## Using an existing registry
 
 `--registry` takes a path prefix without a tag. The installer adds the image name and the
-tag. The three images use one tag, the version in `images/manifest.env`. If that file is not
+tag. The two images use one tag, the version in `images/manifest.env`. If that file is not
 present, you must give `--image-tag`. Also give it if your registry uses another tag.
 
 ```bash
@@ -302,7 +303,6 @@ command uses these images:
 ```
 registry.example.com/langguard/langguard-dashboard:1.38.0
 registry.example.com/langguard/otel-ingest:1.38.0
-registry.example.com/langguard/langguard-discovery:1.38.0
 ```
 
 :::warning
@@ -325,7 +325,7 @@ from the bundle root, on a host that has credentials for the registry:
 
 ```bash
 . images/manifest.env
-for img in langguard-dashboard:$LANGGUARD_VERSION otel-ingest:$LANGGUARD_VERSION langguard-discovery:$LANGGUARD_VERSION; do
+for img in langguard-dashboard:$LANGGUARD_VERSION otel-ingest:$LANGGUARD_VERSION; do
   name=${img%%:*}
   gunzip -c images/$name.tar.gz > /tmp/$name.tar
   skopeo copy --all --preserve-digests \
@@ -471,6 +471,10 @@ To upgrade:
    `--image-tag`.
 3. From the `gcp/` directory of the new bundle, run `install.sh` with the same flags and
    the same `--tfvars` file. See [Upgrade](/private-install/google-cloud/installation#upgrade).
+   For the upgrade from a bundle with the `langguard-discovery` image, also see
+   [that upgrade](/private-install/google-cloud/installation#upgrade-catalog): the
+   catalog moves into `otel-ingest`, and you delete the keys of a queue in `redis`
+   after the upgrade.
 
 ## Uninstall
 

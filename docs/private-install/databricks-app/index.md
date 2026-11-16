@@ -48,15 +48,21 @@ processes inside the Databricks App container:
         │     • Web UI + API            • Policy enforcement (/v1/chat proxy)        │
         │     • OTLP exporter           • GUI-aware pollers                          │
         │                                                                           │
-        │   OPA sidecar                 OpenCITE sidecar                             │
+        │   OPA sidecar                 Discovery sidecar                            │
         │     • Rego policy eval          • Agent / tool / model / MCP discovery     │
         │                                                                           │
         └───────────┬───────────────────────────────┬───────────────────────────────┘
                     │                                │
        Lakebase PostgreSQL                   Unity Catalog (Delta)
        (metadata, policies,                  (OTEL spans/logs, trace
-        entities, config)                     views, annotations)
+        entities, config,                     views, annotations)
+        discovery catalog)
 ```
+
+The discovery sidecar keeps its catalog in the Lakebase database of the app, in the
+schema `discovery`: the discovered agents, tools, models and MCP servers, their
+lineage, and the read positions of the workspace. It creates and migrates this schema
+when it starts. The catalog stays when the app restarts.
 
 Unlike the LangGuard SaaS pipeline, the Databricks App has **no `otel-ingest`
 service and no inbound webhook chain**. Instead the app:

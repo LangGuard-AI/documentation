@@ -34,10 +34,10 @@ skopeo login <registry>
 ./push-images.sh <registry>/langguard
 ```
 
-`push-images.sh` pushes `langguard-dashboard`, `otel-ingest`, `langguard-discovery` and
-`langguard-ai-gateway` (the AI gateway) with all of their architectures. The chart uses
-the tag of this release by default. Set the same path (`<registry>/langguard`) in
-`global.imageRegistry` in step 4.
+`push-images.sh` pushes `langguard-dashboard`, `otel-ingest` and `langguard-ai-gateway`
+(the AI gateway) with all of their architectures. The chart uses the tag of this release
+by default. Set the same path (`<registry>/langguard`) in `global.imageRegistry` in step
+4.
 
 ## 3. Create the namespace and the database admin Secret {#namespace}
 
@@ -523,24 +523,24 @@ The dashboard installs the LLM guardrails in the gateway when it starts. It trie
 every 5 seconds for 5 minutes, then at most every 60 seconds, until the gateway answers.
 Until then, LLM traffic through the gateway is not governed.
 
-### Back up the encryption keys {#back-up-the-encryption-keys}
+### Back up the encryption key {#back-up-the-encryption-keys}
 
-The chart generates two encryption keys on the first install. `helm uninstall` does not
-delete their Secrets.
+The chart generates the encryption key on the first install. `helm uninstall` does not
+delete its Secret.
 
 | Secret / key | Use |
 |---|---|
-| `encryption-key` / `ENCRYPTION_KEY` | Encrypts the integration credentials in the database. |
-| `opencite-config-key` / `OPENCITE_CONFIG_KEY` | Encrypts the plugin credentials that the catalog stores in the table `discovery.plugin_configs`, for example the client secret of an Azure AI Foundry integration. |
+| `encryption-key` / `ENCRYPTION_KEY` | Encrypts the integration credentials in the database, for example the client secret of an Azure AI Foundry integration. |
 
-If a key is lost or changes, LangGuard cannot decrypt the credentials. The catalog does
-not fail: it starts, and the credentials do not decrypt. Keep a copy of the two keys
-together in your key vault:
+If the key is lost or changes, LangGuard cannot decrypt the credentials. Keep a copy of
+the key in your key vault:
 
 ```bash
 kubectl get secret encryption-key -n langguard -o jsonpath='{.data.ENCRYPTION_KEY}' | base64 -d
-kubectl get secret opencite-config-key -n langguard -o jsonpath='{.data.OPENCITE_CONFIG_KEY}' | base64 -d
 ```
+
+The catalog stores no integration credentials, so it has no encryption key. The dashboard
+sends the configuration of an integration with each discovery request.
 
 ### Back up the AI gateway keys {#back-up-the-ai-gateway-keys}
 
@@ -624,21 +624,113 @@ To change a setting, edit `values.yaml` and run the same command.
 - With `secrets.existingSecret` (GitOps), also set `aiGateway.existingSecret`, or set
   `aiGateway.enabled: false`. Without one of them, a render without a cluster (for example
   Argo CD) fails while the gateway is on.
-- With `secrets.existingSecret`, add the key `OPENCITE_CONFIG_KEY` to that Secret before
-  an upgrade from a chart version without it. Without the key, the `opencite` pod does
-  not start (`CreateContainerConfigError`). The value is a Fernet key: 32 random bytes in
-  URL-safe base64, 44 characters, for example
-  `openssl rand -base64 32 | tr '+/' '-_'`. See "Secrets" in the chart README.
-- An upgrade from a chart version without `OPENCITE_CONFIG_KEY` generates the key. When
-  the catalog starts, it encrypts the plugin credentials that it stored in plaintext.
+- With `secrets.existingSecret`, that Secret must have the key `OPENCITE_API_KEY`.
+  Without the key, the `langguard-dashboard` and `otel-ingest` pods do not start
+  (`CreateContainerConfigError`). See
+  [Upgrade from a chart version with the opencite Deployment](#upgrade-catalog).
 - The pods restart only when a value that they use changes.
 - A change in a Secret that you manage does not restart the pods. Restart the
   Deployments that read it, for example
-  `kubectl rollout restart deployment/langguard-dashboard deployment/otel-ingest deployment/opencite -n langguard`,
+  `kubectl rollout restart deployment/langguard-dashboard deployment/otel-ingest -n langguard`,
   and `deployment/litellm` with the AI gateway. Do not restart `redis`: it loses its
   queued work and job schedules.
 - `helm rollback` does not revert the database schema or the LiteLLM migrations. Roll
   back only to a release that works with the current schema.
+
+### Upgrade from a chart version with the `opencite` Deployment {#upgrade-catalog}
+
+In this chart version, the catalog runs in the `otel-ingest` pods. The upgrade makes
+these changes:
+
+- Helm deletes the Deployment `opencite` and its pod. The Service `opencite` stays, with
+  port 8080. It now selects the `otel-ingest` pods, on their port 8081. The dashboard
+  continues to use `http://opencite:8080`.
+- `otel-ingest` runs under the ServiceAccount `opencite`. Helm deletes the
+  ServiceAccount `otel-ingest`. A federated credential with the subject
+  `system:serviceaccount:langguard:opencite` does not change.
+- Each `otel-ingest` pod requests 256 MiB of memory and has a limit of 1 GiB. Before, the
+  requests were 128 MiB and the limit 512 MiB. The `opencite` pod (512 MiB requested,
+  2 GiB limit) is gone, so the total memory requests of the release decrease.
+- The new Secret `opencite-api-key` holds the key of the catalog API. The chart generates
+  it. The dashboard sends the key, and `otel-ingest` accepts only requests with it.
+- The catalog stores no integration credentials. Helm deletes the Secret
+  `opencite-webhook-secret`. The Secret `opencite-config-key` stays, because it has the
+  policy `helm.sh/resource-policy: keep`, but no pod reads it.
+- The NetworkPolicy `opencite-ingress` now selects the `otel-ingest` pods. Port 8081
+  accepts connections only from `langguard-dashboard` and `otel-ingest`. Helm deletes the
+  NetworkPolicy `opencite-egress`: the egress rules of `otel-ingest` apply to the catalog.
+- When the new `otel-ingest` pods start, the catalog migrates the schema `discovery`. The
+  migration adds tables and copies the discovered assets into them. It deletes no table.
+- The catalog connects to the Databricks host, the LiteLLM URL and the Azure AI Foundry
+  endpoints only over `https`, at public addresses, and without an HTTP proxy (see
+  [Outbound access from the cluster](/private-install/helm/requirements#outbound-access-from-the-cluster)).
+- The bundle has no `langguard-discovery` image. You can delete it from your registry
+  when you do not need to roll back.
+
+Before the upgrade:
+
+1. Remove the `catalog` block from your values file. The chart refuses it. Move
+   `catalog.serviceAccount.annotations` to `otelIngest.serviceAccount.annotations`. The
+   `otelIngest` values, for example `otelIngest.resources` and `otelIngest.nodeSelector`,
+   now also apply to the catalog.
+2. With `secrets.existingSecret`, add the key `OPENCITE_API_KEY` to that Secret. The
+   value must not contain a comma:
+
+   ```bash
+   kubectl patch secret <your Secret> -n langguard --type merge \
+     -p "{\"stringData\":{\"OPENCITE_API_KEY\":\"$(openssl rand -hex 32)\"}}"
+   ```
+
+   If a tool manages the Secret, add the key in that tool. The keys
+   `OPENCITE_WEBHOOK_SECRET` and `OPENCITE_CONFIG_KEY` are no longer read. Keep them
+   until you do not need to roll back: the chart version before reads them.
+3. Make sure that the nodes have the memory for the new limits of `otel-ingest` (see
+   [Capacity](/private-install/helm/requirements#capacity)).
+
+Upgrade in this order: the new dashboard first, then the new `otel-ingest`. The new
+dashboard can process the work of the old `otel-ingest` pods, but the old dashboard
+cannot process all of the work of the new `otel-ingest` pods. `helm upgrade` changes all
+Deployments at the same time, so pause the rollout of `otel-ingest` first. Do not use
+`--wait` for this upgrade: a paused Deployment does not complete its rollout.
+
+```bash
+./push-images.sh <registry>/langguard
+kubectl rollout pause deployment/otel-ingest -n langguard
+helm upgrade --install langguard ./charts/langguard -n langguard \
+  -f values.yaml --timeout 15m
+kubectl rollout status deployment/langguard-dashboard -n langguard --timeout 10m
+kubectl rollout resume deployment/otel-ingest -n langguard
+kubectl rollout status deployment/otel-ingest -n langguard --timeout 10m
+```
+
+From the start of the upgrade until the first new `otel-ingest` pod is ready, the catalog
+is not available. During this time, the Discovery pages and the syncs of the Databricks,
+Azure AI Foundry, Google Agent Platform, AWS Bedrock and LiteLLM integrations can show
+`Discovery service is not available`. The old `otel-ingest` pods continue to receive and
+store traces and logs. They keep the data for the catalog in a queue in `redis`, and the
+new pods give the queued data to the catalog during their first 30 minutes. No trace and
+no log is lost.
+
+After the rollout, delete the keys of this queue in `redis`. This command shows the
+number of items that are left in the queue:
+
+```bash
+kubectl -n langguard exec deploy/redis -c redis -- sh -c \
+  'q=bull:langguard-opencite-forward; echo $(( $(redis-cli llen $q:wait) + $(redis-cli llen $q:paused) + $(redis-cli llen $q:active) + $(redis-cli zcard $q:delayed) + $(redis-cli zcard $q:failed) ))'
+```
+
+When it shows `0`, delete the keys. The command deletes nothing when no key is left:
+
+```bash
+kubectl -n langguard exec deploy/redis -c redis -- sh -c \
+  'redis-cli --scan --pattern "bull:langguard-opencite-forward:*" | xargs -r redis-cli unlink'
+```
+
+To roll back, run `helm rollback langguard <revision> -n langguard` with the revision
+before the upgrade (`helm history langguard -n langguard`). The migration of this
+version only adds tables, so the catalog of the version before starts again. It shows
+the assets that it had at the upgrade. With `secrets.existingSecret`, the Secret must
+then have the keys `OPENCITE_WEBHOOK_SECRET` and `OPENCITE_CONFIG_KEY`.
 
 ## Uninstall {#uninstall}
 
@@ -647,11 +739,12 @@ helm uninstall langguard -n langguard
 ```
 
 These objects stay in the namespace, so that a new install keeps the same database
-credentials and encryption keys: the Secrets `encryption-key`, `opencite-config-key`,
-`database-credentials`, `discovery-database-credentials` and `database-jobs`, the TLS Secret `langguard-tls` from
-cert-manager, and the ConfigMap `database-sql`. The Secret `database-admin-credentials`
-stays only when you gave the admin password inline (`database.admin.password`). The
-Secrets that you created (for example `langguard-db-admin`) also stay. The chart deletes
+credentials and encryption key: the Secrets `encryption-key`, `database-credentials`,
+`discovery-database-credentials` and `database-jobs`, the TLS Secret `langguard-tls` from
+cert-manager, and the ConfigMap `database-sql`. On an install that you upgraded from a
+chart version with the `opencite` Deployment, the Secret `opencite-config-key` also
+stays. No pod reads it. The Secret `database-admin-credentials` stays only when you gave
+the admin password inline (`database.admin.password`). The Secrets that you created (for example `langguard-db-admin`) also stay. The chart deletes
 its other generated Secrets, for example `userpass-credentials`: a new install generates
 a new admin password. The database Jobs stay until their TTL ends (3600 seconds).
 
@@ -662,8 +755,8 @@ CiliumNetworkPolicy `litellm-migration-node-dns`. The Job `ai-gateway-migration`
 until its TTL ends. A new install with the same release name and namespace uses the kept
 gateway keys, so it can decrypt the stored provider keys and MCP credentials.
 
-To remove all of them, delete the namespace. Back up the encryption keys first (see
-[Back up the encryption keys](#back-up-the-encryption-keys)), and with the AI gateway also
+To remove all of them, delete the namespace. Back up the encryption key first (see
+[Back up the encryption key](#back-up-the-encryption-keys)), and with the AI gateway also
 `ai-gateway-credentials` (see [Back up the AI gateway keys](#back-up-the-ai-gateway-keys)):
 
 ```bash
@@ -682,10 +775,16 @@ delete the database, its roles, the discovery schema or the AI gateway schema `l
   support bundle: it reads pods, logs and events in the namespace. The other workloads
   have no token.
 - NetworkPolicies restrict which pods can connect to each workload, and where
-  `langguard-dashboard`, `otel-ingest`, the catalog and the AI gateway can connect (see
-  [Outbound access from the cluster](/private-install/helm/requirements#outbound-access-from-the-cluster)).
-  OPA and Presidio accept connections only from `langguard-dashboard`. The catalog accepts
-  them only from `langguard-dashboard` and `otel-ingest`.
+  `langguard-dashboard`, `otel-ingest` (with the catalog) and the AI gateway can connect
+  (see [Outbound access from the cluster](/private-install/helm/requirements#outbound-access-from-the-cluster)).
+  OPA and Presidio accept connections only from `langguard-dashboard`. The catalog API
+  (port 8081 of the `otel-ingest` pods) accepts them only from `langguard-dashboard` and
+  `otel-ingest`, and only with the key in the Secret `opencite-api-key`.
+- The `otel-ingest` pods receive the OTLP traffic from outside the cluster, and the
+  catalog runs in them. With the
+  [discovery identity](/private-install/azure/requirements#discovery-identity) on AKS,
+  these pods hold that identity. Give it only the read roles that the Azure AI Foundry
+  integration needs.
 - The AI gateway has no route from outside the cluster, and only `langguard-dashboard` can
   connect to it. A caller can set the upstream URL of a request, so OPA, Presidio and the
   catalog do not accept connections from the gateway. The gateway pods run as UID 65532
@@ -700,18 +799,11 @@ delete the database, its roles, the discovery schema or the AI gateway schema `l
 - The generated secrets are Kubernetes Secrets in the namespace. Restrict access to the
   namespace. Turn on encryption of Secrets at rest with your own key if your policy
   requires it.
-- The catalog encrypts the credentials of its plugins in the table
-  `discovery.plugin_configs` (for example the client secret of an Azure AI Foundry
-  integration) with `OPENCITE_CONFIG_KEY`. The dashboard encrypts its own copy of the
-  integration credentials with `ENCRYPTION_KEY`. With the
-  [discovery identity](/private-install/azure/requirements#discovery-identity) on AKS, the
-  catalog stores no secret for Azure AI Foundry.
-- An empty or invalid `OPENCITE_CONFIG_KEY` does not stop the catalog: it logs a line with
-  `OPENCITE_CONFIG_KEY` and stores the plugin credentials in plaintext. With
-  `secrets.existingSecret`, `helm install` and `helm upgrade` fail on such a key, but a
-  render without a cluster (for example Argo CD) cannot check it. After the install or
-  upgrade, make sure that
-  `kubectl logs deployment/opencite -n langguard | grep OPENCITE_CONFIG_KEY` shows no line.
+- The dashboard encrypts the integration credentials (for example the client secret of
+  an Azure AI Foundry integration) with `ENCRYPTION_KEY`. It sends the configuration to
+  the catalog with each discovery request. The catalog does not store it. With the
+  [discovery identity](/private-install/azure/requirements#discovery-identity) on AKS,
+  LangGuard stores no secret for Azure AI Foundry.
 - The Helm release contains the values that you give inline. Give passwords and keys as
   Secrets (the `existingSecret` values), not inline.
 
@@ -730,6 +822,9 @@ delete the database, its roles, the discovery schema or the AI gateway schema `l
 | The settings have no AI Gateway page | The AI gateway is off (`aiGateway.enabled: false`). Set it to `true` and run the [upgrade](#upgrade). |
 | Long LLM streams stop | With the Gateway API, check `httpRoute.timeouts.aiGateway`. With an Ingress controller, set a longer read timeout for `/aigateway/` (see [AI gateway behind an Ingress](#ai-gateway-ingress)). |
 | Pods of the dashboard or of `otel-ingest` stay in `Init:0/1` | The init container waits for `redis`. Check `kubectl get pods -n langguard -l app=redis`. |
+| Pods of the dashboard or of `otel-ingest` show `CreateContainerConfigError` after an upgrade | With `secrets.existingSecret`, that Secret must have the key `OPENCITE_API_KEY`. See [Upgrade from a chart version with the opencite Deployment](#upgrade-catalog). |
+| The Discovery pages or the sync of an integration show `Discovery service is not available` | The catalog runs in the `otel-ingest` pods. `kubectl get endpoints opencite -n langguard` must show the addresses of the `otel-ingest` pods with port 8081. `kubectl logs -n langguard -l app=otel-ingest --tail=-1 \| grep "catalog:"` shows the state of the catalog database. The catalog API answers only after the line `catalog: database open and migrated`. A fault of the catalog database does not stop the OTLP ingest. |
+| Test Connection of an integration fails with `host is not allowed` | The catalog connects only to `https` URLs at public addresses. See [Outbound access from the cluster](/private-install/helm/requirements#outbound-access-from-the-cluster). |
 | The Gateway has no address | `kubectl describe gateway langguard -n langguard`. `PROGRAMMED` must be `True`. Check the controller of your GatewayClass. |
 | A route is not accepted | `kubectl describe httproute langguard langguard-http-redirect -n langguard`. `Accepted` and `ResolvedRefs` must be `True` for each parent. If your implementation rejects the server-sent events rule or the timeouts, see [Gateway API](#gateway-api). |
 | Requests through a Gateway or an Ingress controller in another namespace fail | Add the namespace of its proxy or controller pods to `networkPolicy.extraIngressFrom`. |
