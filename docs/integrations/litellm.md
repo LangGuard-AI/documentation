@@ -48,6 +48,29 @@ From your LiteLLM deployment:
 5. Click **Test Connection**
 6. Click **Save**
 
+## Proxy URL requirements
+
+LangGuard connects to your proxy from its own network. The requirements depend on where LangGuard runs.
+
+| Where LangGuard runs | Proxy URL requirements |
+|---|---|
+| LangGuard cloud | The URL must use `https://`. The host name must resolve to public addresses only. The URL must not contain a user name or a password. |
+| Private install | The proxy can be on your private network. `http://` and private addresses are accepted. |
+
+On LangGuard cloud, these URLs are refused:
+
+- `http://localhost:4000` and other `http://` addresses
+- A private address, for example `https://10.0.0.5`
+- A host name that resolves to a private address
+- A host name that does not resolve
+
+If the URL is refused, the connection test and each sync fail with the message "LiteLLM base URL must be an https address of a public host."
+
+To connect a proxy that is not reachable from the internet, use one of these options:
+
+- Publish the proxy at a public `https://` address and limit access with the master key and your network controls.
+- Use a [private install](/private-install/helm) of LangGuard on the same network as the proxy.
+
 ## What Gets Captured
 
 ### Model Requests
@@ -104,6 +127,10 @@ into your proxy to wire up the guardrail manually.
 2. Check that your API key has the correct permissions
 3. Ensure your LiteLLM proxy is logging requests (check LiteLLM settings)
 4. Try triggering a manual sync
+
+### "LiteLLM base URL must be an https address of a public host"
+
+On LangGuard cloud, the proxy URL must use `https://` and resolve to public addresses. See [Proxy URL requirements](#proxy-url-requirements).
 
 ### Connection Timeout
 
