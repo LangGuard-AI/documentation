@@ -134,58 +134,56 @@ const config: Config = {
         },
       ],
     },
+    // Rendered by src/theme/Footer, which mirrors the langguard.ai footer.
     footer: {
-      style: 'light',
       links: [
-        {
-          title: 'Documentation',
-          items: [
-            {
-              label: 'Getting Started',
-              to: '/getting-started',
-            },
-            {
-              label: 'Features',
-              to: '/features',
-            },
-            {
-              label: 'Integrations',
-              to: '/integrations',
-            },
-          ],
-        },
         {
           title: 'Product',
           items: [
-            {
-              label: 'Pricing',
-              href: 'mailto:info@langguard.ai',
-            },
-            {
-              label: 'Support',
-              href: 'mailto:info@langguard.ai',
-            },
+            {label: 'Home', href: 'https://langguard.ai/'},
+            {label: 'Features', href: 'https://langguard.ai/platform/#solutions'},
+            {label: 'Platform', href: 'https://langguard.ai/platform/'},
+            {label: 'AI Action Security Assessment', href: 'https://langguard.ai/ai-security-assessment/'},
+            {label: 'Alternatives', href: 'https://langguard.ai/alternatives/'},
+          ],
+        },
+        {
+          title: 'Solutions',
+          items: [
+            {label: 'MCP Context Authorization', href: 'https://langguard.ai/solutions/mcp-context-authorization/'},
+            {label: 'AWS', href: 'https://langguard.ai/solutions/aws/'},
+            {label: 'Databricks', href: 'https://langguard.ai/solutions/databricks/'},
+            {label: 'Claude Code', href: 'https://langguard.ai/solutions/claude-code/'},
+            {label: 'Forward-Deployed Engineering', href: 'https://langguard.ai/solutions/forward-deployed-engineering/'},
+          ],
+        },
+        {
+          title: 'Assets',
+          items: [
+            {label: 'Solution Brief', href: 'https://langguard.ai/assets/LangGuard%20Company%201_pager%202026.pdf'},
+            {label: 'Whitepaper', href: 'https://langguard.ai/whitepaper/'},
           ],
         },
         {
           title: 'Company',
           items: [
-            {
-              label: 'About',
-              href: 'https://langguard.ai',
-            },
-            {
-              label: 'Blog',
-              href: 'https://langguard.ai/blog',
-            },
-            {
-              label: 'Contact',
-              href: 'https://langguard.ai',
-            },
+            {label: 'About', href: 'https://langguard.ai/about/'},
+            {label: 'News & Press', href: 'https://langguard.ai/news/'},
+            {label: 'Events', href: 'https://langguard.ai/events/'},
+            {label: 'Blog', href: 'https://langguard.ai/blog/'},
+          ],
+        },
+        {
+          title: 'Legal',
+          items: [
+            {label: 'Privacy', href: 'https://langguard.ai/privacy/'},
+            {label: 'Terms', href: 'https://langguard.ai/tos/'},
+            {label: 'SLA', href: 'https://langguard.ai/sla/'},
+            {label: 'Responsible Disclosure', href: 'https://langguard.ai/security-policy/'},
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} LangGuard Inc. Built with Docusaurus.`,
+      copyright: `© ${new Date().getFullYear()} LangGuard Inc. All rights reserved.`,
     },
     prism: {
       theme: prismTheme,

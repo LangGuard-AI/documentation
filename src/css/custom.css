@@ -140,13 +140,6 @@
   --ifm-pagination-nav-border-radius: var(--lg-radius-xl);
   --ifm-pagination-nav-color-hover: var(--lg-border);
 
-  --ifm-footer-background-color: var(--lg-sidebar);
-  --ifm-footer-color: var(--lg-muted-foreground);
-  --ifm-footer-link-color: var(--lg-muted-foreground);
-  --ifm-footer-link-hover-color: var(--lg-sidebar-foreground);
-  --ifm-footer-title-color: var(--lg-sidebar-foreground);
-  --ifm-footer-padding-vertical: 2rem;
-
   --ifm-button-border-radius: var(--lg-radius-md);
   --ifm-button-font-weight: 500;
 
@@ -913,50 +906,6 @@ html [class*='hitWrapper'] mark {
   --ifm-button-background-color: var(--lg-card);
   --ifm-button-hover-background-color: var(--lg-card);
   --ifm-button-color: var(--lg-foreground);
-}
-
-/* The footer continues the zone, aligned to the content column above it. */
-.footer {
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  border-top: 1px solid var(--lg-border);
-}
-
-.footer__title {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-
-.footer__item {
-  margin-top: 0.25rem;
-}
-
-.footer__bottom {
-  margin-top: 1rem;
-}
-
-.footer__copyright {
-  color: var(--lg-muted-foreground);
-}
-
-@media (min-width: 997px) {
-  .footer {
-    padding-inline: calc(var(--doc-sidebar-width) + 1px) 0;
-  }
-
-  .footer .container {
-    max-width: calc(var(--lg-measure) + 23rem);
-  }
-
-  .footer__links {
-    max-width: calc(var(--lg-measure) + 2rem);
-    margin-bottom: 0;
-  }
-
-  .footer__bottom {
-    text-align: left;
-  }
 }
 
 /* The front door composes like an app page: title, actions, then surfaces. */
