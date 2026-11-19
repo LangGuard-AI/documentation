@@ -117,6 +117,7 @@ LangGuard includes pre-configured policies across all categories:
 - [Built-in Policies](/policies/built-in-policies) - Details on all pre-configured policies
 - [AI Policy Authoring](/policies/ai-authoring) - Generate policies from plain-language intent
 - [Creating Policies](/policies/creating-policies) - Write custom policies with Rego
+- [Data Sources](/settings/data-sources) - Let a policy read a list or a JSON document from one of your systems
 - [Budgets & Cost Control](/policies/budgets) - Track cost and enforce spend budgets
 - [Policy Violations](/policies/policy-violations) - Understanding and managing violations
 

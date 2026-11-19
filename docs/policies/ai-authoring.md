@@ -70,6 +70,16 @@ The wizard is **iterative** — you can pause at any stage and resume later, and
 back to have the agent tighten coverage or fix red-team findings before you commit.
 Nothing is saved as an active policy until you finish the Review & Save step.
 
+## Questions and data sources
+
+Before the agent writes a policy, it can ask you questions: at most 5, all at one time. You answer them in the panel **Before LangGuard writes the policy**, check your answers, then select **Write the policy**.
+
+When a policy needs data that changes outside LangGuard, for example a list of blocked hosts, the agent asks for a [data source](/settings/data-sources). You select one that exists or add a new one in the card. You type the address and the key in the card. They never go to the agent.
+
+Do not put a password or an API key in a request, an answer or a chat message. LangGuard checks the text before it sends it and does not send a message that holds a key.
+
+For the details, read [Policy AI](/settings/data-sources#policy-ai) on the Data Sources page.
+
 ## When to use hand-written Rego instead
 
 AI authoring is the fastest path for most policies. When you need full control over

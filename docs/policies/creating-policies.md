@@ -402,6 +402,28 @@ inspects: `helpers.is_model_input` for what is sent to a model, `helpers.is_mode
 for what a model produced. The guard sets the moment the rule runs. It does not set which
 text is scanned. Set that with `field_matches("input", ...)` or `field_matches("output", ...)`.
 
+## Data Sources
+
+A policy can read a list or a JSON document that LangGuard gets from one of your systems on a schedule, for example a threat blocklist. An administrator adds the data source in **Settings > Data Sources**. The policy imports it by its name:
+
+```rego
+package custom.block_threat_hosts
+
+import rego.v1
+import data.langguard.helpers
+import data.langguard.feeds.threat_blocklist
+
+violation contains v if {
+    helpers.is_tool_call_input
+    some host in helpers.feed_matching_hosts(threat_blocklist, helpers.tool_call_hosts)
+    v := {"message": sprintf("Tool call contacts %s. This host is on the threat blocklist.", [host])}
+}
+```
+
+In the policy editor, the **Data sources** button lists the data sources. **Insert** adds the import line and a starter rule. A policy that reads a data source also has the field **If the data source is not available**.
+
+A policy cannot send its own requests: `http.send` is not available. For the helpers, the JSON document shape, the limits and the statuses, read [Data Sources](/settings/data-sources#use-a-data-source-in-a-policy).
+
 ## Creating a Policy
 
 ### Via UI
