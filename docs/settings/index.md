@@ -89,6 +89,11 @@ Set what happens to traces as they get older: compress, archive to your object s
 
 ---
 
+### [Data Sources](/settings/data-sources)
+Let a policy read a list or a JSON document that LangGuard gets from one of your systems on a schedule, for example a threat blocklist.
+
+---
+
 ### [Enforcement Mode](/settings/enforcement-mode)
 Switch the MCP gateway between Shadow mode, which does not block for a policy verdict and records what Enforce mode would do, and Enforce mode, which blocks your MCP tool calls.
 

@@ -42,6 +42,9 @@ Webhooks deliver HTTP POST requests to your configured endpoints whenever specif
 | `entity.tag.changed` | A tag was added to or removed from an entity |
 | `entity.approval.changed` | An entity's approval status changed (approved, under review, blocked) |
 | `entity.discovered` | A new AI asset was discovered |
+| `data_source.sync_failing` | A [data source](/settings/data-sources#alerts) cannot update, or its first sync failed |
+| `data_source.too_old` | The list of a data source became too old for policies to use |
+| `data_source.recovered` | A data source is up to date again after one of the two events above |
 | `agent.quarantine` | An agent was quarantined, its quarantine changed, or it was released (also by expiry). See [Agent quarantine events](#agent-quarantine-events). |
 
 ## Webhook Payload
