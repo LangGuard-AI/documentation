@@ -18,7 +18,7 @@ Only an **admin** can add, change, test, sync or remove a data source. Other use
 
 ## What a data source is
 
-LangGuard sends one HTTPS request that you configure: the address, the method, an optional body, extra headers and the authentication. It reads the answer in one of three formats (lines, CSV or JSON). It cannot read XML. It keeps one of two shapes:
+LangGuard sends one HTTPS request that you configure: the address, the method, an optional body, extra headers and the authentication. It reads the answer in one of four formats (lines, CSV, JSON or XML). It keeps one of two shapes:
 
 - **A list of values.** For example host names, IP ranges, email addresses or URLs. Each value can keep some fields of its item, for example a label.
 - **A JSON document (not a list).** LangGuard keeps the JSON answer as it is, for example a map of team to allowed models.
@@ -59,7 +59,7 @@ Data sources are in **Settings > Data Sources**. If you do not see this item, da
 | **Address** | An HTTPS address on the internet. LangGuard sends one request for each sync. |
 | **Method** | `GET` or `POST`. |
 | **Body** | POST only. At most 16 KB. |
-| **Sent as** | **JSON** or **Form**, for a body. |
+| **Sent as** | **JSON**, **Form** or **XML**, for a body. |
 | **Extra headers** | At most 10 headers. Do not put a key here. LangGuard refuses the header names `Authorization`, `Cookie`, `Proxy-Authorization`, `Host`, `Content-Length` and `Transfer-Encoding`. |
 
 LangGuard shows the address, the extra headers and the body to each user who can read the data source. LangGuard checks them for a key or a password before it saves, and it has two results:
@@ -82,16 +82,40 @@ For how LangGuard keeps the key, read [The key](#the-key).
 
 | Field | What to enter |
 |---|---|
-| **Format** | **Lines**: one value on each line. A line that starts with `#` is skipped. **CSV**: one value in each row. **JSON**: a list of items in the answer. |
+| **Format** | **Lines**: one value on each line. A line that starts with `#` is skipped. **CSV**: one value in each row. **JSON**: a list of items in the answer. **XML**: each element with one name is an item. |
 | **What the data is** | **A list of values**, or **A JSON document (not a list)**. A document needs the JSON format. |
 | **Path to the items** | JSON only. A JSON Pointer to the list in the answer, for example `/items`. Leave it empty when the answer is the list. |
-| **Value field** | JSON only. The field of each item that holds the value. Leave it empty when each item is the value. |
+| **Value field** | JSON: the field of each item that holds the value. Leave it empty when each item is the value. XML: an element in the item, or an attribute of the item as `@name`. Leave it empty when the text of the item is the value. |
+| **Item element** | XML only. The name of the element that is one item, for example `Indicator`. LangGuard finds the element at each depth. A name with no prefix matches each prefix; a name with a prefix, such as `stix:Indicator`, matches only as written. |
 | **Value column** | CSV only. A column name from the header row, or a column number (1 is the first). |
 | **The first row is a header** | CSV only. A column name and kept fields need a header row. |
-| **Also keep fields** | At most 5 field names. A policy can show them, for example a label. Each kept value is cut to 256 characters. Kept fields need a value field (JSON) or a header row (CSV). |
+| **Also keep fields** | At most 5 field names. A policy can show them, for example a label. Each kept value is cut to 256 characters. Kept fields need a value field (JSON) or a header row (CSV). For XML, a kept field is an element in the item or an attribute as `@name`. |
 | **Ignore upper and lower case** | List only. On by default. Keep it on for host names and email addresses: then `Example.COM` matches `example.com`. Host matching in policies needs it on. |
 
 A list must be complete. If an item has no value field, the sync fails and shows how many items have no value. LangGuard does not skip the item, because a list with silent gaps lets traffic through.
+
+### XML and STIX 1
+
+STIX 1 packages and TAXII 1 answers are XML. Name the element that holds the value. Examples for a STIX 1 package:
+
+| To get | Item element | Value field |
+|---|---|---|
+| Each IP address | `AddressObj:Address_Value` | (empty) |
+| Each domain name | `DomainNameObj:Value` | (empty) |
+| Each URL | `URIObj:Value` | (empty) |
+| The title of each indicator, with its id as a kept field | `Indicator` | `Title`, and **Also keep fields** `@id` |
+
+For a TAXII 1 poll, select the method `POST`, put the poll request in **Body**, select **Sent as** **XML**, and add the `X-TAXII-*` headers that your server needs in **Extra headers**.
+
+Limits of the XML format:
+
+- The settings are element and attribute names. A path or an XPath expression is not accepted.
+- The value is the first element with the name of the value field in the item. An item inside an item with the same name is a part of the outer item.
+- LangGuard refuses an answer with a `DOCTYPE`. It reads only the five standard XML entities and character references.
+- The answer must be UTF-8.
+- A STIX value that holds a list (`a##comma##b`) is one value. LangGuard does not split it.
+- STIX 2 is JSON. Use the JSON format for it.
+- A document (not a list) needs the JSON format.
 
 ### Schedule
 
@@ -270,7 +294,9 @@ In a private install, your LangGuard operator can change some of these values. A
 | The server did not answer in time. | Try again later. |
 | The server answered with an error (HTTP status). | Make sure that the address and the request are correct, or try again later. |
 | The connection to the server failed, or the server sent a redirect. | Make sure that the address is correct and does not redirect. |
-| The server answered, but the answer is not JSON. | Make sure that the address is correct, or select **Lines** or **CSV**. |
+| The server answered, but the answer is not JSON. | Make sure that the address is correct, or select a different format. |
+| The server answered, but the answer is not XML that LangGuard can read. | Make sure that the address is correct and that the answer has no `DOCTYPE`. |
+| The answer has no element with this name. | Correct **Item element**. |
 | The path finds no list in the answer. The answer is not a list. | Correct **Path to the items**, for example `/items`. |
 | The field is missing in N of M items. | Correct **Value field**. |
 | The answer has no column. | Correct **Value column**. |
