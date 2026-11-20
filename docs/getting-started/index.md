@@ -23,6 +23,7 @@ Before you begin, make sure you have:
 
 - **Email access** - To verify your account
 - **Integration credentials** - API keys or tokens for your AI platforms (Databricks, AWS Bedrock, etc.)
+- **Identity provider access** (optional) - Admin access to Microsoft Entra ID, Google Workspace, or a SAML 2.0 identity provider such as PingOne, if you want your team to sign in with single sign-on
 
 That's it! LangGuard is a hosted platform - no installation required.
 
@@ -30,6 +31,13 @@ That's it! LangGuard is a hosted platform - no installation required.
 LangGuard can also be deployed as a [Databricks App](/private-install/databricks-app) for full data
 residency — installed into your workspace and storing data in your Unity Catalog.
 The steps below cover the hosted SaaS.
+:::
+
+:::tip Want your team to sign in with SSO?
+Set up [single sign-on](/settings/sso) before you invite your team. A LangGuard admin connects
+Microsoft Entra ID, Google Workspace, or a SAML 2.0 identity provider in **Settings > Single Sign-On**.
+Users then sign in with their identity provider, and LangGuard creates their accounts at the first
+sign-in. SSO is not available in a Databricks App deployment, which uses Databricks sign-in.
 :::
 
 Once you're signed in, **guided tours** walk you through each area of the product —
