@@ -287,6 +287,124 @@ Other Gateway implementations do not read `gateway.serviceOptions`, and the char
 use it for a Gateway that you operate (`gateway.create: false`). Then set the Service
 options in the configuration of your Gateway or your implementation.
 
+### AI features {#ai-features}
+
+Ask LangGuard, policy authoring and custom checks call a model. The chart configures no
+model by default (`ai.provider: none`), and these features then fail. The AI gateway does
+not supply this model. To turn on the AI features, configure one model provider.
+
+| Provider | Values | Stored credential |
+|---|---|---|
+| Azure OpenAI | `ai` and `workloadIdentity.azure` | None. The dashboard uses Azure workload identity. |
+| AWS Bedrock | `dashboard.extraEnv` | An IAM access key in a Secret that you create. |
+| An OpenAI-compatible endpoint | `dashboard.extraEnv` | An API key in a Secret that you create. |
+
+The model provider must support tool calls. Ask LangGuard uses them.
+
+#### Azure OpenAI {#ai-azure-openai}
+
+```yaml
+workloadIdentity:
+  azure:
+    clientId: <client ID of the managed identity>
+ai:
+  provider: azure
+  azure:
+    endpoint: https://<account>.openai.azure.com
+```
+
+The account, the two model deployments, the managed identity and its federated credential
+must exist first. See [Azure OpenAI](/private-install/azure/requirements#azure-openai).
+
+#### AWS Bedrock {#ai-aws-bedrock}
+
+Create an IAM user with `bedrock:InvokeModel` and `bedrock:InvokeModelWithResponseStream`
+on the models below. Put its access key in a Secret:
+
+```bash
+kubectl create secret generic langguard-ai-bedrock -n langguard \
+  --from-literal=AWS_ACCESS_KEY_ID=<access key ID> \
+  --from-literal=AWS_SECRET_ACCESS_KEY=<secret access key>
+```
+
+Keep `ai.provider: none`, and set the environment of the dashboard:
+
+```yaml
+dashboard:
+  extraEnv:
+    - name: AI_PROVIDER
+      value: aws
+    - name: BEDROCK_REGION
+      value: us-east-1
+    - name: AWS_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: langguard-ai-bedrock
+          key: AWS_ACCESS_KEY_ID
+    - name: AWS_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: langguard-ai-bedrock
+          key: AWS_SECRET_ACCESS_KEY
+```
+
+- `BEDROCK_REGION` is the AWS region that LangGuard calls. Without it, LangGuard calls
+  `ca-central-1`.
+- LangGuard calls three models: `anthropic.claude-haiku-4-5-20251001-v1:0`,
+  `anthropic.claude-sonnet-4-6` and `anthropic.claude-opus-4-6-v1`. Your AWS account must
+  have access to them. To use other models, add `AI_MODEL_FAST`, `AI_MODEL_LOW` and
+  `AI_MODEL_HIGH` with the Bedrock model IDs.
+- LangGuard calls the models through the `us.` inference profile, so AWS processes the
+  requests in its regions in the United States. To use a different inference profile, add
+  `AI_BEDROCK_ENDPOINT_PREFIX`, for example `global`. A model ID that already starts with
+  an inference profile prefix stays as it is.
+- With `email.ses.existingSecret`, the chart already sets `AWS_ACCESS_KEY_ID` and
+  `AWS_SECRET_ACCESS_KEY` from that Secret. Do not add them again. Give the Bedrock
+  permissions to the IAM user of that Secret.
+
+#### An OpenAI-compatible endpoint {#ai-openai-compatible}
+
+Use this for a service that serves the OpenAI Chat Completions API. Put its API key in a
+Secret:
+
+```bash
+kubectl create secret generic langguard-ai-key -n langguard \
+  --from-literal=AI_API_KEY=<API key>
+```
+
+Keep `ai.provider: none`, and set the environment of the dashboard:
+
+```yaml
+dashboard:
+  extraEnv:
+    - name: AI_PROVIDER
+      value: openai
+    - name: AI_BASE_URL
+      value: https://<host>/v1
+    - name: AI_MODEL
+      value: <model ID>
+    - name: AI_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: langguard-ai-key
+          key: AI_API_KEY
+```
+
+- `AI_BASE_URL` is the address that serves `/chat/completions`.
+- `AI_MODEL` sets one model for all work. To use a different model for each tier, set
+  `AI_MODEL_FAST`, `AI_MODEL_LOW` and `AI_MODEL_HIGH`. There is no default model.
+
+#### A model for Ask LangGuard only {#ai-ask-langguard}
+
+An administrator can give Ask LangGuard its own model after the install, with no change
+to the values. Open **Settings > Ask LangGuard**. In the **Model** card, select **Your
+own key**. Then select the provider (OpenAI, Anthropic or OpenAI-compatible), and enter
+the API key and the three model IDs. Click **Save**, and then click **Test connection**.
+LangGuard stores the key encrypted.
+
+Policy authoring and custom checks do not use this model. They need one of the providers
+above.
+
 ### AI gateway {#ai-gateway}
 
 The chart installs the AI gateway by default. You do not need values for it. To install
@@ -740,6 +858,7 @@ delete the database, its roles, the discovery schema or the AI gateway schema `l
 | Symptom | Check |
 |---|---|
 | `helm upgrade --install` fails on a Job | `kubectl logs job/<job> -n langguard`. Correct the cause and run the same command again. |
+| Ask LangGuard, policy authoring or custom checks return an error | No model provider is configured, or the provider refused the credentials. See [AI features](#ai-features). Check `kubectl logs deployment/langguard-dashboard -n langguard \| grep -i -e "AI not configured" -e "AI upstream"`. The message `AWS credentials are required for the Bedrock provider` means that no provider is configured. |
 | `db-bootstrap` cannot connect | The server name must resolve in the cluster, and the database port must be open from the cluster. The admin password in the Secret must be correct. |
 | A Job or the application cannot connect to PostgreSQL with a certificate error | `database.host` must be a name in the server certificate. The certificate must chain to a CA in the public trust store, or to the CA in `database.caCert`. For a private CA, see [PostgreSQL server with a private CA](/private-install/helm/requirements#postgresql-server-with-a-private-ca). Do not set `sslMode: require` for this. |
 | Pods in `ImagePullBackOff` | `kubectl describe pod`. The images must be in `global.imageRegistry` with the tag of the release, `langguard-ai-gateway` included when the AI gateway is on. The nodes must have pull rights on the registry, or `global.imagePullSecrets` must name a pull Secret that works. |
