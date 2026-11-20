@@ -26,9 +26,13 @@ deterministic verdict against your LangGuard policies, with a best-effort audit 
 | Verdict | Effect |
 |---------|--------|
 | **ALLOW** | Tool runs; the decision is logged to the audit trail |
-| **DENY** | Tool is denied and the agent is told why |
-| **WARN** | Tool runs; a notify-only violation is still recorded in LangGuard |
+| **BLOCK** | Tool is blocked and the agent is told why |
 | **ASK** | A human is asked to approve, where the harness supports it |
+
+When an approved tool breaks only notify-only (permissive) policies, the verdict is
+**ALLOW** and LangGuard still records the violations. Coding agents use their own words
+for these verdicts: all four show BLOCK as "deny". See the
+[harness support summary](#harness-support-summary).
 
 By default the full verdict flow applies to **MCP tools** (`mcp__*`). Native tools such
 as Bash, Edit, and Read are screened and auto-allowed, apart from a short bundled
@@ -150,7 +154,7 @@ reads the shared config file instead.
    `/hooks` inside Codex and trust the LangGuard Arbiter hooks. Trust is hash-pinned,
    so plugin upgrades prompt again.
 
-Codex has no "ask", so **ASK collapses to DENY**. The deny reason points the agent at
+Codex has no "ask", so **ASK becomes a block**, which Codex shows as "deny". The reason points the agent at
 LangGuard, where approval happens. Codex runs hooks fail-open at the harness level, so
 strict mode applies only while the Arbiter shim itself is running.
 
@@ -203,12 +207,15 @@ behaviour is undocumented.
 
 ### Harness support summary
 
-| Harness | Verdicts | Configuration |
-|---------|----------|---------------|
-| Claude Code | ALLOW · DENY · WARN · ASK | Plugin prompts on enable |
-| Cursor | ALLOW · DENY · ASK | `~/.cursor/plugins` + `~/.config/arbiter/config.yaml` |
-| Codex | ALLOW · DENY · WARN | `~/.codex/plugins` + `~/.config/arbiter/config.yaml` |
-| Google Antigravity | ALLOW · DENY · FORCE-ASK | `~/.gemini/config/plugins` + `~/.config/arbiter/config.yaml` |
+Every harness receives the same three verdicts. The table shows how each one presents
+BLOCK and ASK.
+
+| Harness | BLOCK shows as | ASK shows as | Configuration |
+|---------|----------------|--------------|---------------|
+| Claude Code | deny | Native approval dialog | Plugin prompts on enable |
+| Cursor | deny | Native **Ask** prompt on MCP tool calls | `~/.cursor/plugins` + `~/.config/arbiter/config.yaml` |
+| Codex | deny | deny (no ask); the reason points to approval in LangGuard | `~/.codex/plugins` + `~/.config/arbiter/config.yaml` |
+| Google Antigravity | deny | `force_ask` prompt, which ignores cached Always-Allow grants | `~/.gemini/config/plugins` + `~/.config/arbiter/config.yaml` |
 
 :::note Local evaluation
 Low-latency local evaluation applies to the confident subset of verdicts. Every other
