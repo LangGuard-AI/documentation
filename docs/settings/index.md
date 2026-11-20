@@ -65,7 +65,7 @@ View all user and system actions, and configure SIEM forwarding.
 ---
 
 ### [Single Sign-On (SSO)](/settings/sso)
-Configure SSO with Microsoft Entra ID or Google Workspace, and set up role mapping.
+Configure SSO with Microsoft Entra ID, Google Workspace, or SAML 2.0, and set up role mapping.
 
 ---
 
