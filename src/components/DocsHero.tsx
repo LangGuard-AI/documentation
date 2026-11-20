@@ -14,8 +14,8 @@ export function DocsHero(): ReactNode {
         manage, and secure AI agent operations in one place.
       </p>
       <div className="lg-home-actions">
-        <Link className="button button--primary" to="/getting-started/quick-start">
-          Open the Quick Start
+        <Link className="button button--primary" to="/getting-started">
+          Get started
         </Link>
         <Link
           className="button button--outline button--secondary"
