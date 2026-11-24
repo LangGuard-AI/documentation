@@ -175,9 +175,9 @@ Set **Identity Provider** to **SAML 2.0 (Ping Identity and others)**. The page s
 | Value | Format | Use |
 |---|---|---|
 | **Entity ID (Audience)** | `https://<your-langguard-address>/auth/saml/metadata` | The service provider entity ID. The IdP puts it in the assertion audience. |
-| **ACS URL** | `https://<your-langguard-address>/auth/saml/acs` | The Assertion Consumer Service URL. Binding: HTTP-POST. |
+| **ACS URL** | `https://<your-langguard-address>/auth/saml/acs` | The Assertion Consumer Service URL. The IdP sends the SAML response to this URL. Binding: HTTP-POST. |
 | **Metadata URL** | `https://<your-langguard-address>/auth/saml/metadata` | The service provider metadata. Import it in your IdP instead of entering each value. |
-| **Initiate Single Sign-On URL** | `https://<your-langguard-address>/auth/saml` | Optional. Starts a sign-in from LangGuard, for example from an application tile in the IdP portal. |
+| **Sign-in start URL (optional)** | `https://<your-langguard-address>/auth/saml` | Optional. Starts a sign-in from LangGuard, for example from an application tile in the IdP portal. PingOne names this field **Initiate Single Sign-On URL**. It does not receive the SAML response. |
 
 The values are specific to the address in your browser. If users sign in to LangGuard at more than one address, configure one IdP application for each address.
 
@@ -187,6 +187,10 @@ In other identity providers, these values can have different names:
 |---|---|---|
 | **Entity ID (Audience)** | Audience URI (SP Entity ID) | Identifier (Entity ID) |
 | **ACS URL** | Single sign-on URL | Reply URL (Assertion Consumer Service URL) |
+
+:::warning
+In Okta, **Single sign-on URL** is the **ACS URL** (`/auth/saml/acs`). Do not enter the **Sign-in start URL** (`/auth/saml`) there. If you do, the test and each sign-in fail with the message "Your identity provider sent the SAML response to the wrong URL".
+:::
 
 ### IdP Requirements
 
@@ -269,7 +273,7 @@ If you set the **Email attribute**, LangGuard reads the email address only from 
 
 ### IdP-Initiated Sign-In
 
-LangGuard does not accept an IdP-initiated SAML response as a sign-in, because the response is not connected to a request from the browser. An example is a click on an application tile in the PingOne portal without an **Initiate Single Sign-On URL**.
+LangGuard does not accept an IdP-initiated SAML response as a sign-in, because the response is not connected to a request from the browser. An example is a click on an application tile in the PingOne portal when the PingOne field **Initiate Single Sign-On URL** is not set to the LangGuard **Sign-in start URL**.
 
 When LangGuard receives such a response, it starts an SP-initiated sign-in. The user already has an IdP session, so the user does not see a second sign-in prompt.
 
@@ -369,6 +373,7 @@ LangGuard compares the full domain after the `@`. A subdomain such as `eu.yourco
 | The SAML response does not answer the request LangGuard sent. | The sign-in started in a different browser, took more than 10 minutes, or was sent two times. Start the test again. |
 | The identity provider returned an error instead of an assertion. | Read the error in the logs of your IdP. For example, the user is not assigned to the application. |
 | The test took too long or was started in another browser. | Start the test again in the same browser and complete it within 10 minutes. |
+| Your identity provider sent the SAML response to the wrong URL. | The ACS URL in the IdP is not the LangGuard **ACS URL**. In Okta, set **Single sign-on URL** to the **ACS URL**. Do not use the **Sign-in start URL** or the **Entity ID**. |
 
 ### The IdP Shows a Redirect URI Error (Entra ID or Google Workspace)
 
@@ -388,3 +393,4 @@ LangGuard compares the full domain after the `@`. A subdomain such as `eu.yourco
 - Make sure that the user is assigned to the LangGuard application in your IdP.
 - Google Workspace: if **Hosted Domain** is set, make sure that the user account is in that domain.
 - SAML 2.0: make sure that no signing certificate has expired. The SSO page marks expired certificates.
+- SAML 2.0: if the login page shows "Single sign-on is not set up correctly", the IdP sends the SAML response to the wrong URL. Set the ACS URL in the IdP (Okta: **Single sign-on URL**) to the LangGuard **ACS URL**.
