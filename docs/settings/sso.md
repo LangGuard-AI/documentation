@@ -224,32 +224,31 @@ Configure the IdP application as follows:
 
 ### Okta
 
-1. In the Okta Admin Console, go to **Applications > Applications** and click **Create App Integration**. Select **SAML 2.0** and click **Next**.
-2. Enter an **App name**, for example `LangGuard`, and click **Next**.
-3. On **Configure SAML**, set:
+These steps use the names in the Okta documentation. The names in your Okta org can be different.
+
+1. In the Okta Admin Console, go to **Applications and Resources > Applications**. In some Okta orgs, this menu is **Applications > Applications**.
+2. Click **Create App Integration**. If Okta shows a list, select **Classic experience**.
+3. Select **SAML 2.0** as the **Sign-in method** and click **Next**.
+4. On **General Settings**, enter an **App name**, for example `LangGuard`, and click **Next**.
+5. On **Configure SAML**, set:
    - **Single sign-on URL**: the LangGuard **ACS URL**. This URL ends with `/auth/saml/acs`.
    - **Use this for Recipient URL and Destination URL**: keep it selected.
    - **Audience URI (SP Entity ID)**: the LangGuard **Entity ID**.
    - **Default RelayState**: keep it empty.
-   - **Name ID format**: **EmailAddress** or **Unspecified**. Do not use **Transient**.
+   - **Name ID format**: keep the default, **Unspecified**, or select **EmailAddress**. Do not select a transient format.
    - **Application username**: **Email**. You can also use **Okta username** if your Okta usernames are email addresses.
-4. Keep the defaults under **Show Advanced Settings**: a signed response, a signed assertion, the signature algorithm `RSA-SHA256`, and no assertion encryption.
-5. Optional: under **Attribute Statements**, add these attributes:
-
-   | Name | Value | Use |
-   |---|---|---|
-   | `email` | `user.email` | The email address. Necessary if the NameID is not an email address. |
-   | `firstName` | `user.firstName` | The display name, together with `lastName`. |
-   | `lastName` | `user.lastName` | The display name, together with `firstName`. |
-
-6. Optional, for role mapping: under **Group Attribute Statements**, add an attribute with the name `groups` and a filter. For example, the filter **Matches regex** with the value `.*` sends all groups of the user. Then set **Groups attribute** to `groups` in LangGuard.
-7. Click **Next**, complete the feedback step, and click **Finish**.
-8. On the **Assignments** tab, assign the people and the groups that can sign in to LangGuard.
-9. On the **Sign On** tab, copy the **Metadata URL**. Open it in your browser and save the XML.
-10. In LangGuard, import the XML with **Import IdP metadata**. See [IdP Settings in LangGuard](#idp-settings-in-langguard).
+6. Open **Show Advanced Settings** and make sure that:
+   - Okta signs the response, the assertion, or both (**Response** and **Assertion Signature**).
+   - **Signature Algorithm** is `RSA-SHA256`.
+   - **Assertion Encryption** is off. LangGuard does not decrypt assertions.
+7. Click **Next**. On **Feedback**, select **I'm an Okta customer adding an internal app** and **This is an internal app that we have created**. Click **Finish**.
+8. On the **Assignments** tab, click **Assign**, then **Assign to People** or **Assign to Groups**. Assign the people and the groups that can sign in to LangGuard.
+9. Optional: add attribute statements. See [Okta Attribute Statements](#okta-attribute-statements).
+10. On the **Sign On** tab, copy the **Metadata URL**. Open it in your browser and save the XML. As an alternative, under **SAML Signing Certificates**, select **Actions > View IdP metadata** for the active certificate.
+11. In LangGuard, import the XML with **Import IdP metadata**. See [IdP Settings in LangGuard](#idp-settings-in-langguard).
 
 :::warning Okta: Single sign-on URL is the ACS URL
-In Okta, **Single sign-on URL** is the URL that receives the SAML response. Enter the LangGuard **ACS URL** (`https://<your-langguard-address>/auth/saml/acs`) there.
+In Okta, **Single sign-on URL** is the URL to which Okta sends the SAML response. Enter the LangGuard **ACS URL** (`https://<your-langguard-address>/auth/saml/acs`) there.
 
 Do not enter the LangGuard **Sign-in start URL** (`https://<your-langguard-address>/auth/saml`), although the two names are almost the same. By default, Okta sends the response to the URL that is saved in the application, not to the ACS URL in the request from LangGuard.
 
@@ -257,12 +256,54 @@ With the wrong URL, **Test Authentication** and each sign-in fail with the messa
 :::
 
 :::note Okta: assign the users
-Okta lets a user sign in to LangGuard only if the user, or a group of the user, is assigned to the application. A user who is not assigned sees an Okta error page. Okta sends no response to LangGuard for such an attempt, so LangGuard shows no error and the audit log has no entry.
+Okta lets a user sign in to LangGuard only if the user, or a group of the user, is assigned to the application. A user who is not assigned sees an Okta error, for example "User is not assigned to this application". Okta sends no response to LangGuard for such an attempt, so LangGuard shows no error and the audit log has no entry. To find the reason, open **Reports > System Log** in the Okta Admin Console.
 :::
 
-:::tip Okta: the tile on the Okta dashboard
+:::tip Okta: the tile on the Okta End-User Dashboard
 A click on the LangGuard tile starts an IdP-initiated sign-in. LangGuard then starts an SP-initiated sign-in automatically, and the user sees no second sign-in prompt. No extra setting is necessary. See [IdP-Initiated Sign-In](#idp-initiated-sign-in).
 :::
+
+#### Okta Attribute Statements
+
+Attribute statements are optional. They are necessary in these two cases:
+
+- The NameID is not an email address. Then send the email address in an attribute.
+- You use [role mapping](#role-mapping). Then send the groups of the user in an attribute.
+
+In current Okta orgs, you add attribute statements after you create the application:
+
+1. Open the application and select the **Sign On** tab.
+2. In the section for attribute statements, click **Add expression**.
+3. Enter a **Name** and an **Expression** from this table, and click **Save**.
+
+   | Name | Expression | Use |
+   |---|---|---|
+   | `email` | `user.profile.email` | The email address. |
+   | `firstName` | `user.profile.firstName` | The display name, together with `lastName`. |
+   | `lastName` | `user.profile.lastName` | The display name, together with `firstName`. |
+   | `groups` | `user.getGroups({'group.type': {'OKTA_GROUP', 'APP_GROUP'}}).![profile.name]` | The names of the groups of the user, for role mapping. |
+
+4. If you added `groups`, set **Groups attribute** to `groups` in LangGuard.
+
+Some Okta orgs use the legacy configuration. It shows **Attribute Statements (optional)** and **Group Attribute Statements (optional)** on the **Configure SAML** step, or on the **Sign On** tab when you expand **Show legacy configuration**. The values there use a different syntax:
+
+| Statement | Name | Value |
+|---|---|---|
+| Attribute statement | `email` | `user.email` |
+| Attribute statement | `firstName` | `user.firstName` |
+| Attribute statement | `lastName` | `user.lastName` |
+| Group attribute statement | `groups` | Filter **Matches regex** with the value `.*`, to send all groups of the user. |
+
+:::note Okta: send only the necessary groups
+A user who is in many groups makes the SAML response large. LangGuard refuses a SAML response that is larger than 100 KB. If necessary, use a filter that sends only the groups that your role mapping uses. Run **Test Authentication** to see the group values that Okta sends.
+:::
+
+For more details, see the Okta documentation:
+
+- [Create SAML app integrations](https://help.okta.com/en-us/content/topics/apps/apps_app_integration_wizard_saml.htm)
+- [Application Integration Wizard SAML field reference](https://help.okta.com/en-us/content/topics/apps/aiw-saml-reference.htm)
+- [Configure custom claims for app integrations](https://help.okta.com/en-us/content/topics/apps/federated-claims-overview.htm)
+- [Define group attribute statements](https://help.okta.com/en-us/content/topics/apps/define-group-attribute-statements.htm)
 
 ### PingOne
 
@@ -304,8 +345,8 @@ A click on the LangGuard tile starts an IdP-initiated sign-in. LangGuard then st
 | Setting | Description |
 |---|---|
 | **Import IdP metadata** | Paste the IdP metadata XML and click **Import**, or click **Choose file** to import a metadata file at once. The import fills **IdP Entity ID**, **IdP SSO URL**, and **IdP Signing Certificates**. LangGuard does not save the values until you click **Save**. |
-| **IdP Entity ID (Issuer)** | The entity ID of the IdP. The issuer of each assertion must be equal to this value. Okta format: `http://www.okta.com/<application-id>`. PingOne format: `https://auth.pingone.<region>/<environment-id>`. |
-| **IdP SSO URL** | The single sign-on URL of the IdP. LangGuard sends the authentication request to this URL. It must use `https`. Okta format: `https://<your-okta-domain>/app/<application-name>/<application-id>/sso/saml`. |
+| **IdP Entity ID (Issuer)** | The entity ID of the IdP. The issuer of each assertion must be equal to this value. Okta format: `http://www.okta.com/<external-key>`. The external key is the value that starts with `exk` in the **IdP SSO URL**. PingOne format: `https://auth.pingone.<region>/<environment-id>`. |
+| **IdP SSO URL** | The single sign-on URL of the IdP. LangGuard sends the authentication request to this URL. It must use `https`. Okta format: `https://<your-okta-domain>/app/<application-name>/<external-key>/sso/saml`. |
 | **IdP Signing Certificates** | One to five X.509 certificates. Paste them as PEM, or click **Upload certificate** to add a PEM file or a DER `.cer` or `.crt` file. A signature is valid if one of the certificates verifies it. The page shows the subject and the expiry date of each saved certificate, and marks expired certificates. |
 | **Email attribute** | Optional. See [Attribute Mapping](#attribute-mapping). |
 | **Name attribute** | Optional. See [Attribute Mapping](#attribute-mapping). |
@@ -333,7 +374,7 @@ If you set the **Email attribute**, LangGuard reads the email address only from 
 
 ### IdP-Initiated Sign-In
 
-LangGuard does not accept an IdP-initiated SAML response as a sign-in, because the response is not connected to a request from the browser. Examples are a click on the application tile on the Okta dashboard, and a click on an application tile in the PingOne portal when the PingOne field **Initiate Single Sign-On URL** is not set to the LangGuard **Sign-in start URL**.
+LangGuard does not accept an IdP-initiated SAML response as a sign-in, because the response is not connected to a request from the browser. Examples are a click on the application tile on the Okta End-User Dashboard, and a click on an application tile in the PingOne portal when the PingOne field **Initiate Single Sign-On URL** is not set to the LangGuard **Sign-in start URL**.
 
 When LangGuard receives such a response, it starts an SP-initiated sign-in. The user already has an IdP session, so the user does not see a second sign-in prompt.
 
