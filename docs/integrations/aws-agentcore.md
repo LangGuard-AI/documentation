@@ -101,9 +101,16 @@ Do this step to enforce policies. Without it, LangGuard shows the tool calls but
 
 ### Deploy the function
 
-Get the interceptor package from LangGuard. It contains the function and a Terraform template.
+The function and its Terraform template are in the [`agentcore-gateway-interceptor`](https://github.com/LangGuard-AI/langguard-plugins/tree/main/agentcore-gateway-interceptor) package of the LangGuard plugins repository.
 
-1. Go to the `terraform` directory of the package and run `terraform init`.
+1. Get the package and initialize Terraform:
+
+   ```bash
+   git clone --depth 1 https://github.com/LangGuard-AI/langguard-plugins.git
+   cd langguard-plugins/agentcore-gateway-interceptor/terraform
+   terraform init
+   ```
+
 2. Apply the template. Set `gateway_authorizer_type` to the inbound authorizer of your gateway: `CUSTOM_JWT`, `AWS_IAM` or `NONE`.
 
    ```bash
@@ -114,6 +121,8 @@ Get the interceptor package from LangGuard. It contains the function and a Terra
    ```
 
 3. Copy the `function_arn` output.
+
+The package README lists all the Terraform variables, the log line of the function, and the known limits.
 
 To use a JWT claim as the user name on a `CUSTOM_JWT` gateway, also set `user_claim`, for example `-var 'user_claim=email'`. If LangGuard has a private endpoint, set `subnet_ids` and `security_group_ids` so that the function runs in a VPC that can reach LangGuard and Secrets Manager.
 
