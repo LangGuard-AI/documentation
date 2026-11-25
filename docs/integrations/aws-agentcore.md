@@ -101,13 +101,13 @@ Do this step to enforce policies. Without it, LangGuard shows the tool calls but
 
 ### Deploy the function
 
-The function and its Terraform template are in the [`agentcore-gateway-interceptor`](https://github.com/LangGuard-AI/langguard-plugins/tree/main/agentcore-gateway-interceptor) package of the LangGuard plugins repository.
+The function and its Terraform template are in the [`agentcore-gateway-interceptor`](https://github.com/LangGuard-AI/langguard-public/tree/main/agentcore-gateway-interceptor) package of the LangGuard public repository.
 
 1. Get the package and initialize Terraform:
 
    ```bash
-   git clone --depth 1 https://github.com/LangGuard-AI/langguard-plugins.git
-   cd langguard-plugins/agentcore-gateway-interceptor/terraform
+   git clone --depth 1 https://github.com/LangGuard-AI/langguard-public.git
+   cd langguard-public/agentcore-gateway-interceptor/terraform
    terraform init
    ```
 
