@@ -130,19 +130,20 @@ architecture, so it adds about 1 GB to the bundle.
   the model providers and the MCP servers that you add. The dashboard continues to operate
   when the gateway is not available. See [AI gateway](/private-install/helm/installation#ai-gateway).
 - **AI.** The chart supports two values for `ai.provider`: `none` (the default) and
-  `azure`. With `none`, the AI features of LangGuard are off, and LangGuard works without
-  them. With `azure`, `langguard-dashboard` calls Azure OpenAI with keyless Microsoft
+  `azure`. With `none`, the chart configures no model. The AI features of LangGuard then
+  fail, and the other features work without them. With `azure`, `langguard-dashboard` calls Azure OpenAI with keyless Microsoft
   Entra authentication through Azure workload identity. Azure workload identity needs an
   OIDC issuer URL of the cluster that Microsoft Entra ID can reach from the internet, and
   the Azure Workload Identity webhook. The chart sets only the ServiceAccount annotations
   and the pod label that the webhook reads. AKS supplies both
   (`--enable-oidc-issuer --enable-workload-identity`). On another cluster, install the
   webhook, and use the OIDC issuer URL of your cluster for the federated credential. For
-  another provider, the chart README says to set its environment variables with
-  `dashboard.extraEnv`. For Azure
-  OpenAI, see
+  AWS Bedrock or an OpenAI-compatible endpoint, set the environment of the dashboard with
+  `dashboard.extraEnv`. See [AI features](/private-install/helm/installation#ai-features).
+  For Azure OpenAI, see
   [Azure OpenAI](/private-install/azure/requirements#azure-openai). The AI provider powers
-  LangGuard's own AI features, for example policy authoring and custom checks. It does
+  LangGuard's own AI features, for example Ask LangGuard, policy authoring and custom
+  checks. It does
   not carry the model traffic of your agents: that traffic goes through the AI gateway.
 - **Images.** The nodes pull the LangGuard images from your container registry. OPA,
   Redis, the Presidio analyzer and PostgreSQL (for the Jobs) are public upstream images.
