@@ -162,7 +162,7 @@ Integration API keys are:
 Yes. We support:
 - Microsoft Entra ID (Azure AD)
 - Google Workspace
-- SAML 2.0 identity providers, for example PingOne and PingFederate
+- SAML 2.0 identity providers, for example Okta, PingOne, and PingFederate
 
 See [SSO Settings](/settings/sso) for configuration details.
 

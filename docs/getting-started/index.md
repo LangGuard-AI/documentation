@@ -23,7 +23,7 @@ Before you begin, make sure you have:
 
 - **Email access** - To verify your account
 - **Integration credentials** - API keys or tokens for your AI platforms (Databricks, AWS Bedrock, etc.)
-- **Identity provider access** (optional) - Admin access to Microsoft Entra ID, Google Workspace, or a SAML 2.0 identity provider such as PingOne, if you want your team to sign in with single sign-on
+- **Identity provider access** (optional) - Admin access to Microsoft Entra ID, Google Workspace, or a SAML 2.0 identity provider such as Okta or PingOne, if you want your team to sign in with single sign-on
 
 That's it! LangGuard is a hosted platform - no installation required.
 
