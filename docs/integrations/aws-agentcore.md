@@ -26,6 +26,10 @@ agent -> gateway -> interceptor -> LangGuard -> tool -> interceptor -> LangGuard
 
 LangGuard joins the decision of the interceptor and the gateway span on the trace ID, so each tool call is one row.
 
+:::tip Claude Code model calls
+An AgentCore Gateway with an inference target can also check the Amazon Bedrock model calls of Claude Code. See [Check Claude Code model calls with an AgentCore inference gateway](/integrations/aws-agentcore-inference).
+:::
+
 :::tip Agents on AgentCore Runtime
 This page is about **AgentCore Gateway**. An agent on AgentCore Runtime can also send OpenTelemetry traces to LangGuard. The AWS AgentCore form in LangGuard has a guide for that, under **Other way to connect**.
 :::

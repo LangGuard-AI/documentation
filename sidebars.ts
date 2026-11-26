@@ -51,6 +51,7 @@ const sidebars: SidebarsConfig = {
         'integrations/langchain',
         'integrations/crewai',
         'integrations/aws-agentcore',
+        'integrations/aws-agentcore-inference',
         'integrations/cursor',
         'integrations/claude-code',
         'integrations/opencode',
