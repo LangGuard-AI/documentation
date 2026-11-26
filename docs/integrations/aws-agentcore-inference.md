@@ -90,6 +90,7 @@ The Terraform template is in the [`agentcore-gateway-interceptor`](https://githu
 | `user_claim` | Empty | The JWT claim that LangGuard uses as the user name, for example `email`. Only with `CUSTOM_JWT`. |
 | `sts_key_map_enabled` | `false` | Create the STS key map, which gives LangGuard the IAM Identity Center user of each call. Only with `AWS_IAM`. |
 | `existing_gateway_role_name` | Empty | The name of an existing gateway service role. The template adds its policy to that role. Empty means that the template creates the role. |
+| `invoke_model_resource_arns` | Empty | The ARNs of the models that the gateway role can call. Empty means all the models in [Gateway role permissions](#gateway-role-permissions). For an inference profile, also give the ARNs of its foundation models in each Region that the profile sends calls to. |
 
 ### Outputs
 
@@ -110,7 +111,18 @@ The template gives the gateway role these permissions:
 |---------|-----------|-----|
 | `lambda:InvokeFunction` | The interceptor function | The gateway calls the interceptor for each request. |
 | `bedrock:ListFoundationModels`, `bedrock:ListInferenceProfiles`, `bedrock:ListProvisionedModelThroughputs`, `bedrock:ListCustomModelDeployments`, `bedrock:ListImportedModels`, `bedrock:ListMarketplaceModelEndpoints`, `bedrock:ListPromptRouters`, `bedrock:GetFoundationModel`, `bedrock:GetInferenceProfile` | `*` | The target finds the models when AWS creates it. |
-| `bedrock:InvokeModel`, `bedrock:InvokeModelWithResponseStream` | Foundation models in all Regions, and the inference profiles of the account | The gateway calls the models. A cross-Region inference profile sends the call to a model in another Region. |
+| `bedrock:InvokeModel`, `bedrock:InvokeModelWithResponseStream` | All the models, or the ARNs in `invoke_model_resource_arns` | The gateway calls the models. |
+
+"All the models" means these ARNs, in all Regions:
+
+- Foundation models.
+- The inference profiles of the account.
+- The application inference profiles of the account.
+- The provisioned models of the account.
+- The custom model deployments of the account.
+- The imported models of the account.
+
+A cross-Region inference profile sends the call to a foundation model in another Region. Thus, if you set `invoke_model_resource_arns`, give the ARNs of the foundation models in each Region of the profile.
 
 When AWS creates the inference target, it reads the Amazon Bedrock model catalog as the gateway role. If the role cannot do one of the list actions, the target stops before it gets to `READY`. For the list of actions, see [InvokeModel with inference targets](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-target-inference-invokemodel.html) in the AWS documentation.
 
