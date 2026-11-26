@@ -17,6 +17,7 @@ The Azure AI Foundry integration enables LangGuard to:
 - **Ingest traces** from Azure AI Foundry applications
 - **Track model deployments** and their usage
 - **Monitor performance** — Latency, token usage, and error rates
+- **Protect API Management gateways** — Check each MCP tool call through Azure API Management with LangGuard (see [Protect API Management Gateways](#apim-enforcement))
 
 ## Prerequisites
 
@@ -102,6 +103,84 @@ The identity that LangGuard signs in with (the managed identity or the app regis
 - **Test Connection** checks the sign-in. It does not check the roles: it passes when a role is missing.
 - Without **Reader**, Azure returns an empty list of diagnostic settings, not an error. LangGuard then finds no Log Analytics workspace, and the traces stop with no error or warning.
 - For traces, the Azure AI Foundry account needs a diagnostic setting that sends the **Request and Response Logs** category to a Log Analytics workspace. LangGuard finds the workspace in this setting. A setting that sends only other categories gives a workspace with no traces.
+
+## Protect API Management Gateways {#apim-enforcement}
+
+LangGuard can enforce its MCP policies in the Azure API Management (APIM) services of the subscription of the integration. LangGuard adds its check to the policy of each MCP API of an APIM service, also of MCP APIs that you add later. For each MCP `tools/call` through a protected API, APIM asks LangGuard for a decision. APIM then forwards the call or blocks it.
+
+- Only a LangGuard admin can install, check and remove APIM enforcement.
+- The deployment must offer it. When it does, LangGuard shows an optional step after you save the integration, and the menu of the integration card shows **Protect API Management gateways**.
+- You allow or block single tools on the **MCP Enforcement** page. In Shadow mode, LangGuard blocks no call that it decides on. APIM blocks each call when it cannot get a decision from LangGuard, also in Shadow mode.
+
+### Which Identity Writes to APIM
+
+| Deployment | Identity |
+|------------|----------|
+| LangGuard cloud | The app registration of this integration: its Tenant ID, Client ID and Client Secret |
+| Private install with a dashboard identity | The managed identity of the LangGuard dashboard. Ask your operator. |
+| Private install without a dashboard identity | The app registration of this integration |
+
+An integration that signs in with the [managed identity](#managed-identity) has no app registration. Where the app registration writes to APIM, such an integration cannot use APIM enforcement.
+
+:::warning The app registration gets a write role
+The role below lets the app registration write APIM policies. LangGuard stores the client secret of the integration encrypted, and the discovery service uses the same secret. With the role, anyone who has this secret can change the policies of each APIM service where you assign the role. Assign the role only on the APIM services or resource groups that LangGuard must protect. Rotate the secret as your policy for write credentials says.
+:::
+
+### Assign the Role
+
+Create this custom role. It has the minimum actions:
+
+```bash
+cat > langguard-apim-enforcement-role.json <<'EOF'
+{
+  "Name": "LangGuard APIM Enforcement",
+  "IsCustom": true,
+  "Description": "Lets LangGuard write its enforcement policy into API Management MCP APIs.",
+  "Actions": [
+    "Microsoft.ApiManagement/service/read",
+    "Microsoft.ApiManagement/service/apis/read",
+    "Microsoft.ApiManagement/service/apis/policies/read",
+    "Microsoft.ApiManagement/service/apis/policies/write",
+    "Microsoft.ApiManagement/service/policyFragments/read",
+    "Microsoft.ApiManagement/service/policyFragments/write",
+    "Microsoft.ApiManagement/service/policyFragments/delete",
+    "Microsoft.ApiManagement/service/namedValues/read",
+    "Microsoft.ApiManagement/service/namedValues/write",
+    "Microsoft.ApiManagement/service/namedValues/delete"
+  ],
+  "NotActions": [],
+  "AssignableScopes": ["/subscriptions/<subscription ID>"]
+}
+EOF
+az role definition create --role-definition @langguard-apim-enforcement-role.json
+```
+
+Assign it to the service principal of the app registration on each APIM service, or on the resource group of the APIM services:
+
+```bash
+SP_ID="$(az ad sp show --id <client ID of the integration> --query id -o tsv)"
+az role assignment create --role "LangGuard APIM Enforcement" \
+  --scope "$(az apim show -g <APIM resource group> -n <APIM service> --query id -o tsv)" \
+  --assignee-object-id "$SP_ID" \
+  --assignee-principal-type ServicePrincipal
+```
+
+- No role at the subscription scope is necessary. LangGuard shows only the APIM services where the identity has the role.
+- The built-in role **API Management Service Contributor** also works, but it lets the identity change all of the APIM service and delete it.
+- A new role assignment can take some minutes to apply.
+
+### Install
+
+1. Open the menu of the integration card and click **Protect API Management gateways**.
+2. LangGuard lists the APIM services where the identity has the role, and their MCP APIs.
+3. Click **Install** on an APIM service. LangGuard protects every MCP API of the service. You do not select APIs.
+4. Make a `tools/call` through an MCP API of the service. Then approve the new tools on the **MCP Enforcement** page.
+
+LangGuard writes a policy fragment, two named values (the LangGuard address and a LangGuard API key) and one include line in the policy of each MCP API. Your own policy content stays. **Remove** takes all of it out again. Remove APIM enforcement from each APIM service before you delete the integration: LangGuard does not delete an integration that has APIM enforcement.
+
+### When the Client Secret Expires
+
+When Microsoft Entra ID refuses the app registration, for example because the client secret expired, each APIM service shows the status **Drifted** with the item "LangGuard cannot read this service". The item names the `AADSTS` error. APIM still asks LangGuard about each `tools/call` with its own key, so the calls of the protected MCP APIs are still checked. But LangGuard cannot add its check to new MCP APIs, and **Remove** cannot work. Put a new client secret in the integration, then click **Check now**.
 
 ## What Gets Captured
 
