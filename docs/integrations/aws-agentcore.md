@@ -130,6 +130,8 @@ The package README lists all the Terraform variables, the log line of the functi
 
 To use a JWT claim as the user name on a `CUSTOM_JWT` gateway, also set `user_claim`, for example `-var 'user_claim=email'`. If LangGuard has a private endpoint, set `subnet_ids` and `security_group_ids` so that the function runs in a VPC that can reach LangGuard and Secrets Manager.
 
+Leave `gateway_kind` empty for a function on an MCP gateway. The value `inference` is for a function that only an inference gateway uses: it blocks each request that is not a known model call (see [AgentCore model calls](/integrations/aws-agentcore-inference)).
+
 ### Attach the function to the gateway
 
 1. Give the gateway service role `lambda:InvokeFunction` on the `function_arn`. If you cannot change the role, set the Terraform variable `gateway_role_arn` to the role ARN, and apply again.
