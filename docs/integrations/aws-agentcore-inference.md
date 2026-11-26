@@ -206,13 +206,20 @@ When the interceptor blocks a call, the gateway does not call Amazon Bedrock. Th
 | LangGuard cannot give a decision | `Blocked by LangGuard: the policy check is unavailable, so this model call is not allowed.` |
 | The body is not a JSON object, or the call names no model | `Blocked by LangGuard: this is not a valid model request, so it was not sent for a policy check.` |
 | The API is not in the table | `Blocked by LangGuard: LangGuard cannot check calls to this inference API, so this call is not allowed.` |
-| The request is too large | `Blocked by LangGuard: the model request is larger than 1 MB without its older messages, the size limit of the policy check, so it is not allowed.` |
+| The request is too large | `Blocked by LangGuard: the model request is too large for the policy check, so it is not allowed.` |
 
-LangGuard accepts a check of 1 MB or less. For a larger request, the interceptor removes the oldest messages from the check until the check fits. It keeps the system prompt, the tools, each `system` or `developer` message, and the messages from the latest user message to the end. Amazon Bedrock still gets the full request. If the check still does not fit, the call is blocked with the "too large" text. A large image in the latest user message can cause this.
+The interceptor sends all the messages of the request to LangGuard. It does not remove messages. The policy check reads only text, so the interceptor replaces binary data with a short text before the check:
+
+- The base64 data of an image block or a document block, also in a tool result.
+- An image URL that is a `data:` URL.
+
+The interceptor keeps a document block that has a text source. Amazon Bedrock gets the full request, with the binary data.
+
+LangGuard accepts a policy check of 6 MiB or less. If the check is larger, the call is blocked with the "too large" text.
 
 ## Troubleshooting
 
-The interceptor writes one log line for each call to the log group `/aws/lambda/<name>-interceptor`. For a model call, the line has the `route`, the `dialect`, the `model`, the `outcome`, and the `reason`. It does not have the prompt or the API key.
+The interceptor writes one log line for each call to the log group `/aws/lambda/<name>-interceptor`. For a model call, the line has the `route`, the `dialect`, the `model`, the `outcome`, and the `reason`. It has `truncated` when the interceptor replaced binary data. It does not have the prompt or the API key.
 
 ### The target does not get to READY
 
