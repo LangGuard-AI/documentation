@@ -192,9 +192,19 @@ The interceptor sorts each request by its method and its path under `/inference`
 | `POST /v1/messages` | LangGuard check |
 | `POST /v1/chat/completions` | LangGuard check |
 | `GET` on all paths, for example `/inference-profiles` and `/v1/models` | Pass. No model runs. |
-| All other requests under `/inference`, for example `POST /v1/responses` | Blocked. LangGuard cannot check them. |
+| All other requests, for example `POST /v1/responses` | Blocked. LangGuard cannot check them. |
 
-Claude Code uses the three `/model/{model}/` paths. On the two invoke paths, LangGuard checks only Anthropic models. A call to another model on these paths is blocked.
+Claude Code uses the three `/model/{model}/` paths. `{model}` can have a `/`, because the ARN of an application inference profile has one.
+
+Before the interceptor compares a path with the table, it makes the path normal:
+
+- It removes the query, empty segments, `.` segments, and `..` segments.
+- It decodes the percent escapes, so `%6Dodel` becomes `model`.
+- It compares each segment other than the model ID without case, so `/Model/` agrees with `/model/`.
+
+A path with a bad percent escape is blocked as not valid.
+
+The template sets the interceptor to inference gateway mode. It sets `gateway_kind = "inference"` on the interceptor module, which sets `LANGGUARD_GATEWAY_KIND=inference` on the function. In this mode, the interceptor reads each path as a path under `/inference`, with or without the `/inference` prefix. It blocks each request that does not agree with a LangGuard check row or a pass row. Do not use this function for a gateway with HTTP targets, because the interceptor blocks their calls. On the two invoke paths, LangGuard checks only Anthropic models. A call to another model on these paths is blocked.
 
 The rules for each LangGuard decision are the same as for a tool call. A call in Shadow mode is not blocked by a policy. A call that needs an approval is blocked. See [What the agent gets](/integrations/aws-agentcore#what-the-agent-gets).
 
