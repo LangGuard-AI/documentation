@@ -225,7 +225,7 @@ LangGuard applies the [Enforcement Mode](/settings/enforcement-mode) setting of 
 
 In both modes, a model call is blocked when LangGuard cannot be reached or when LangGuard has quarantined the agent.
 
-When the interceptor blocks a call, the gateway does not call Amazon Bedrock. The answer is HTTP 403, in the error format of the API that the client called. The error message is one of these texts:
+When the interceptor blocks a call, the gateway does not call Amazon Bedrock. The answer is in the error format of the API that the client called. For a call on a `/model/{model}/` path, it is HTTP 451 with the error name `AccessDeniedException`. For a call on another path, it is HTTP 403. The error message is one of these texts:
 
 | Cause | Text |
 |-------|------|
