@@ -180,7 +180,7 @@ LangGuard writes a policy fragment, two named values (the LangGuard address and 
 
 ### When the Client Secret Expires
 
-When Microsoft Entra ID refuses the app registration, for example because the client secret expired, each APIM service shows the status **Drifted** with the item "LangGuard cannot read this service". The item names the `AADSTS` error. APIM still asks LangGuard about each `tools/call` with its own key, so the calls of the protected MCP APIs are still checked. But LangGuard cannot add its check to new MCP APIs. Put a new client secret in the integration, then click **Check now**.
+When Microsoft Entra ID refuses the app registration, for example because the client secret expired, each APIM service shows the status **Drifted** with the item "LangGuard cannot read this service". The item names the `AADSTS` error. APIM still asks LangGuard about each `tools/call` with its own key, so the calls of the protected MCP APIs are still checked. But LangGuard cannot add its check to new MCP APIs, and **Remove** cannot work. Put a new client secret in the integration, then click **Check now**.
 
 ## What Gets Captured
 
