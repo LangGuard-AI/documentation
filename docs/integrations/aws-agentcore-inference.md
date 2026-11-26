@@ -194,7 +194,7 @@ The interceptor sorts each request by its method and its path under `/inference`
 | `GET` on all paths, for example `/inference-profiles` and `/v1/models` | Pass. No model runs. |
 | All other requests, for example `POST /v1/responses` | Blocked. LangGuard cannot check them. |
 
-Claude Code uses the three `/model/{model}/` paths. `{model}` can have a `/`, because the ARN of an application inference profile has one.
+Claude Code uses the three `/model/{model}/` paths. `{model}` can have a `/`, because the ARN of an application inference profile has one. On the two invoke paths, the interceptor checks only Anthropic request bodies. It blocks a body without `anthropic_version` as not supported and does not call LangGuard.
 
 Before the interceptor compares a path with the table, it makes the path normal:
 
@@ -204,7 +204,7 @@ Before the interceptor compares a path with the table, it makes the path normal:
 
 A path with a bad percent escape is blocked as not valid.
 
-The template sets the interceptor to inference gateway mode. It sets `gateway_kind = "inference"` on the interceptor module, which sets `LANGGUARD_GATEWAY_KIND=inference` on the function. In this mode, the interceptor reads each path as a path under `/inference`, with or without the `/inference` prefix. It blocks each request that does not agree with a LangGuard check row or a pass row. Do not use this function for a gateway with HTTP targets, because the interceptor blocks their calls. On the two invoke paths, LangGuard checks only Anthropic models. A call to another model on these paths is blocked.
+The template sets the interceptor to inference gateway mode. It sets `gateway_kind = "inference"` on the interceptor module, which sets `LANGGUARD_GATEWAY_KIND=inference` on the function. In this mode, the interceptor reads each path as a path under `/inference`, with or without the `/inference` prefix. It blocks each request that does not agree with a LangGuard check row or a pass row. Do not use this function for a gateway with HTTP targets, because the interceptor blocks their calls.
 
 The rules for each LangGuard decision are the same as for a tool call. A call in Shadow mode is not blocked by a policy. A call that needs an approval is blocked. See [What the agent gets](/integrations/aws-agentcore#what-the-agent-gets).
 
@@ -214,8 +214,8 @@ When the interceptor blocks a call, the gateway does not call Amazon Bedrock. Th
 |-------|------|
 | A policy blocks the call | `Blocked by LangGuard: <policy message>` |
 | LangGuard cannot give a decision | `Blocked by LangGuard: the policy check is unavailable, so this model call is not allowed.` |
-| The body is not a JSON object, or the call names no model | `Blocked by LangGuard: this is not a valid model request, so it was not sent for a policy check.` |
-| The API is not in the table | `Blocked by LangGuard: LangGuard cannot check calls to this inference API, so this call is not allowed.` |
+| The body is not a JSON object, the body has a top-level key two times, the call names no model, the path has a bad percent escape, or LangGuard refuses the check as not valid | `Blocked by LangGuard: this is not a valid model request, so it was not sent for a policy check.` |
+| The API is not in the table, or an Amazon Bedrock invoke body has no `anthropic_version` | `Blocked by LangGuard: LangGuard cannot check calls to this inference API, so this call is not allowed.` |
 | The request is too large | `Blocked by LangGuard: the model request is too large for the policy check, so it is not allowed.` |
 
 The interceptor sends all the messages of the request to LangGuard. It does not remove messages. The policy check reads only text, so the interceptor replaces binary data with a short text before the check:
@@ -259,11 +259,25 @@ The developer gets `Blocked by LangGuard: the policy check is unavailable, so th
 
 1. Do the checks in [Each tool call is blocked as unavailable](/integrations/aws-agentcore#each-tool-call-is-blocked-as-unavailable).
 2. Look at the `reason` in the log line of the interceptor.
-3. If only the calls to one model are blocked and the reason is `JSON-RPC error -32602`, the model is not an Anthropic model. On the two invoke paths, LangGuard checks only Anthropic models.
 
 ### Calls are blocked as not supported
 
-The client calls an API that is not in the table in [What the developer gets](#what-the-developer-gets). The `route` in the log line is `unsupported`. Configure the client to use a supported API.
+The `outcome` in the log line is `unsupported`. Look at the `route` and the `reason`:
+
+- If the `route` is `unsupported`, the client calls an API that is not in the table in [What the developer gets](#what-the-developer-gets). Configure the client to use a supported API.
+- If the `reason` is `body has no anthropic_version`, the client calls a model that is not an Anthropic model on an invoke path. LangGuard checks only Anthropic request bodies on these paths.
+
+### Calls are blocked as not valid
+
+The developer gets `Blocked by LangGuard: this is not a valid model request, so it was not sent for a policy check.` The `reason` in the log line gives the cause:
+
+| Reason | Cause |
+|--------|-------|
+| `body is not a JSON object` | The request body is empty, is not JSON, or is not a JSON object. |
+| `body has a duplicate top-level key` | The body has a top-level key two times. LangGuard and Amazon Bedrock can read different values, so the interceptor blocks the call. |
+| `request names no model` | The path and the body give no model ID. |
+| `path has a bad percent escape` | The interceptor cannot decode the path. |
+| `JSON-RPC error -32602` | LangGuard refused the check as not valid. |
 
 ---
 
