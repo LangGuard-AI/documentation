@@ -102,7 +102,10 @@ with a certificate from a private CA, see
 
 ## Azure OpenAI (optional) {#azure-openai}
 
-Without Azure OpenAI, LangGuard works without its own AI features.
+Without a model provider, LangGuard works without its own AI features: Ask LangGuard,
+policy authoring and custom checks fail. Azure OpenAI is the provider that needs no
+stored key. To use AWS Bedrock or an OpenAI-compatible endpoint in its place, see
+[AI features](/private-install/helm/installation#ai-features).
 
 | Requirement | Notes |
 |---|---|

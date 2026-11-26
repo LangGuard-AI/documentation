@@ -44,7 +44,7 @@ LangGuard integrates with AI platforms, frameworks, coding agents, and identity 
 | [MLflow](/integrations/mlflow) | ML lifecycle management platform | ✓ Available |
 | [LangChain](/integrations/langchain) | LLM application framework | ✓ Available |
 | [CrewAI](/integrations/crewai) | Multi-agent orchestration framework | ✓ Available |
-| [AWS AgentCore](/integrations/aws-agentcore) | Amazon Bedrock AgentCore observability | ✓ Available |
+| [AWS AgentCore](/integrations/aws-agentcore) | AgentCore Gateway tool calls and policy enforcement | ✓ Available |
 
 ### Coding Agents
 
@@ -202,7 +202,7 @@ See [Integration Issues](/troubleshooting/integration-issues) for detailed help.
 - [MLflow](/integrations/mlflow) - ML lifecycle management
 - [LangChain](/integrations/langchain) - LLM application framework
 - [CrewAI](/integrations/crewai) - Multi-agent orchestration
-- [AWS AgentCore](/integrations/aws-agentcore) - Bedrock AgentCore observability
+- [AWS AgentCore](/integrations/aws-agentcore) - AgentCore Gateway tool calls and policy enforcement
 - [Cursor](/integrations/cursor) - AI-powered code editor
 - [Claude Code](/integrations/claude-code) - Anthropic Claude Code CLI
 - [OpenCode](/integrations/opencode) - Open-source coding agent

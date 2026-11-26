@@ -45,7 +45,7 @@ To connect an integration:
 | [MLflow](/integrations/mlflow) | Tracking URI, API Token |
 | [LangChain](/integrations/langchain) | OpenTelemetry environment variables |
 | [CrewAI](/integrations/crewai) | OpenTelemetry environment variables |
-| [AWS AgentCore](/integrations/aws-agentcore) | AWS credentials, Region |
+| [AWS AgentCore](/integrations/aws-agentcore) | AWS credentials, Region, CloudWatch Transaction Search |
 
 ### Coding Agents
 
@@ -146,7 +146,16 @@ AI framework integrations use OpenTelemetry to send traces directly to LangGuard
    - **API Token**: Authentication token (if required)
 3. Click **Test Connection**, then **Save**
 
-### LangChain / CrewAI / AWS AgentCore
+### AWS AgentCore
+
+LangGuard reads the tool calls of your AgentCore Gateways from CloudWatch Logs. To enforce policies, you also add the LangGuard gateway interceptor. See [AWS AgentCore](/integrations/aws-agentcore) for the full setup.
+
+1. Turn on CloudWatch Transaction Search, and add a `TRACES` log delivery to X-Ray for each gateway
+2. Click **Add Integration** > **AI Frameworks** > **AWS AgentCore**
+3. Enter the AWS access key and the Region of your gateways
+4. Click **Test & Save**
+
+### LangChain / CrewAI
 
 These frameworks integrate via OpenTelemetry environment variables:
 

@@ -28,6 +28,10 @@ LangGuard sits inline and answers allow, notify, or block for each MCP tool call
   Interceptors extension and evaluates MCP tool calls for gateways that call it
 - The **LiteLLM guardrail** in its MCP modes, which delegates to the same path
   (see [LiteLLM](/integrations/litellm#real-time-guardrails))
+- The **model call check** of the AgentCore interceptor on an inference gateway
+  (see [AgentCore model calls](/integrations/aws-agentcore-inference)). In Shadow mode a
+  policy result does not block a model call, and LangGuard records what Enforce mode
+  would do.
 
 It does **not** change how the [Arbiter](/settings/arbiter-management) hooks inside
 Claude Code, Codex, Cursor, and Antigravity behave. Those use the same decision core
@@ -48,8 +52,8 @@ difference is what reaches the wire.
 
 :::warning Shadow is the default
 If no mode was ever set, the mode is Shadow. LangGuard then does not block MCP tool
-calls on the MCP gateway, also when a policy in enforce mode finds a violation. To block,
-switch to Enforce.
+calls on the MCP gateway or model calls on an AgentCore inference gateway, also when a
+policy in enforce mode finds a violation. To block, switch to Enforce.
 :::
 
 ### Shadow mode
