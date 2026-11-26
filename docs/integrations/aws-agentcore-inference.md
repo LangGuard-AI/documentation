@@ -218,7 +218,12 @@ A path with a bad percent escape is blocked as not valid.
 
 The template sets the interceptor to inference gateway mode. It sets `gateway_kind = "inference"` on the interceptor module, which sets `LANGGUARD_GATEWAY_KIND=inference` on the function. In this mode, the interceptor reads each path as a path under `/inference`, with or without the `/inference` prefix. It blocks each request that does not agree with a LangGuard check row or a pass row. Do not use this function for a gateway with HTTP targets, because the interceptor blocks their calls.
 
-The rules for each LangGuard decision are the same as for a tool call. A call in Shadow mode is not blocked by a policy. A call that needs an approval is blocked. See [What the agent gets](/integrations/aws-agentcore#what-the-agent-gets).
+LangGuard applies the [Enforcement Mode](/settings/enforcement-mode) setting of your organization to model calls:
+
+- In **Shadow** mode, LangGuard does not block a model call for a policy result, also when the call needs an approval. LangGuard records that Enforce mode would block the call.
+- In **Enforce** mode, LangGuard blocks a model call that a policy blocks. It also blocks a call that needs an approval, because AgentCore Gateway has no approval prompt.
+
+In both modes, a model call is blocked when LangGuard cannot be reached or when LangGuard has quarantined the agent.
 
 When the interceptor blocks a call, the gateway does not call Amazon Bedrock. The answer is HTTP 403, in the error format of the API that the client called. The error message is one of these texts:
 
