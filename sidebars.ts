@@ -95,6 +95,7 @@ const sidebars: SidebarsConfig = {
         'settings/sso',
         'settings/session',
         'settings/user-management',
+        'settings/email',
         'settings/cost-estimates',
         'settings/trace-retention',
         'settings/data-sources',

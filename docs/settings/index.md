@@ -79,6 +79,11 @@ Invite users, assign roles, and manage workspace membership.
 
 ---
 
+### [Email](/settings/email)
+Set how LangGuard sends email for your organization on a private install: an SMTP server, Amazon SES or Azure Communication Services.
+
+---
+
 ### [Cost Estimates](/settings/cost-estimates)
 Configure cost-per-token rates for different models to power cost metrics in Trace Explorer and Monitoring.
 

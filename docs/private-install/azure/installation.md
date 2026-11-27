@@ -100,7 +100,7 @@ Changes for Azure cases:
 |---|---|
 | Internal load balancer | In `gateway.infrastructure.annotations`, replace the two IP lines with `service.beta.kubernetes.io/azure-load-balancer-internal: "true"`, `service.beta.kubernetes.io/azure-load-balancer-internal-subnet: <node subnet>` and `service.beta.kubernetes.io/azure-load-balancer-ipv4: <free address>`. The HTTP-01 challenge of Let's Encrypt cannot reach an internal address: use DNS-01, your own certificate or your own issuer. |
 | Allow only some client ranges on a public ingress | `service.beta.kubernetes.io/azure-allowed-ip-ranges: <CIDR>[,<CIDR>]` in `gateway.infrastructure.annotations`. AKS creates one network security group rule that allows TCP 80, 443 and 15021 (the status port of the Gateway proxy) to the ingress address only from these ranges. Port 80 is then closed to Let's Encrypt, so HTTP-01 cannot issue or renew the certificate: use your own certificate (`tls.provided`) or DNS-01. For DNS-01, set a DNS-01 solver in `tls.acmeIssuer.solvers`, or set your own DNS-01 issuer in `tls.certificate.issuerRef` and remove `tls.acmeIssuer` (while `tls.acmeIssuer.create` is true, the chart ignores `tls.certificate.issuerRef`). The rule does not apply to pods in the cluster. |
-| No Azure OpenAI | Remove `ai`, and `workloadIdentity.azure.clientId` and `tenantId`. Keep `workloadIdentity.azure.catalog` if you use the discovery identity. Ask LangGuard, policy authoring and custom checks then fail. To use another model provider, see [AI features](/private-install/helm/installation#ai-features). |
+| No Azure OpenAI | Remove `ai`. Remove `workloadIdentity.azure.clientId` and `tenantId` only when no other feature uses the dashboard identity ([trace archive](#archive-workload-identity), [email](#acs-email)). Keep `workloadIdentity.azure.catalog` if you use the discovery identity. Ask LangGuard, policy authoring and custom checks then fail. To use another model provider, see [AI features](/private-install/helm/installation#ai-features). |
 | Discovery identity | `workloadIdentity.azure.catalog.clientId` and `tenantId`. See [Discovery identity](#discovery-identity). |
 | AI gateway | `aiGateway.enabled: true`. See [Turn on the AI gateway](#ai-gateway). |
 
@@ -160,6 +160,41 @@ Give the dashboard managed identity the **Storage Blob Data Contributor** role o
 container. After the install, an admin selects **Workload identity (Azure)** in **Settings >
 Trace Retention > Archive destination** and clicks **Test connection**. See
 [Trace archive with workload identity](/private-install/helm/installation#archive-workload-identity).
+
+### Email with Azure Communication Services {#acs-email}
+
+LangGuard can send its email with Azure Communication Services and the dashboard managed
+identity (`workloadIdentity.azure.clientId`), without a key. The chart needs no other
+value: an admin selects the mail service in [Settings > Email](/settings/email) after the
+install.
+
+1. Connect an email domain to your Communication Services resource. The sender address
+   must be a MailFrom address of that domain.
+2. Give the dashboard managed identity the **Communication and Email Service Owner** role
+   on the Communication Services resource:
+
+   ```bash
+   ACS_ID=$(az communication show -g <rg> -n <communication services resource> --query id -o tsv)
+   az role assignment create --role "Communication and Email Service Owner" --scope "$ACS_ID" \
+     --assignee-object-id "$(az identity show -g <rg> -n <identity> --query principalId -o tsv)" \
+     --assignee-principal-type ServicePrincipal
+   ```
+
+   A role assignment can take some minutes to apply.
+3. In LangGuard, an admin opens **Settings > Email** and sets:
+   - **Send with**: **Azure Communication Services**
+   - **Sign in with**: **Workload or managed identity**
+   - **Endpoint**: `https://<communication services resource>.communication.azure.com`
+   - **Sender address**: a MailFrom address of the connected domain
+4. The admin clicks **Save settings**, then **Send test message**. When the test passes,
+   the admin turns on **Send organization email with these settings** and saves again.
+
+If the test fails with **LangGuard could not get a token for the workload identity of its
+deployment**, the release has no `workloadIdentity.azure.clientId`, or the federated
+credential of the identity does not have the subject
+`system:serviceaccount:<namespace>:langguard-dashboard`. If it fails with **the server
+refused the credentials or the identity has no permission to send**, check the role
+assignment.
 
 ### Turn on the AI gateway {#ai-gateway}
 
