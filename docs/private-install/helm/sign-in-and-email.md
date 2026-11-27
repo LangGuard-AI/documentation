@@ -61,6 +61,7 @@ LangGuard sends email for:
 - User invitations
 - Sign-in links
 - Rate limit notifications
+- [Email alert destinations](/settings/webhooks#email-destination)
 
 :::warning Configure email before you add users
 By default, the chart configures no email (`email.provider: none`). Then LangGuard sends

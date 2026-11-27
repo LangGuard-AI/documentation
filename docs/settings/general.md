@@ -52,6 +52,7 @@ On a private install, the email settings tell LangGuard how to send email for yo
 - Sign-in links
 - User invitations
 - Rate limit notifications
+- [Email alert destinations](/settings/webhooks#email-destination)
 - Policy violation notices (optional, see [Violation notices](#email-violation-notices))
 
 **Navigation:** **Settings > General**, card **Email delivery**.

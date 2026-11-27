@@ -29,10 +29,30 @@ Webhooks deliver HTTP POST requests to your configured endpoints whenever specif
 1. Navigate to **Settings > Webhooks**
 2. Click **Add Webhook**
 3. Configure the webhook:
+   - **Destination type** — Webhook, PagerDuty, Slack or Email (see [Destination types](#destination-types))
    - **URL** — The HTTPS endpoint to receive events
    - **Secret** — A shared secret for verifying webhook signatures
    - **Events** — Select which event types to subscribe to
 4. Click **Save**
+
+## Destination types
+
+| Type | Delivery |
+|------|----------|
+| **Webhook (HTTP)** | An HTTP POST of the JSON payload to your HTTPS endpoint. |
+| **PagerDuty** | An event to PagerDuty Events API v2, with your routing key. |
+| **Slack (alert channel)** | A message to a Slack channel, with an incoming-webhook URL. |
+| **Email** | An email to the recipients of the destination. See [Email destination](#email-destination). |
+
+### Email destination {#email-destination}
+
+An email destination sends each event as an email to its **Recipients**: 1 to 10 email addresses, separated by commas or lines. The recipients are not secret: the destination shows them when you edit it.
+
+- LangGuard sends the email with the same mail service as its other email. On a private install with [Email delivery](/settings/general#email-delivery) turned on, that is the mail service of your organization. Else it is the mail service of the deployment.
+- A policy violation, an approval request or decision, and a data source status each get their own subject and text. Other events get a short email with the event type.
+- The email holds the same values as the alert in a Slack channel: for a policy violation, the policy name, the severity, the violation message, the agent and a link to LangGuard.
+- A test sends a real email to the recipients. LangGuard sends one test every 10 seconds at most for your workspace.
+- A failed send is retried with the retry rules below. When the deployment has no mail service, the delivery fails with **Email is not configured on this deployment**.
 
 ## Event Types
 
