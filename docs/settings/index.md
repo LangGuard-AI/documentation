@@ -15,7 +15,7 @@ Most settings require the **admin** role. Members and viewers have read-only acc
 ## Settings Sections
 
 ### [General](/settings/general)
-Configure your workspace name and display settings.
+Configure your workspace name and display settings. On a private install, also set how LangGuard sends email.
 
 ---
 

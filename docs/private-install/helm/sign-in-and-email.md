@@ -61,6 +61,7 @@ LangGuard sends email for:
 - User invitations
 - Sign-in links
 - Rate limit notifications
+- [Email alert destinations](/settings/webhooks#email-destination)
 
 :::warning Configure email before you add users
 By default, the chart configures no email (`email.provider: none`). Then LangGuard sends
@@ -95,9 +96,9 @@ email:
 ```
 
 :::note
-The SMTP relay option does not support a relay that requires a username and password, for
-example Microsoft 365 or SendGrid. Use Amazon SES, or a relay that accepts mail by IP
-address.
+The SMTP relay option of the chart does not support a relay that requires a username and
+password, for example SendGrid. For such a server, use
+[Option C](#option-c-email-settings-in-the-app).
 :::
 
 ### Option B: Amazon SES
@@ -121,6 +122,22 @@ email:
     existingSecret: langguard-ses
 ```
 
+### Option C: Email settings in the app
+
+After the install, an admin can set the email of the organization in
+[Settings > General > Email delivery](/settings/general#email-delivery). These settings support more than the chart values:
+
+- An SMTP server with a user name and password, with STARTTLS, TLS (port 465) or no TLS.
+- Amazon SES with the workload identity of the deployment.
+- Azure Communication Services with the workload identity of the deployment, or with a
+  connection string. For AKS, see
+  [Email with Azure Communication Services](/private-install/azure/installation#acs-email).
+
+When **Send organization email with these settings** is on, these settings take precedence
+over the chart values for that organization. You can keep `email.provider: none`.
+`auth.method: magiclink` still needs an `email.provider`: the first sign-in comes before an
+admin can open **Settings > General**.
+
 ### Verify
 
 Invite a user in [User Management](/settings/user-management). Then read the dashboard
@@ -132,7 +149,9 @@ kubectl logs deployment/langguard-dashboard -n langguard | grep EmailService
 
 | Log line | Meaning |
 |---|---|
-| `Email service initialized with SMTP relay` or `with Amazon SES` | The provider that LangGuard uses. |
+| `Email service initialized with SMTP relay` or `with Amazon SES` | The provider of the chart values. |
+| `<message> sent to <address> with the organization email settings` | The mail service of [Email delivery](/settings/general#email-delivery) accepted the message. |
+| `Failed to send <message> with the organization email settings` | The mail service of Email delivery refused the message. Send a test message in Email delivery to see the reason. |
 | `Email sent successfully to <address>` | The mail service accepted the message. |
 | `Failed to send email` | The mail service rejected the message. The error follows. |
 | `No email provider configured` | No provider is set. LangGuard does not send the email. |
