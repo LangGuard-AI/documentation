@@ -124,7 +124,7 @@ email:
 ### Option C: Email settings in the app
 
 After the install, an admin can set the email of the organization in
-[Settings > Email](/settings/email). These settings support more than the chart values:
+[Settings > General > Email delivery](/settings/general#email-delivery). These settings support more than the chart values:
 
 - An SMTP server with a user name and password, with STARTTLS, TLS (port 465) or no TLS.
 - Amazon SES with the workload identity of the deployment.
@@ -135,7 +135,7 @@ After the install, an admin can set the email of the organization in
 When **Send organization email with these settings** is on, these settings take precedence
 over the chart values for that organization. You can keep `email.provider: none`.
 `auth.method: magiclink` still needs an `email.provider`: the first sign-in comes before an
-admin can open **Settings > Email**.
+admin can open **Settings > General**.
 
 ### Verify
 
@@ -149,8 +149,8 @@ kubectl logs deployment/langguard-dashboard -n langguard | grep EmailService
 | Log line | Meaning |
 |---|---|
 | `Email service initialized with SMTP relay` or `with Amazon SES` | The provider of the chart values. |
-| `<message> sent to <address> with the organization email settings` | The mail service of [Settings > Email](/settings/email) accepted the message. |
-| `Failed to send <message> with the organization email settings` | The mail service of Settings > Email refused the message. Send a test message in Settings > Email to see the reason. |
+| `<message> sent to <address> with the organization email settings` | The mail service of [Email delivery](/settings/general#email-delivery) accepted the message. |
+| `Failed to send <message> with the organization email settings` | The mail service of Email delivery refused the message. Send a test message in Email delivery to see the reason. |
 | `Email sent successfully to <address>` | The mail service accepted the message. |
 | `Failed to send email` | The mail service rejected the message. The error follows. |
 | `No email provider configured` | No provider is set. LangGuard does not send the email. |

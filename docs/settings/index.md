@@ -15,7 +15,7 @@ Most settings require the **admin** role. Members and viewers have read-only acc
 ## Settings Sections
 
 ### [General](/settings/general)
-Configure your workspace name and display settings.
+Configure your workspace name and display settings. On a private install, also set how LangGuard sends email.
 
 ---
 
@@ -76,11 +76,6 @@ Configure session timeout and idle timeout durations.
 
 ### [User Management](/settings/user-management)
 Invite users, assign roles, and manage workspace membership.
-
----
-
-### [Email](/settings/email)
-Set how LangGuard sends email for your organization on a private install: an SMTP server, Amazon SES or Azure Communication Services.
 
 ---
 

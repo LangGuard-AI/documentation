@@ -165,7 +165,7 @@ Trace Retention > Archive destination** and clicks **Test connection**. See
 
 LangGuard can send its email with Azure Communication Services and the dashboard managed
 identity (`workloadIdentity.azure.clientId`), without a key. The chart needs no other
-value: an admin selects the mail service in [Settings > Email](/settings/email) after the
+value: an admin selects the mail service in [Settings > General > Email delivery](/settings/general#email-delivery) after the
 install.
 
 1. Connect an email domain to your Communication Services resource. The sender address
@@ -181,7 +181,7 @@ install.
    ```
 
    A role assignment can take some minutes to apply.
-3. In LangGuard, an admin opens **Settings > Email** and sets:
+3. In LangGuard, an admin opens **Settings > General**, goes to the **Email delivery** card and sets:
    - **Send with**: **Azure Communication Services**
    - **Sign in with**: **Workload or managed identity**
    - **Endpoint**: `https://<communication services resource>.communication.azure.com`
