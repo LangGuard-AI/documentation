@@ -123,8 +123,9 @@ Enforcement page does to that list:
   that is not in that listing, LangGuard does not change the old list.
 - **If LangGuard cannot read this setting:** the list is the same as in Enforce mode.
 
-When you change the mode, LangGuard updates the list of your AI Gateway. The Settings,
-AI Gateway page shows the result for each server.
+When you change the mode, LangGuard updates the list of your AI Gateway. The
+[Settings, AI Gateway](/settings/ai-gateway#the-server-list) page shows the result for
+each server.
 
 These rules do not depend on the mode: a server that is not registered on your AI
 Gateway is not offered, and a server that nobody has decided on the MCP Enforcement page

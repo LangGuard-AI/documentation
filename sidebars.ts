@@ -99,7 +99,17 @@ const sidebars: SidebarsConfig = {
         'settings/trace-retention',
         'settings/data-sources',
         'settings/enforcement-mode',
-        'settings/ai-gateway/entra-cowork-plugin',
+        {
+          type: 'category',
+          label: 'AI Gateway',
+          link: {
+            type: 'doc',
+            id: 'settings/ai-gateway/index',
+          },
+          items: [
+            'settings/ai-gateway/entra-cowork-plugin',
+          ],
+        },
       ],
     },
     {

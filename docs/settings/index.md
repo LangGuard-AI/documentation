@@ -99,5 +99,7 @@ Switch the MCP gateway between Shadow mode, which does not block for a policy ve
 
 ---
 
-### [Entra SSO for Copilot Cowork](/settings/ai-gateway/entra-cowork-plugin)
-Let Microsoft Copilot Cowork call your governed MCP tools with each signed-in user's Microsoft Entra token, and generate the plugin package it installs.
+### [AI Gateway](/settings/ai-gateway)
+Route LLM calls and MCP tool calls through the LangGuard AI Gateway. Add models with your own provider keys, register MCP servers, and get the connection details for your agents.
+
+- [Entra SSO for Copilot Cowork](/settings/ai-gateway/entra-cowork-plugin): let Microsoft Copilot Cowork call your governed MCP tools with each signed-in user's Microsoft Entra token, and generate the plugin package it installs.

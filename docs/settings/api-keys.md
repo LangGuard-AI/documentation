@@ -38,6 +38,7 @@ that works for the job:
 | **Read** | Read-only access to data via the API |
 | **Write** | Read and modify data via the API |
 | **Admin** | Full administrative access via the API |
+| **AI Gateway** | The LLM and MCP endpoints of the [AI Gateway](/settings/ai-gateway#authenticate-to-the-gateway) only. It gives no access to the LangGuard API. This is the only scope that can have **No expiry**. Read, Write and Admin keys can also use the AI Gateway. |
 | **Quarantine** | Place, change, release and read [agent quarantines](/features/agent-quarantine) only, through the REST API and the MCP server. The key needs an expiry, as Ingest, Read, Write and Admin keys do. |
 
 :::note Ingestion requires an ingest-scoped key
