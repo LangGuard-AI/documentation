@@ -9,11 +9,23 @@ description: Let Microsoft Copilot Cowork call your governed MCP tools with each
 Microsoft Copilot Cowork can reach your AI Gateway's MCP endpoint and call your
 governed tools. Each request carries the **signed-in user's Microsoft Entra
 token**. LangGuard validates that token against your directory, then forwards the
-call to your tools under a tenant-scoped key, so every Cowork tool call is
-evaluated by policy before it runs.
+call to your tools under a key scoped to your workspace, so every Cowork tool call
+is evaluated by policy before it runs.
 
-**Navigation:** Settings → AI Gateway → **Microsoft Entra SSO (Copilot Cowork)**
-(`/settings/ai-gateway`)
+Whether a policy verdict can block the call depends on the
+[Enforcement Mode](/settings/enforcement-mode). In Shadow mode, the default,
+LangGuard records what Enforce mode would block, and the call runs.
+
+**Navigation:** Settings → [AI Gateway](/settings/ai-gateway) → **Microsoft Entra SSO
+(Copilot Cowork)** (`/settings/ai-gateway`)
+
+:::note Private installs
+The URLs on this page are for LangGuard cloud. On a private install, replace
+`https://<tenant>.app.langguard.ai` and `https://app.langguard.ai` with
+`https://<domain>`. Copilot Cowork connects to the MCP endpoint from the Microsoft
+cloud, so the install needs a public ingress. See
+[Set up the AI gateway](/private-install/helm/installation#set-up-the-ai-gateway).
+:::
 
 The settings page carries a five-step walkthrough that prints the exact value for
 every field, with copy buttons. This page is the same procedure in reference form,
@@ -218,9 +230,15 @@ sign in again roughly every hour.
 
 Enter both audiences. Entra puts the client-id GUID in a v2 token and the
 Application ID URI in a v1 token, and which one you get is a property of the
-directory, so accepting both covers either.
+directory, so accepting both covers either. The client-id GUID also turns on the
+[requesting-client check](#what-the-gateway-checks-on-each-token), and the plugin
+cannot be generated without the Application ID URI.
 
-Click **Save and Generate Plugin**. The `.zip` downloads straight away.
+Click **Save and Generate Plugin**. The `.zip` downloads straight away, and a dialog
+shows the install command. **Reset** puts the form back to the saved values.
+
+When you edit a value that the plugin carries, the form says so. Generate a new
+plugin and install it again (see [Regenerating the plugin](#regenerating-the-plugin)).
 
 #### Connect sign-in
 
@@ -288,8 +306,9 @@ are refused.
 
 By default LangGuard asks only for read and search permissions. An admin can
 change this per server: **Settings → AI Gateway → MCP servers → the server's
-⋯ menu → Per-user access**. A change applies to new connections; people already
-connected keep their permissions until they connect again.
+⋯ menu → Per-user access** (see [Per-user access](/settings/ai-gateway#per-user-access)).
+A change applies to new connections; people already connected keep their
+permissions until they connect again.
 
 ### Disconnecting
 
@@ -327,10 +346,11 @@ installed.
 | Signature | Against your directory's JWKS, pinned to your Directory (tenant) ID |
 | Issuer | Your directory only. Both Entra issuer forms are accepted (`sts.windows.net/<tid>/` for v1 tokens and `login.microsoftonline.com/<tid>/v2.0` for v2), because which one a directory issues is not something you choose. |
 | Audience | Must match one of your accepted audiences |
-| Requesting client | The `azp` (or `appid`) claim must be the gateway app's own client id. A token with no such claim is rejected. |
+| Requesting client | The `azp` (or `appid`) claim must be the gateway app's own client id. A token with no such claim is rejected. LangGuard takes the client id from the client-id GUID in your accepted audiences. If no accepted audience is a GUID, this check is not made, so enter the GUID. |
 
 When Entra SSO is switched off, Entra (JWT) requests to the gateway are rejected.
-Virtual-key callers are unaffected.
+Virtual-key callers are unaffected: that is, callers that use a LangGuard API key
+or a [gateway key](/settings/ai-gateway#gateway-keys-for-oauth-mcp-servers).
 
 ## Troubleshooting
 
@@ -338,7 +358,8 @@ Virtual-key callers are unaffected.
 |---|---|---|
 | Every sign-in fails with `invalid_client` | The Application ID URI holds the base64 registration id, or the wrong GUID from it | Decode the registration id and use the **second** GUID |
 | `AADSTS900144` | The Teams OAuth client has no Scope value | Set the Scope in step 4 |
-| Cowork asks the user to sign in about every hour | `offline_access` missing from the Teams client Scope | Add it, then regenerate nothing — this is portal-side only |
+| Cowork asks the user to sign in about every hour | `offline_access` missing from the Teams client Scope | Add it in the Teams Developer Portal. This change is in the portal only, so you do not need a new plugin |
+| The form says the Application ID URI is required to generate an installable plugin | No accepted audience starts with `api://` | Add the Application ID URI from step 3a to the accepted audiences |
 | Cowork reports "Authentication is still processing" and never finishes | The gateway rejects the token, usually because the requesting-client pin does not match | Make sure the bare client-id GUID is one of your accepted audiences |
 | Tokens rejected on audience | Only one audience entered | Enter both the client-id GUID and the Application ID URI |
 | The connector worked, then stopped on a date | The client secret expired | Create a new secret and update the Teams OAuth client |
@@ -348,6 +369,10 @@ Virtual-key callers are unaffected.
 
 ## Related
 
+- [AI Gateway](/settings/ai-gateway) — the rest of the AI Gateway settings page:
+  models, MCP servers and pass-through endpoints
+- [Enforcement Mode](/settings/enforcement-mode) — whether a policy verdict blocks
+  an MCP tool call through the gateway
 - [MCP Server](/settings/mcp-server) — LangGuard's own MCP server, for agents that
   operate the platform
 - [Single Sign-On (SSO)](/settings/sso) — Entra ID for **logging in** to LangGuard,

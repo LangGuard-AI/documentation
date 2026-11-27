@@ -631,7 +631,8 @@ accept it for up to 5 minutes, because each pod keeps validated keys in a cache.
 With the AI gateway:
 
 1. Open **Settings → AI Gateway** (`https://<domain>/settings/ai-gateway`). The page shows
-   the gateway URL `https://<domain>/aigateway` and the connection snippets.
+   the gateway URL `https://<domain>/aigateway` and the connection snippets. See
+   [AI Gateway](/settings/ai-gateway) for all the settings of the page.
 2. Add a model: select the provider, give the model name of the provider and your
    provider API key. You bring your own provider keys (BYOK). The gateway stores the key
    encrypted in its database schema.
