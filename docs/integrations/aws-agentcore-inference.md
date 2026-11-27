@@ -37,7 +37,7 @@ The person who runs `terraform apply` needs permission to:
 - Create IAM roles and role policies, and pass the roles to AWS Lambda and to AgentCore (`iam:PassRole`).
 - Create Lambda functions and Lambda permissions.
 - Create AgentCore gateways and gateway targets.
-- With `existing_gateway_role_name`, add a policy to that role. The template then does not create the gateway role.
+- With `existing_gateway_role_name`, add a policy named `<name>-gateway` to that role. The template then does not create the gateway role.
 - With `sts_key_map_enabled`, create a DynamoDB table, EventBridge rules, and Lambda functions in the Region of the gateway and in `us-east-1`.
 
 ## Create the inference gateway
@@ -91,6 +91,10 @@ The Terraform template is in the [`agentcore-gateway-interceptor`](https://githu
 | `sts_key_map_enabled` | `false` | Create the STS key map, which gives LangGuard the IAM Identity Center user of each call. Only with `AWS_IAM`. |
 | `existing_gateway_role_name` | Empty | The name of an existing gateway service role. The template adds its policy to that role. Empty means that the template creates the role. |
 | `invoke_model_resource_arns` | Empty | The ARNs of the models that the gateway role can call. Empty means all the models in [Gateway role permissions](#gateway-role-permissions). For an inference profile, also give the ARNs of its foundation models in each Region that the profile sends calls to. |
+| `secret_kms_key_arn` | Empty | The ARN of the customer-managed KMS key that encrypts the API key secret. Empty means that the secret uses the AWS managed key. |
+| `role_permissions_boundary_arn` | Empty | The ARN of the permissions boundary for the interceptor function role. |
+| `subnet_ids` | Empty | The subnets of the interceptor function, when LangGuard has a private endpoint. The subnets need a path to LangGuard and to Secrets Manager. Empty means no VPC. |
+| `security_group_ids` | Empty | The security groups of the interceptor function. Use them with `subnet_ids`. |
 
 ### Outputs
 
@@ -216,6 +220,8 @@ Before the interceptor compares a path with the table, it makes the path normal:
 
 A path with a bad percent escape is blocked as not valid.
 
+A call that no LangGuard check row agrees with passes only when its path is in normal form. A path in normal form has no `?` or `#` (a `GET` can have a query), no empty, `.` or `..` segment (a trailing `/` is allowed), and only printable ASCII with no `\` or `;`. A decoded `/` is allowed only in a model ARN. The interceptor blocks another such call as not valid, for example `POST /inference/../v1/responses`, so a pass does not depend on how the gateway and Amazon Bedrock read the path.
+
 The template sets the interceptor to inference gateway mode. It sets `gateway_kind = "inference"` on the interceptor module, which sets `LANGGUARD_GATEWAY_KIND=inference` on the function. In this mode, the interceptor reads each path as a path under `/inference`, with or without the `/inference` prefix. It blocks each request that does not agree with a LangGuard check row or a pass row. Do not use this function for a gateway with HTTP targets, because the interceptor blocks their calls.
 
 LangGuard applies the [Enforcement Mode](/settings/enforcement-mode) setting of your organization to model calls:
@@ -231,7 +237,7 @@ When the interceptor blocks a call, the gateway does not call Amazon Bedrock. Th
 |-------|------|
 | A policy blocks the call | `Blocked by LangGuard: <policy message>` |
 | LangGuard cannot give a decision | `Blocked by LangGuard: the policy check is unavailable, so this model call is not allowed.` |
-| The body is not a JSON object, the body has a top-level key two times, the call names no model, the path has a bad percent escape, or LangGuard refuses the check as not valid | `Blocked by LangGuard: this is not a valid model request, so it was not sent for a policy check.` |
+| The body is not a JSON object, an object in the body has a key two times, the call names no model, the path has a bad percent escape or is not in normal form, or LangGuard refuses the check as not valid | `Blocked by LangGuard: this is not a valid model request, so it was not sent for a policy check.` |
 | The API is not in the table, or an Amazon Bedrock invoke body has no `anthropic_version` | `Blocked by LangGuard: LangGuard cannot check calls to this inference API, so this call is not allowed.` |
 | The request is too large | `Blocked by LangGuard: the model request is too large for the policy check, so it is not allowed.` |
 
@@ -240,7 +246,7 @@ The interceptor sends all the messages of the request to LangGuard. It does not 
 - The base64 data of an image block or a document block, also in a tool result.
 - An image URL that is a `data:` URL.
 
-The interceptor keeps a document block that has a text source. Amazon Bedrock gets the full request, with the binary data.
+The interceptor keeps a document block that has a text source, and LangGuard checks its text, its title and its context. LangGuard also checks the text of a search result block. Amazon Bedrock gets the full request, with the binary data.
 
 LangGuard accepts a policy check of 6 MiB or less. If the check is larger, the call is blocked with the "too large" text.
 
@@ -291,9 +297,11 @@ The developer gets `Blocked by LangGuard: this is not a valid model request, so 
 | Reason | Cause |
 |--------|-------|
 | `body is not a JSON object` | The request body is empty, is not JSON, or is not a JSON object. |
-| `body has a duplicate top-level key` | The body has a top-level key two times. LangGuard and Amazon Bedrock can read different values, so the interceptor blocks the call. |
+| `body has a duplicate key` | An object in the body, at any depth, has a key two times. LangGuard and Amazon Bedrock can read different values, so the interceptor blocks the call. |
 | `request names no model` | The path and the body give no model ID. |
 | `path has a bad percent escape` | The interceptor cannot decode the path. |
+| `path is not in normal form` | No LangGuard check row agrees with the call, and the path is not in normal form. Send the call to the path that the client documents. |
+| `gatewayResponse is not a response` | The REQUEST event has a `gatewayResponse` value that is not `null` and not a response. |
 | `JSON-RPC error -32602` | LangGuard refused the check as not valid. |
 
 ---
