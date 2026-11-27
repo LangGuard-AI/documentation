@@ -220,7 +220,7 @@ Before the interceptor compares a path with the table, it makes the path normal:
 
 A path with a bad percent escape is blocked as not valid.
 
-A call that no LangGuard check row agrees with passes only when its path is in normal form. A path in normal form has no `?` or `#` (a `GET` can have a query), no empty, `.` or `..` segment (a trailing `/` is allowed), and only printable ASCII with no `\` or `;`. A decoded `/` is allowed only in a model ARN. The interceptor blocks another such call as not valid, for example `POST /inference/../v1/responses`, so a pass does not depend on how the gateway and Amazon Bedrock read the path.
+A call that no LangGuard check row agrees with passes only when its path is in normal form. A path in normal form starts with `/`, has no `?` or `#` (a `GET` can have a query), has no empty, `.` or `..` segment (a trailing `/` is allowed), and has only printable ASCII with no `\`, `;`, `?`, `#` or `%` in each decoded segment. A decoded `/` is allowed only in the model ARN of a count-tokens call. The interceptor blocks another such call as not valid, for example `POST /inference/../v1/responses`, so a pass does not depend on how the gateway and Amazon Bedrock read the path.
 
 The template sets the interceptor to inference gateway mode. It sets `gateway_kind = "inference"` on the interceptor module, which sets `LANGGUARD_GATEWAY_KIND=inference` on the function. In this mode, the interceptor reads each path as a path under `/inference`, with or without the `/inference` prefix. It blocks each request that does not agree with a LangGuard check row or a pass row. Do not use this function for a gateway with HTTP targets, because the interceptor blocks their calls.
 
